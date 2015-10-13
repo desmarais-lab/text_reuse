@@ -39,11 +39,35 @@ equivalent policies often contain the same language, since legislators use past
 legislation from other states or model legislation from interest groups as
 templates when drafting new bills or model legislation from interest groups. In
 this paper we evaluate the effectives of text reuse measures to detect bills
-that address the same policy issues... 
+that address the same policy issues. We find that... 
 \end{abstract}
 
 \section{Introduction}
 
+...
+
+
+\section{Data}
+
+We will rely on two main data sources to assess the reliability of text reuse to
+identify substantively equivalent bills. 
+
+One is a data base of bill text that was extracted through the sunlight
+foundation's Open States API. This data base contains approximately 500,000
+bills from 2009 to 2015. From this database we will extract the bills for which we
+have ground truth on policy equivalence. 
+Once we obtained these bills, we will use the local alignment algorithm
+implemented by (Burgess et al. 2015) in order to obtain alignment scores for
+these bills. 
+Information on which bills implement equivalent policies is obtained from
+several sources. One option is to rely on datasets compiled by scholars who have
+studied policy diffusion in the past. Another option is to rely on materials
+compiled by the National Conference of State Legislatures (NCSL). The NCSL keeps
+track of specific policies and regulations across states. However, the tables
+compiled by the NCSL most often refer to the relevant sections in the states'
+statutes instead of to the bills that these sections are based on. In order to
+use these material we would have to find a way to link statute sections to their
+original bills. 
 
 
 

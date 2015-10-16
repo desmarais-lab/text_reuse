@@ -48,10 +48,41 @@ that address the same policy issues. We find that...
 \begin{itemize}
 \item Write paragraph about how it would be great if text-reuse could be used to classify policy overlap (BD)
 \item Write paragraph on why this is not easy (FL)
-\item Summarize what we do to solve problem and validate (FL)
 \end{itemize}
+How ever, it is not clear, how well text reuse is suited to to detect real
+policy diffusion. There are several complications that we are addressing in this
+paper. First, every bill has procedural content that is not related to the
+policy content of the bill. Since every state legislature has a set of such
+standard or boiler plate text in each bill, there will be significant text reuse
+between bills in the same state and possibly also between bills from different
+states. Second, it is not obvious how much text reuse will mean substantive
+policy overlap. Given that each bill pair has a continuous proportion of
+overlapping text, setting the threshold too low might mean to classify bills as
+equivalent that are only in the same policy area, or are on a similar issue, but
+are opposed in content. On the other hand, setting the threshold too high could
+mean overlooking equivalent bills because of small insignificant changes to the
+text. 
 
-...
+In this paper we address these issues and evaluate how much policy overlap can
+be detected using text reuse measures. Following Wilkerson et al. (2015) we use
+supervised machine learning to separate boiler plate from substantive text. We
+further more use an original data set on policy diffusion to evaluate how much
+equivalent policy can be detected using measures of text reuse. Using the system
+developed by Burges et al. (2015) we calculate text reuse scores for all pairs
+of bills in our dataset. We then use these scores in a model that classifies
+bills as equivalent and evaluate its performance with the validation data set. 
+
+This work has several important implications. First, it allows us to estimate,
+how policies are transferred between states. Do state legislators work mainly
+from templates from other states or interest groups, or to what extent do
+legislators draft their own bill text. Furthermore, text reuse is a relatively
+simple metric to calculate for large amounts of text. Previous scholars of
+policy diffusion mainly relied on case studies or manually coded data sets of
+policy diffusion in few policy areas. If working copying text forms a
+significant portion of how legislators adopt policies from other states, text
+reuse can be used to easily gather comprehensive data sets on policy diffusion. 
+
+[This might be overlapping a bit with your part]
 
 \section{Background}
 
@@ -92,7 +123,7 @@ original bills.
 
 \subsection{Tasks}
 \begin{itemize}
-\item Scrape Google urls for NCSL tables (FL)
+\item Scrape Google urls for NCSL tables (
 \item Extract state  \& bill \# from tables (FL)
 \end{itemize}
 

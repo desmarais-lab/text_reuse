@@ -123,16 +123,44 @@ original bills.
 
 \subsection{Tasks}
 \begin{itemize}
-\item Scrape Google urls for NCSL tables (
-\item Extract state  \& bill \# from tables (FL)
+\item Scrape Google urls for NCSL tables (FL) -- lower priority
+\item Extract state  \& bill \# from tables (FL) -- lower priority
+\item See tasks in analysis -- create metadata file and dyadic file, then put them on the ACI (FL).
+\item Store MALP data on ACI and make sure the identifiers match those in the bill data (FL). 
+\item Put policy diffusion data in project folder on ACI (BD).
 \end{itemize}
 
 \section{Analysis}
+ Below we list X separate analyses designed to test the degree to which measuring text reuse measures policy overlap/diffusion. 
+
+\begin{itemize}
+\item We use statistical topic modeling to assess the major content areas represented by the text identified in the alignment algorithm. We consider whether the resultant topics align with policy areas.
+\item The Measuring American Legislators Project (MALP) provides data that we will use to assess the significance of text re-use in US state legislation \citet{shor2011}. The most recent release of the MALP data covers 1993-2014. The MALP data provide ideological scores of legislators on an annual basis. We conduct a bill-level statistical network analysis to see whether the rate of bill-to-bill alignment is positively related to the ideological similarity of their sponsors.
+\item We conduct a state-level analysis to see whether the volume of state-to-state text alignment is positively related to the policy diffusion networks inferred in \citet{desmarais2015}.
+\end{itemize}
 
 
 \subsection{Tasks}
 \begin{itemize}
-\item Alternative validation options (BD)
+\item Develop bill metadata dataset (FL)
+\begin{itemize}
+\item unique bill identifier
+\item sponsor identifier from  MALP data
+\item state identifier
+\item chamber identifier
+\item Introduction date
+\item Anything else, even if some is missing (status, committees, etc)
+\end{itemize}
+\item Develop bill-to-bill edgelists (FL)
+\begin{itemize}
+\item Sparse dyadic dataset (i.e., no observations when there is 0 alignment/overlap)
+\item alignment score(s)
+\item name of a text file in which aligned text is stored
+\end{itemize}
+\item Topic models, possibly of a relational form, applied to aligned text
+\item Computationally intensive analysis of bill-to-bill alignment and sponsor ideology.
+\item Analysis of alignment aggregated at the state level.
+
 \end{itemize}
 
 

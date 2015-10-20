@@ -103,30 +103,36 @@ reuse can be used to easily gather comprehensive data sets on policy diffusion.
 We will rely on two main data sources to assess the reliability of text reuse to
 identify substantively equivalent bills. 
 
-One is a data base of bill text that was extracted through the sunlight
-foundation's Open States API. This data base contains approximately 500,000
-bills from 2008 to 2015. From this database we will extract the bills for which we
-have ground truth on policy equivalence. 
-Once we obtained these bills, we will use the local alignment algorithm
-implemented by (Burgess et al. 2015) in order to obtain alignment scores for
-these bills. 
-Information on which bills implement equivalent policies is obtained from
-several sources. One option is to rely on datasets compiled by scholars who have
-studied policy diffusion in the past. Another option is to rely on materials
-compiled by the National Conference of State Legislatures (NCSL). The NCSL keeps
-track of specific policies and regulations across states. However, the tables
-compiled by the NCSL most often refer to the relevant sections in the states'
-statutes instead of to the bills that these sections are based on. In order to
-use these material we would have to find a way to link statute sections to their
-original bills. 
+In order to calculate the alignment scores between bills, we rely on a database collected by Burgess et al. (2015) and the Sunlight foundation. This data base contains approximately 500,000
+bills from 2008 to 2015. The available metadata for the bills includes a timestamp for introduction and approval of the bill, the name and party affiliation of the sponsor(s), the state and the bill id. 
+
+For the ideological matching, we rely on latent ideology scores measured by \citep{shor2011}. The data set contains scores for 20738 legislators from 50 state legislatures as well as their party affiliation and their time in office. 
+
+We additionally construct a validation dataset of equivalent bills from information obtained from the National Conference of State Legislatures (NCSL). The NCSL publishes summary tables on specific policies, citing the relevant bills or sections in the state statutes of the states that have implemented regulations on this policy. We collected all these tables, and extracted all bills that address the same policy measure and that overlap with the time frame covered by our bill database.
 
 
 \subsection{Tasks}
 \begin{itemize}
 \item Scrape Google urls for NCSL tables (FL) -- lower priority
+    \begin{enumerate}
+        \item Scraped 64 urls. 
+        \item Can't get around the Google API limitation yet. Also get blocked when trying to scrape the search result.
+    \end{enumerate}
+
 \item Extract state  \& bill \# from tables (FL) -- lower priority
+    \begin{enumerate}
+        \item Didn't do this yet, let's first check how many are potentially suitable and then probably better to do by hand
+    \end{enumerate}
 \item See tasks in analysis -- create metadata file and dyadic file, then put them on the ACI (FL).
+    \begin{enumerate}
+        \item We have a preliminary dyadic file for all similar bill pairs and their alignment scores (this is from the LID approach: each bill is only compared to the 100 most similar ones)
+        \item Matt transfering the database to a new server at the moment, it is therefore unavailable. Should be online again sometime today.
+    \end{enumerate}
 \item Store MALP data on ACI and make sure the identifiers match those in the bill data (FL). 
+    \begin{enumerate}
+        \item data is on aci
+        \item Most Legislators can probably be matched by Name, Pary, State, Time in Office
+    \end{enumerate}
 \item Put policy diffusion data in project folder on ACI (BD).
 \end{itemize}
 

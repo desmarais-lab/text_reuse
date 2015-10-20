@@ -15,7 +15,6 @@
 \usepackage{setspace}
 \usepackage{amsmath}
 \usepackage{hyperref}
-\usepackage{pa}
 
 \setlength{\parindent}{0.0in}
 \setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
@@ -98,6 +97,9 @@ reuse can be used to easily gather comprehensive data sets on policy diffusion.
 \item Discussion of text-based classification
 \end{itemize}
 
+
+In order to detect text reuse between bills we follow \citet{wilderson2015tracing} and use the Smith-Waterman local alignment algorithm \citep{smith1981identification}. 
+
 \section{Data}
 
 We will rely on two main data sources to assess the reliability of text reuse to
@@ -131,7 +133,7 @@ We additionally construct a validation dataset of equivalent bills from informat
 \item Store MALP data on ACI and make sure the identifiers match those in the bill data (FL). 
     \begin{enumerate}
         \item data is on aci
-        \item Most Legislators can probably be matched by Name, Pary, State, Time in Office
+        \item Legislators can be matched by Name, State, Pary and Term. This information should be contained in the database. If not, the open state api has a legislator search method, that returns all necessary information.
     \end{enumerate}
 \item Put policy diffusion data in project folder on ACI (BD).
 \end{itemize}

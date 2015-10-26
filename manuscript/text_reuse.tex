@@ -48,6 +48,10 @@ that address the same policy issues. We find that...
 \item Write paragraph about how it would be great if text-reuse could be used to classify policy overlap (BD)
 \item Write paragraph on why this is not easy (FL)
 \end{itemize}
+
+Research on public policy adoption and diffusion has conventionally relied on modest hand-coded datasets encode when one or a handful of policies were adopted by each jurisdiction \citep{boehmke2012}. Scholars of public policy diffusion have recently turned their attention to the empirical identification of emulation ties connecting policy jurisdictions \citep{volden2006,boehmke2009,desmarais2015,garrett2015}. Identifying instances of policy emulation and explicit diffusion ties opens policy diffusion scholarship to an entirely new set of questions and theories that can be approached empirically. In this paper we draw upon a massive and nearly all-encompassing source of data from which to infer diffusion ties -- the text of legislation. If the computer-based analysis of bill text can be tuned to successfully identify policy adoption and emulation, we will be able to vastly scale up both the scale of data gathered and the precision of diffusion inferences.
+
+
 How ever, it is not clear, how well text reuse is suited to to detect real
 policy diffusion. There are several complications that we are addressing in this
 paper. First, every bill has procedural content that is not related to the
@@ -85,20 +89,22 @@ reuse can be used to easily gather comprehensive data sets on policy diffusion.
 
 \section{Background}
 
+Public policy diffusion -- the process by which policymakers emulate the policies implemented outside of their jurisdictions -- is a firmly established area of research in both Comparative \citep{simmons2004,gilardi2009} and American politics \citep{walker1969,berry1990,shipan2006,nicholson-crotty2009}. Until recently, policy diffusion studies have deployed quantitative research designs in which the relational component of policy diffusion (i.e., which jurisdiction is being emulated in a given diffusion instance), has been treated as completely unobservable or assumed to align with the geographic adjacency network (i.e., jurisdictions only emulate their geographic neighbors) \citep{volden2006,boehmke2009}. Recognizing the limitations in this approach, scholars have recently taken on the task of directly measuring the latent networks through which policies diffuse. \cite{desmarais2015} apply network inference algorithms to US state adoption sequences in over 100 policy domains to empirically infer the underlying network through which policies diffuse. \cite{garrett2015} analyze the text of US state legislation to measure the diffusion of policy in one domain -- restrictions on insurance coverage for abortion -- and identify the influence of model legislation, as introduced by interest groups.
+
+
+In order to detect text reuse between bills we follow \citet{wilkerson2015tracing} and use the Smith-Waterman local alignment algorithm \citep{smith1981identification}. 
+
 \subsection{Tasks}
 \begin{itemize}
-\item Policy diffusion (BD get papers)
+\item Policy diffusion (FL expand paragraph)
 \item Text re-use in CBP in bills 
 \item Text re-use in general
 \begin{itemize}
 \item Plaigirism
-\item Alignment
+\item Alignment (FL expand review of Wilkerson et al)
 \end{itemize} 
 \item Discussion of text-based classification
 \end{itemize}
-
-
-In order to detect text reuse between bills we follow \citet{wilderson2015tracing} and use the Smith-Waterman local alignment algorithm \citep{smith1981identification}. 
 
 \section{Data}
 

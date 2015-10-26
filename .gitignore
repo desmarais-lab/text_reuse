@@ -6,3 +6,4 @@ data/
 *.aux
 *.log
 *.out
+*_log.txt

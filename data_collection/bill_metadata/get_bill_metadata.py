@@ -4,15 +4,16 @@ import json
 import io
 import time
 from pprint import pprint
-import warnings
+import os
 
 # CONFIG
 # ============================================================================== 
-OUTFILE = '../data/lid/all_bills_metadata.csv'
+IDFILE = '../../data/lid/bill_ids.txt'
+OUTFILE = '../../data/lid/all_bills_metadata.csv' 
 ELASTICIP = '54.244.236.175'
 ELASTICPORT = 9200
-IDFILE = '../data/lid/bill_ids.txt'
-LIMIT = 2000
+SKIP = None 
+LIMIT = None
 FIELDS = ['bill_id', 'unique_id', 'short_title',  'bill_type', 'date_created', 'date_introduced', 
         'date_signed', 'session', 'state']
 BATCHSIZE = 1000
@@ -32,8 +33,9 @@ def write_batch(results, outfile):
             elif isinstance(cell, list) and len(cell) == 1:
                 cell = cell[0]
             elif isinstance(cell, list) and len(cell) > 1:
-                msg = 'Warning: Multiple entries in field. Bill: {0}, field: {1}'.format(result['_id'], field)
-                warnings.warn(msg)
+                msg = 'Bill: {0}, field: {1}. Multiple entries: {2}. Using first entry'.format(result['_id'], field, cell)
+                logfile.write(msg + '\n')
+                cell = cell[0]
             elif isinstance(cell, str) or isinstance(cell, unicode):
                 pass
             else:
@@ -41,13 +43,19 @@ def write_batch(results, outfile):
                 raise ValueError(msg)
 
             cells[i] = cell
-        row = ','.join(cells) + '\n'
+        try:
+            row = ','.join(cells) + '\n'
+        except TypeError as e:
+            pprint(cells) 
+            raise TypeError(e)
         outfile.write(row)
 
 if __name__ == '__main__':
 
     outfile = io.open(OUTFILE, 'w+', encoding='utf-8')
     idfile = io.open(IDFILE, 'r', encoding='utf-8')
+    LOGFILE = os.path.basename(__file__) + '_log.txt'
+    logfile = io.open(LOGFILE, 'w+', encoding='utf-8')
 
     ec = Elasticsearch([{'host': ELASTICIP, 'port': ELASTICPORT}])
 
@@ -59,8 +67,9 @@ if __name__ == '__main__':
     ids = []
     b = 1
     for index, id_ in enumerate(idfile):
-
-        if index > LIMIT:
+        if SKIP is not None and index < SKIP:
+            continue
+        if LIMIT is not None and index > LIMIT:
             break
         id_ = id_.strip('\n')
         ids.append({'_id': id_})
@@ -69,10 +78,11 @@ if __name__ == '__main__':
                                   doc_type='bill_document', fields=FIELDS)        
             ids = []
             write_batch(bulk_result['docs'], outfile)
-            print('\rProcessed batch {0}'.format(b), end="")
+            print('Processed batch {0}'.format(b))
             b += 1 
 
     print('\n')
         
     idfile.close()
     outfile.close() 
+    logfile.close()

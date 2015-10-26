@@ -1,6 +1,7 @@
-*.csv
 data/
+literature/
 .DS_Store
+*.csv
 *.bbl
 *.blg
 *.aux

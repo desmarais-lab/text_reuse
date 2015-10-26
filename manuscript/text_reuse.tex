@@ -85,20 +85,22 @@ reuse can be used to easily gather comprehensive data sets on policy diffusion.
 
 \section{Background}
 
+Public policy diffusion -- the process by which policymakers emulate the policies implemented outside of their jurisdictions -- is a firmly established area of research in both Comparative \citep{simmons2004,gilardi2009} and American politics \citep{walker1969,berry1990,shipan2006,nicholson-crotty2009}. Until recently, policy diffusion studies have deployed quantitative research designs in which the relational component of policy diffusion (i.e., which jurisdiction is being emulated in a given diffusion instance), has been treated as completely unobservable or assumed to align with the geographic adjacency network (i.e., jurisdictions only emulate their geographic neighbors) \citep{volden2006,boehmke2009}. Recognizing the limitations in this approach, scholars have recently taken on the task of directly measuring the latent networks through which policies diffuse. \cite{desmarais2015} apply network inference algorithms to US state adoption sequences in over 100 policy domains to empirically infer the underlying network through which policies diffuse. \cite{garrett2015} analyze the text of US state legislation to measure the diffusion of policy in one domain -- restrictions on insurance coverage for abortion -- and identify the influence of model legislation, as introduced by interest groups.
+
+
+In order to detect text reuse between bills we follow \citet{wilkerson2015tracing} and use the Smith-Waterman local alignment algorithm \citep{smith1981identification}. 
+
 \subsection{Tasks}
 \begin{itemize}
-\item Policy diffusion (BD get papers)
+\item Policy diffusion (FL expand paragraph)
 \item Text re-use in CBP in bills 
 \item Text re-use in general
 \begin{itemize}
 \item Plaigirism
-\item Alignment
+\item Alignment (FL expand review of Wilkerson et al)
 \end{itemize} 
 \item Discussion of text-based classification
 \end{itemize}
-
-
-In order to detect text reuse between bills we follow \citet{wilderson2015tracing} and use the Smith-Waterman local alignment algorithm \citep{smith1981identification}. 
 
 \section{Data}
 

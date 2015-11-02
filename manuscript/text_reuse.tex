@@ -13,6 +13,8 @@
 \usepackage{datetime}
 \usepackage{natbib}
 \usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{amsmath}
 \usepackage{hyperref}
 
@@ -188,19 +190,27 @@ We additionally construct a validation dataset of equivalent bills from informat
 
 \subsection{Diffusion networks and Text re-use}
 
-To evaluate whether text re-use corresponds to the transfer of policy, we test whether the presence of a diffusion network tie between two states is a predictor of text reuse. We use the policy diffusion networks inferred in \citet{desmarais2015}. We use [FL FILL IN] to measure the incidence of dyadic text alignment between all state bills covering the time period 200--[??]. For each bill, we first gather the 100 closest bills based on cosine similarity in the term vectors characterizing the bills. We then represent a dyad of bills by the text alignments between them. For each state-pair we calculate the number of alignments between bills from each state.
+To evaluate whether text re-use corresponds to the transfer of policy, we test whether the presence of a diffusion network tie between two states is a predictor of text reuse. We use the policy diffusion networks inferred in \citet{desmarais2015}. We use [FL FILL IN] to measure the incidence of dyadic text alignment between all state bills covering the time period 200--[??]. For each bill, we first gather the 100 closest bills based on cosine similarity in the term vectors characterizing the bills. We then represent a dyad of bills by the text alignments between them. For each state-pair we calculate the number of alignments between bills from each state. The median number of alignments between states is 3,491 with a mean of 6,309 and standard deviation of 8,809. The ``Diffusion Ties'' variable measures the number of diffusion edges between states in the 2008 diffusion network, as measured by \citet{desmarais2015}. The number of diffusion edges between two states is either 0, 1, or 2. The diffusion network in 2008 is inferred using policy adoptions in the 35 years preceding (and excluding) 2008. As such, we do not risk double-counting bills in the policy adoption and text re-use data. There is one observation in the analysis for each of the 1,225 unique state-pairs. Since this is dyadic data, we use a matrix permutation method, quadratic assignment procedure, to calculate $p$-values \citep{krackhardt1988}. As a robustness check, we run the model with both the identity and log link.\footnote{The $p$-values were calculated using 5,000 random matrix permutations.}
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{rrr}
+\begin{tabular}{rrrrr}
+\hline
+& \multicolumn{2}{c}{Identity Link} & \multicolumn{2}{c}{Log Link} \\
   \hline
- & Coefficient & p-value \\ 
+ & Coefficient & p-value & Coefficient & p-value \\ 
   \hline
-Intercept & 5717.1836 & 0.0002 \\ 
-  Diffusion Tie & 2416.9969 & 0.0303 \\ 
+Intercept & 5717.18 & 0.0000 & 8.0431 & 0.0000 \\ 
+  Diffusion Ties & 2417.00 & 0.0308 & 0.3288 & 0.0452 \\ 
    \hline
 \end{tabular}
+\caption{Predicting number of alignments in legislation across states with diffusion ties. Coefficients calculated with OLS regression. $p$-values based on 5,000 QAP permuations.}
+\label{tab:qap.diffusion}
 \end{table}
+
+Results of the simple dyadic regression are presented in Table \ref{tab:qap.diffusion}. In both specifications there is a positive relationship between the number of diffusion ties and the number of alignments, and the relationship is statistically significant at the 0.05 level (two-tailed). Furthermore, the magnitudes of the relationships are substantively significant. A shift from the minimum to the maximum number of diffusion ties corresponds to more than a half of a standard deviation increase in the expected number of cross-state alignments. On the log scale, the addition of a diffusion tie corresponds to a 40\% increase in the expected number of cross-state alignments.\footnote{Calculated as $100\times \left[ \exp(0.3288)-1\right] = 38.93$}. 
+
+
 
 \subsection{Tasks}
 \begin{itemize}

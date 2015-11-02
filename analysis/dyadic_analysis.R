@@ -83,8 +83,16 @@ results_log <- cbind(bivariate_qap_log$coefficients,bivariate_qap_log$pgreqabs)
 rownames(results_log) <- c("Intercept","Diffusion Tie")
 colnames(results_log) <- c("Coefficient","p-value")
 
+## Prepare results for table
 library(xtable)
 results_all <- cbind(results,results_log)
+xtable(results_all,dig=4)
+
+## Descriptive statistics
+diag(align_amat) <- NA
+median(align_amat,na.rm=T)
+mean(align_amat,na.rm=T)
+sd(align_amat,na.rm=T)
 
 
 

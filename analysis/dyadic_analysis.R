@@ -66,4 +66,8 @@ diag(align_amat) <- 0
 # Run ols with qap uncertainty
 bivariate_qap <- netlm(align_amat,diff_amat,mode="graph",reps=10000)
 
-results <- cbind()
+results <- cbind(bivariate_qap$coefficients,bivariate_qap$pgreqabs)
+library(xtable)
+rownames(results) <- c("Intercept","Diffusion Tie")
+colnames(results) <- c("Coefficient","p-value")
+xtable(results,dig=4)

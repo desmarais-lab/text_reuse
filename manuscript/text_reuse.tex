@@ -45,8 +45,7 @@ that address the same policy issues. We find that...
 
 \subsection{Tasks}
 \begin{itemize}
-\item Write paragraph about how it would be great if text-reuse could be used to classify policy overlap (BD)
-\item Write paragraph on why this is not easy (FL)
+\item
 \end{itemize}
 
 Research on public policy adoption and diffusion has conventionally relied on modest hand-coded datasets encode when one or a handful of policies were adopted by each jurisdiction \citep{boehmke2012}. Scholars of public policy diffusion have recently turned their attention to the empirical identification of emulation ties connecting policy jurisdictions \citep{volden2006,boehmke2009,desmarais2015,garrett2015}. Identifying instances of policy emulation and explicit diffusion ties opens policy diffusion scholarship to an entirely new set of questions and theories that can be approached empirically. In this paper we draw upon a massive and nearly all-encompassing source of data from which to infer diffusion ties -- the text of legislation. If the computer-based analysis of bill text can be tuned to successfully identify policy adoption and emulation, we will be able to vastly scale up both the scale of data gathered and the precision of diffusion inferences.
@@ -115,8 +114,9 @@ In order to calculate the alignment scores between bills, we rely on a database 
 bills from 2008 to 2015. The available metadata for the bills includes a timestamp for introduction and approval of the bill, the name and party affiliation of the sponsor(s), the state and the bill id. 
 
 This collection of bills is based on all bills that are available through the \url{openstates.org} API. Open states is a website maintained by the Sunlight Foundation, in order to increase transparency in state politics. The Sunlight Foundation use web scrapers to access all bills that are available on the websites of legislatures in all US states. This includes enacted legislation as well as bill that is still in the legislative process, or where not enacted. The database contains the full bill text and the following additional metadata:
+
 \begin{itemize}
-    \item action_dates:
+    \item action\_dates:
         \begin{itemize}
             \item first
             \item last
@@ -128,7 +128,7 @@ This collection of bills is based on all bills that are available through the \u
         \begin{itemize}
             \item actor
             \item date 
-            \item related_entities 
+            \item related\_entities 
             \item type
         \end{itemize}
     \item bill document first
@@ -143,7 +143,7 @@ This collection of bills is based on all bills that are available through the \u
     \item short title
     \item state
     \item summary
-    \item sunlight_id
+    \item sunlight\_id
     \item unique id
 \end{itemize}
 
@@ -186,6 +186,19 @@ We additionally construct a validation dataset of equivalent bills from informat
 \item We conduct a state-level analysis to see whether the volume of state-to-state text alignment is positively related to the policy diffusion networks inferred in \citet{desmarais2015}.
 \end{itemize}
 
+\subsection{Diffusion networks and Text re-use}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrr}
+  \hline
+ & Coefficient & p-value \\ 
+  \hline
+Intercept & 141.0802 & 0.0000 \\ 
+  Diffusion Tie & 5.7258 & 0.0708 \\ 
+   \hline
+\end{tabular}
+\end{table}
 
 \subsection{Tasks}
 \begin{itemize}
@@ -206,7 +219,14 @@ We additionally construct a validation dataset of equivalent bills from informat
 \end{itemize}
 \item Topic models, possibly of a relational form, applied to aligned text
 \item Computationally intensive analysis of bill-to-bill alignment and sponsor ideology.
+\begin{itemize}
+\item Get big sample of bills
+\item Assess relationship between alignment between bills and ideological similarity between sponsors
+\end{itemize}
 \item Analysis of alignment aggregated at the state level.
+\begin{itemize}
+\item How do we score overlap at the bill and state level?
+\end{itemize}
 
 \end{itemize}
 

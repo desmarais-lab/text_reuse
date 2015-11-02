@@ -38,12 +38,18 @@ for(i in 1:length(files)){
   state1 <- substr(align_dati$left_doc_id,1,2)
   state2 <- substr(align_dati$right_doc_id,1,2)
   ## create the weight according to which each alignment will contribute
-  alignment_weight <- 1
+  alignment_weight <- rep(1,length(state1))
   ## add in the weight
-  align_amat[cbind(state1,state2)] <- align_amat[cbind(state1,state2)] + alignment_weight 
-  align_amat[cbind(state2,state1)] <- align_amat[cbind(state2,state1)] + alignment_weight
+  for(j in 1:length(alignment_weight)){
+    align_amat[cbind(state1[j],state2[j])] <- align_amat[cbind(state1[j],state2[j])] + alignment_weight[j] 
+    align_amat[cbind(state2[j],state1[j])] <- align_amat[cbind(state2[j],state1[j])] + alignment_weight[j]
+  }
   ## print to assess timing
-  if(i/5==round(i/5)) print(i)
+  if(i/5==round(i/5)){
+    print(i)
+    diag(align_amat) <- NA
+    hist(align_amat)
+  }
 }
 
 # subset to 2008 edges
@@ -64,10 +70,21 @@ library(sna)
 diag(diff_amat) <- 0
 diag(align_amat) <- 0
 # Run ols with qap uncertainty
-bivariate_qap <- netlm(align_amat,diff_amat,mode="graph",reps=10000)
-
+set.seed(5)
+bivariate_qap <- netlm(align_amat,diff_amat,mode="graph",reps=5000)
 results <- cbind(bivariate_qap$coefficients,bivariate_qap$pgreqabs)
-library(xtable)
 rownames(results) <- c("Intercept","Diffusion Tie")
 colnames(results) <- c("Coefficient","p-value")
-xtable(results,dig=4)
+
+###  on log scale
+set.seed(5)
+bivariate_qap_log <- netlm(log(align_amat),diff_amat,mode="graph",reps=5000)
+results_log <- cbind(bivariate_qap_log$coefficients,bivariate_qap_log$pgreqabs)
+rownames(results_log) <- c("Intercept","Diffusion Tie")
+colnames(results_log) <- c("Coefficient","p-value")
+
+library(xtable)
+results_all <- cbind(results,results_log)
+
+
+

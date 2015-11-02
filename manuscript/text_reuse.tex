@@ -188,14 +188,16 @@ We additionally construct a validation dataset of equivalent bills from informat
 
 \subsection{Diffusion networks and Text re-use}
 
+To evaluate whether text re-use corresponds to the transfer of policy, we test whether the presence of a diffusion network tie between two states is a predictor of text reuse. We use the policy diffusion networks inferred in \citet{desmarais2015}. We use [FL FILL IN] to measure the incidence of dyadic text alignment between all state bills covering the time period 200--[??]. For each bill, we first gather the 100 closest bills based on cosine similarity in the term vectors characterizing the bills. We then represent a dyad of bills by the text alignments between them. For each state-pair we calculate the number of alignments between bills from each state.
+
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrr}
   \hline
  & Coefficient & p-value \\ 
   \hline
-Intercept & 141.0802 & 0.0000 \\ 
-  Diffusion Tie & 5.7258 & 0.0708 \\ 
+Intercept & 5717.1836 & 0.0002 \\ 
+  Diffusion Tie & 2416.9969 & 0.0303 \\ 
    \hline
 \end{tabular}
 \end{table}

@@ -1,0 +1,123 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[12pt]{article} %a4paper
+
+\usepackage{graphicx} % to include pictures
+\usepackage{subfig} % create subfigures within figures
+\usepackage{pdflscape} % e.g. to rotate one page of the document
+\usepackage{booktabs} % make better looking tabels with different line types and stuff
+\usepackage[left=2.5cm,right=3cm,top=3cm,bottom=2.5cm]{geometry}
+\usepackage{fancyhdr} % for pages with custom headers and footers
+\usepackage[utf8]{inputenc}
+\usepackage{float}
+\usepackage{datetime}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{pa}
+
+\setlength{\parindent}{0.0in}
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+\mmddyyyydate
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document} 
+
+\title{Identifying Equivalent State Bills through Text Reuse. \large Subtitle.}
+\date{\today}
+\author{}
+
+\maketitle
+
+\begin{abstract}
+Much research has been focused on the diffusion of policy ideas in US state
+legislatures. Most of this research uses hand coded data sets that identify
+equivalent bills and analyze patterns of adoption of these bills. Bills on
+equivalent policies often contain the same language, since legislators use past
+legislation from other states or model legislation from interest groups as
+templates when drafting new bills or model legislation from interest groups. In
+this paper we evaluate the effectives of text reuse measures to detect bills
+that address the same policy issues. We find that... 
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{Tasks}
+\begin{itemize}
+\item Write paragraph about how it would be great if text-reuse could be used to classify policy overlap (BD)
+\item Write paragraph on why this is not easy (FL)
+\item Summarize what we do to solve problem and validate (FL)
+\end{itemize}
+
+...
+
+\section{Background}
+
+\subsection{Tasks}
+\begin{itemize}
+\item Policy diffusion (BD get papers)
+\item Text re-use in CBP in bills 
+\item Text re-use in general
+\begin{itemize}
+\item Plaigirism
+\item Alignment
+\end{itemize} 
+\item Discussion of text-based classification
+\end{itemize}
+
+\section{Data}
+
+We will rely on two main data sources to assess the reliability of text reuse to
+identify substantively equivalent bills. 
+
+One is a data base of bill text that was extracted through the sunlight
+foundation's Open States API. This data base contains approximately 500,000
+bills from 2008 to 2015. From this database we will extract the bills for which we
+have ground truth on policy equivalence. 
+Once we obtained these bills, we will use the local alignment algorithm
+implemented by (Burgess et al. 2015) in order to obtain alignment scores for
+these bills. 
+Information on which bills implement equivalent policies is obtained from
+several sources. One option is to rely on datasets compiled by scholars who have
+studied policy diffusion in the past. Another option is to rely on materials
+compiled by the National Conference of State Legislatures (NCSL). The NCSL keeps
+track of specific policies and regulations across states. However, the tables
+compiled by the NCSL most often refer to the relevant sections in the states'
+statutes instead of to the bills that these sections are based on. In order to
+use these material we would have to find a way to link statute sections to their
+original bills. 
+
+
+\subsection{Tasks}
+\begin{itemize}
+\item Scrape Google urls for NCSL tables (FL)
+\item Extract state  \& bill \# from tables (FL)
+\end{itemize}
+
+\section{Analysis}
+
+
+\subsection{Tasks}
+\begin{itemize}
+\item Alternative validation options (BD)
+\end{itemize}
+
+
+\bibliographystyle{chicago}
+\bibliography{bibliography}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+

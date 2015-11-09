@@ -69,8 +69,9 @@ supervised machine learning to separate boiler plate from substantive text. We
 further more use an original data set on policy diffusion to evaluate how much
 equivalent policy can be detected using measures of text reuse. Using the system
 developed by Burges et al. (2015) we calculate text reuse scores for all pairs
-of bills in our dataset. We then use these scores in a model that classifies
-bills as equivalent and evaluate its performance with the validation data set. 
+of bills in our dataset. 
+
+We will then assess the scientific value of the text reuse scores in several different ways. First, we use topic modeling on the discovered reused text sequences to assess the content of the matching text. Second, we investigate the relationship between the ideological distance of the legislators that proposed two bills and the text reuse scores between these bills. Third, we assess the how well policy diffusion networks that have been established by previous research can be discovered using the amount of text reuse between states. And fourth, we use data on equivalent bills collected by the National Council of State Legislatures to build an evaluation data set containing true policy overlap to assess the accuracy of text reuse in predicting policy overlap.
 
 This work has several important implications. First, it allows us to estimate,
 how policies are transferred between states. Do state legislators work mainly
@@ -82,27 +83,26 @@ policy diffusion in few policy areas. If working copying text forms a
 significant portion of how legislators adopt policies from other states, text
 reuse can be used to easily gather comprehensive data sets on policy diffusion. 
 
-[This might be overlapping a bit with your part]
 
 \section{Background}
 
 Public policy diffusion -- the process by which policymakers emulate the policies implemented outside of their jurisdictions -- is a firmly established area of research in both Comparative \citep{simmons2004,gilardi2009} and American politics \citep{walker1969,berry1990,shipan2006,nicholson-crotty2009}. Until recently, policy diffusion studies have deployed quantitative research designs in which the relational component of policy diffusion (i.e., which jurisdiction is being emulated in a given diffusion instance), has been treated as completely unobservable or assumed to align with the geographic adjacency network (i.e., jurisdictions only emulate their geographic neighbors) \citep{volden2006,boehmke2009}. Recognizing the limitations in this approach, scholars have recently taken on the task of directly measuring the latent networks through which policies diffuse. \cite{desmarais2015} apply network inference algorithms to US state adoption sequences in over 100 policy domains to empirically infer the underlying network through which policies diffuse. \cite{garrett2015} analyze the text of US state legislation to measure the diffusion of policy in one domain -- restrictions on insurance coverage for abortion -- and identify the influence of model legislation, as introduced by interest groups.
 
-
-In order to detect text reuse between bills we follow \citet{wilkerson2015tracing} and use the Smith-Waterman local alignment algorithm \citep{smith1981identification}. 
+Previous research on policy diffusion relies almost exclusively on small subsamples of legislation and hand coded data. Little work has been invested in investigating automated ways of detecting equivalent bills in order to measure policy diffusion. 
+\citet{wilkerson2015tracing} use the Smith-Waterman local alignment algorithm 
+\citep{smith1981identification} to detect overlapping language in congressional bills in order to trace policy ideas through the legislative process of the US congress. 
 
 \subsection{Tasks}
 \begin{itemize}
+\item Discuss and find some literature on copying legislative language: 
+    \begin{itemize}
+        \item Interest groups and model legislation
+        \item Legislator's resources
+    \end{itemize}
 \item Policy diffusion (FL expand paragraph)
 \item Text re-use in CBP in bills 
 \item Text re-use in general
-\begin{itemize}
-\item Plaigirism
 \item Alignment (FL expand review of Wilkerson et al)
-
-\citet{wilkerson2015tracing} use the 
-
-\end{itemize} 
 \item Discussion of text-based classification
 \end{itemize}
 
@@ -131,7 +131,7 @@ In order to assess the computational burden the local alignment algorithm poses 
 \label{fig:time} 
 \end{figure}
 
-Since for this calculation there is no minimum threshold (as in \citet{wilkerson2015tracing} minimum of 10 words). Alignments between almost all bills are found and most of the alignments are procedural language. This is apparent in Figure \ref{fig:state_to_state} which displays the average alignment score for bills from Illinois (left panel) and Washington (right panel) for all other states in the sampled data set (x-axis). Especially for Illinois there is a much higher alignment score for bills from the same state. This shows that a minimum threshold and a classifier for procedural language are necessary.
+Since for this calculation there is no minimum threshold (as in \citet{wilkerson2015tracing} minimum of 5 matching 10-grams). Alignments between almost all bills are found and most of the alignments are procedural language. This is apparent in Figure \ref{fig:state_to_state} which displays the average alignment score for bills from Illinois (left panel) and Washington (right panel) for all other states in the sampled data set (x-axis). Especially for Illinois there is a much higher alignment score for bills from the same state. This shows that a minimum threshold and a classifier for procedural language are necessary.
 
 \begin{figure}[ht!]
     \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/state_to_state.png}}
@@ -140,10 +140,7 @@ Since for this calculation there is no minimum threshold (as in \citet{wilkerson
 \end{figure}
 
 
-
-
-
-In order to make the computation more feasible, we rely on a similar strategy as \citet{wilkerson2015tracing}. Our bills are stored in an elastic search database wich provides a variety of search algorithms that are designed to find similar documents. Since the seraching the whole database for the full document is very time consuming the following search algorithm is used to first find a pre selection of similar bills that are then exhaustively checked for text reuse:
+In order to make the computation more feasible, we rely on a similar strategy as \citet{wilkerson2015tracing}. Our bills are stored in an elastic search database wich provides a variety of search algorithms that are designed to find similar documents. Since seaching the whole database for the full document is very time consuming the following search algorithm is used to first find a pre-selection of similar bills that are then exhaustively checked for text reuse:
 
 \begin{enumerate}
 \item All bills are stored in the database in n-grams of size 2-5
@@ -154,9 +151,9 @@ In order to make the computation more feasible, we rely on a similar strategy as
 \subsection*{Tasks}
 
 \begin{itemize}
-    \item Augment the timing dataset with the document similarity scores
-    \item 
-
+    \item For the 1000 bill sample, retrieve the 100 most similar bills from the database 
+    \item Calculate the alignments between the focus bills and the retrieved bills
+    \item Assess the relationship of the search score with the alignment scores
 \end{itemize}
 
 \textit{Ideological Scores}\\

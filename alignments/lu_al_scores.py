@@ -25,7 +25,7 @@ from lid import LID
 N_FOCUS_BILLS = 1000
 N_RIGHT_BILLS = 1000
 
-PROCESSES = 40
+PROCESSES = 8
 
 META_FILE = '../../data/lid/lu_al_score_metadata.csv'
 TEXT_FILE = '../../data/lid/lu_al_score_text.txt'

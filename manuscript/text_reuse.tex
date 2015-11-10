@@ -114,16 +114,23 @@ identify substantively equivalent bills.
 \textit{Bill text}\\
 In order to calculate the alignment scores between bills, we rely on a database collected by Burgess et al. (2015) and the Sunlight foundation. This data base contains approximately 500,000 bills from 2008 to 2015. The available metadata for the bills includes a timestamp for introduction and approval of the bill, the name and party affiliation of the sponsor(s), the state and the bill id.  This collection of bills is based on all bills that are available through the \url{openstates.org} API. Open states is a website maintained by the Sunlight Foundation, in order to increase transparency in state politics. The Sunlight Foundation use web scrapers to access all bills that are available on the websites of legislatures in all US states. This includes enacted legislation as well as bill that is still in the legislative process, or where not enacted. The database contains the bill text as well as additional information on the legislative process for the bill. We have the first and the last version of the bill text, the sponsor of the bill and all legislative action that was taken on the bill. 
 
-\textit{Alignments}\\
-The alignment scores are calculated using the affine version of the local alignment algorithm proposed by \citet{smith1981identification} in order to match genetic sequences. The same algorithm has been used by \citet{wilkerson2015tracing} to trace bills through the legislative process in congress. When considering two bills, the algorithm treats each bill as a sequence of words and tries to find the best alignment between these two sequences. \citet{wilkerson2015tracing} split the bills into sections and search for text reuse across sections. Since this results in about 7 billion possible pairs, first filter out pairs that don't have an exact match of a sequence of at least ten words. We encounter the same problem in our analysis to a greater extent. Assuming each bill consists of ten sections on average, there would be approximately $1.25 * 10^{12}$ possible pairs of sections. 
+\textit{Ideological Scores}\\
+For the ideological matching, we rely on latent ideology scores measured by \citep{shor2011}. The data set contains scores for 20738 legislators from 50 state legislatures as well as their party affiliation and their time in office. 
 
-In order to assess the computational burden the local alignment algorithm poses we test the implementation of the alignment algorithm (Burgess et al. 2015) on a set of 1000 randomly selected bills. In a first pass we calculate the alignments  between all pairs of the full bills (not divided into sections). Figure \ref{fig:time_size} displays the relationship between bill length and computation time. As expected the time increases exponentially with the length of the bills. Figure \ref{fig:time} displays a histogram of the logarithm of the computation time (in seconds). Computation time varies between $0.001s$ and $1,650s$ with $75\%$ of the distribution below $0.1s$ and a median time of $0.03s$.  This shows that an exhaustive comparison of just the full bills (not separated into sections) would take about 100 years on a single machine.
+We additionally construct a validation dataset of equivalent bills from information obtained from the National Conference of State Legislatures (NCSL). The NCSL publishes summary tables on specific policies, citing the relevant bills or sections in the state statutes of the states that have implemented regulations on this policy. We collected all these tables, and extracted all bills that address the same policy measure and that overlap with the time frame covered by our bill database.
+
+
+\section{Alignments}
+
+The alignment scores are calculated using the affine version of the local alignment algorithm proposed by \citet{smith1981identification} in order to match genetic sequences. The same algorithm has been used by \citet{wilkerson2015tracing} to trace bills through the legislative process in congress. When considering two bills, the algorithm treats each bill as a sequence of words and tries to find the best alignment between these two sequences. \citet{wilkerson2015tracing} split the bills into sections and search for text reuse across sections. Since this results in about 7 billion possible pairs, first filter out pairs that don't have an exact match of a sequence of at least ten words. We encounter the same problem in our analysis to a greater extent. Assuming each bill consists of ten sections on average, there would be approximately $1.25 * 10^{12}$ possible pairs of sections. 
 
 \begin{figure}[ht!]
     \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/time_size_selection.png}}
 \caption{Computation time for selection of bills. The Colors correspond to five selected bills (focus bill or left bill). For each of the bills, the best alignment with 1000 randomly selected bills (right bills) are calculated. The size of the dots corresponds to the logarithm of the length of the focus bill (in number of words), the x-axis corresponds to the logarithm of the size of the comparison bill and the y-axis corresponds to the logarithm of the computation time (in seconds).}
 \label{fig:time_size}
 \end{figure}
+
+In order to assess the computational burden the local alignment algorithm poses we test the implementation of the alignment algorithm (Burgess et al. 2015) on a set of 1000 randomly selected bills. In a first pass we calculate the alignments  between all pairs of the full bills (not divided into sections). Figure \ref{fig:time_size} displays the relationship between bill length and computation time. As expected the time increases exponentially with the length of the bills. Figure \ref{fig:time} displays a histogram of the logarithm of the computation time (in seconds). Computation time varies between $0.001s$ and $1,650s$ with $75\%$ of the distribution below $0.1s$ and a median time of $0.03s$.  This shows that an exhaustive comparison of just the full bills (not separated into sections) would take about 100 years on a single machine.
 
 \begin{figure}[ht!]
     \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/time.png}}
@@ -148,18 +155,43 @@ In order to make the computation more feasible, we rely on a similar strategy as
 \item Calculate a score slightly adapted cosine similarity score between the selected n-gram vector and all full document n-gram vectors in the database\footnote{See \url{https://lucene.apache.org/core/4_9_0/core/org/apache/lucene/search/similarities/TFIDFSimilarity.html} for details on the similarity scoring in Elastic Search}
 \end{enumerate}
 
-\subsection*{Tasks}
+In order to evaluate how well the pre screening algorithms performs we select 1000 focus bills at random and retrieve the 1000 most similar bills according to the lucene score (described above). We then calculate find the best alignments between the sections of the focus bill and the section of each of the retrieved bills. This procedure generates a dataset of approximately 4 million alignments. 
 
+For a first assessment of the usefulness of the lucene scores to select document that align well, we investigate the relationship of these scores with the alignment scores. Figure \ref{fig:lu_al_scores} displays the lucene scores against the alignment scores for a random sample of 500,000 alignments. The color indicates if the bills from which the alignment was genrated are from the same state, the larger triangles indicate scores for a bill compared to itself. In order to assess which alignments would get selected if thresholding, that is selecting for example the 100 closest bills according to the lucene score, we plotted all alignments for a sample of 9 focus bills. The green points indicate alignments from the 100 bills with the highest lucene scores for the respective focus bill.
+
+\begin{figure}[ht!]
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/lu_al_scores.png}}
+    \caption{Alignment scores and lucene scores for a sample of 500,000 alignments (sections). The color indicates if the bills of the alignment are from the same state. The larger triangles indicate alignment and lucene scores for sections of bills compared to themselves.}
+\label{fig:lu_al_scores} 
+\end{figure}
+
+\begin{figure}[ht!]
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/closest100.png}}
+    \caption{Alignment and lucene scores for a sample of nine focus bills (panels). Each point in the plot is an alignment for a section of one comparison bill. The color indicates, if the section comes from a bill that is among the 100 bills with the highest lucene score for the specific focus bill. The large triangles indicate that an alignment is from a comparison of the focus bill with itself.}
+\label{fig:closest100} 
+\end{figure}
+
+
+\textit{Identifying procedural alignment text}
+
+Bills share a lot of language that is not related to the policy content of the bill. Especially within states bills have similar headers or formatting content. Further more there is procedural language and common phrases that are used across many, substantively unrelated bills and across states. In order to identify such alignments, we use the fact that we know that within states these matches are so common. We use the following procedure:
+
+
+For each state:\\
 \begin{itemize}
-    \item For the 1000 bill sample, retrieve the 100 most similar bills from the database 
-    \item Calculate the alignments between the focus bills and the retrieved bills
-    \item Assess the relationship of the search score with the alignment scores
+    \item sample n bills
+    \item calculate alignments between all sections of these bills
+    \item Identify matching alignments with one of the following:
+        \begin{itemize}
+            \item Perfect string match
+            \item length normalized alignment score (threshold?)
+            \item String similarity measure (threshold?)
+        \end{itemize}
+    \item label these alignments as boilerplate
+    \item (Optional:) Train classifier on this labeled data
+    \item For all alignments found remove the ones that are labeled as boilerplate by the classifier
 \end{itemize}
 
-\textit{Ideological Scores}\\
-For the ideological matching, we rely on latent ideology scores measured by \citep{shor2011}. The data set contains scores for 20738 legislators from 50 state legislatures as well as their party affiliation and their time in office. 
-
-We additionally construct a validation dataset of equivalent bills from information obtained from the National Conference of State Legislatures (NCSL). The NCSL publishes summary tables on specific policies, citing the relevant bills or sections in the state statutes of the states that have implemented regulations on this policy. We collected all these tables, and extracted all bills that address the same policy measure and that overlap with the time frame covered by our bill database.
 
 
 \subsection{Tasks}
@@ -188,7 +220,7 @@ We additionally construct a validation dataset of equivalent bills from informat
 \end{itemize}
 
 \section{Analysis}
- Below we list X separate analyses designed to test the degree to which measuring text reuse measures policy overlap/diffusion. 
+Below we list X separate analyses designed to test the degree to which measuring text reuse measures policy overlap/diffusion. 
 
 \begin{itemize}
 \item We use statistical topic modeling to assess the major content areas represented by the text identified in the alignment algorithm. We consider whether the resultant topics align with policy areas.

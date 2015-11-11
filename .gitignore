@@ -2,6 +2,7 @@ data/
 literature/
 .DS_Store
 *.csv
+*.rdata
 *.bbl
 *.blg
 *.aux

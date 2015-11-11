@@ -15,13 +15,22 @@ state_diffusion_edges <- read.csv("/Users/bdesmarais/Dropbox/professional/Resear
 ustates <- sort(unique(tolower(state_diffusion_edges$state_01)))
 ## correctly sized empty matrix
 align_amat <- matrix(0,length(ustates),length(ustates))
+align_amat_score <- matrix(0,length(ustates),length(ustates))
+align_amat_threshold <- matrix(0,length(ustates),length(ustates))
 ## row names
 rownames(align_amat) <- colnames(align_amat) <- ustates
+rownames(align_amat_score) <- colnames(align_amat_score) <- ustates
+rownames(align_amat_threshold) <- colnames(align_amat_threshold) <- ustates
 
 # Iteratively read in 100,000 rows at a time to build adjacency matrices
 ## all of the split files begin with x
 files <- dir()
 files <- files[which(substr(files,1,1)=="x")]
+
+nwords <- function(text_vector){
+	nw <- unlist(lapply(strsplit(text_vector," "),"length"))
+	nw
+}
 
 # loop over files
 for(i in 1:length(files)){
@@ -33,22 +42,25 @@ for(i in 1:length(files)){
   state1 <- substr(align_dati$left_doc_id,1,2)
   state2 <- substr(align_dati$right_doc_id,1,2)
   ## subset to actual states (i.e., exclude dc and any other non-state jurisdictions)
-  align_dati <- subset(align_dati,is.element(state1,ustates) & is.element(state2,ustates))
+  align_dati <- subset(align_dati,is.element(state1,ustates) & is.element(state2,ustates) & state1 != state2)
   ## extract state ids from subsetted dataset
   state1 <- substr(align_dati$left_doc_id,1,2)
   state2 <- substr(align_dati$right_doc_id,1,2)
   ## create the weight according to which each alignment will contribute
-  alignment_weight <- rep(1,length(state1))
+  alignment_score <- align_dati$alignment_score
+  alignment_threshold <- 1*(align_dati$alignment_score > 100)
   ## add in the weight
   for(j in 1:length(alignment_weight)){
-    align_amat[cbind(state1[j],state2[j])] <- align_amat[cbind(state1[j],state2[j])] + alignment_weight[j] 
-    align_amat[cbind(state2[j],state1[j])] <- align_amat[cbind(state2[j],state1[j])] + alignment_weight[j]
+    align_amat[cbind(state1[j],state2[j])] <- align_amat[cbind(state1[j],state2[j])] + 1
+    align_amat[cbind(state2[j],state1[j])] <- align_amat[cbind(state2[j],state1[j])] + 1
+    align_amat_score[cbind(state1[j],state2[j])] <- align_amat_score[cbind(state1[j],state2[j])] + alignment_score[j] 
+    align_amat_score[cbind(state2[j],state1[j])] <- align_amat_score[cbind(state2[j],state1[j])] + alignment_score[j]
+    align_amat_threshold[cbind(state1[j],state2[j])] <- align_amat_threshold[cbind(state1[j],state2[j])] + alignment_threshold[j] 
+    align_amat_threshold[cbind(state2[j],state1[j])] <- align_amat_threshold[cbind(state2[j],state1[j])] + alignment_threshold[j]
   }
   ## print to assess timing
   if(i/5==round(i/5)){
     print(i)
-    diag(align_amat) <- NA
-    hist(align_amat)
   }
 }
 

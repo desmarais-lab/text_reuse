@@ -1,0 +1,10 @@
+#!/bin/sh
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=00:30:00
+#PBS -l mem=100gb
+#PBS -N test_program
+#PBS -m abe
+#PBS -M bdesmarais@psu.edu
+
+cd $PBS_O_WORKDIR
+R CMD BATCH test_serial.R

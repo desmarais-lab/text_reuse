@@ -25,7 +25,7 @@ word.freqs <- mallet.word.freqs(topic.model)
 
 topic.model$setAlphaOptimization(20, 50)
 
-topic.model$train(200)
+topic.model$train(300)
 	
 topic.model$maximize(10)
 	
@@ -36,4 +36,4 @@ topic.probs <- apply(doc.topics,2,mean)
 
 mallet.top.words(topic.model, topic.words[6,],20)
 
-save(list=c("topic.model"),file="topic_model_results.RData")
+save(list=c("topic.model","doc.topics","topic.words","topic.probs","vocabulary","word.freqs"),file="topic_model_results.RData")

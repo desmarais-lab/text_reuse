@@ -231,40 +231,63 @@ Below we list X separate analyses designed to test the degree to which measuring
 
 \subsection{Topic Modeling}
 
-Topics of 20 inferred on 200,000 alignments.
+We apply statistical topic modeling via Latent Dirichlet Allocation (LDA) \citep{blei2003} to the alignment text with two objectives.\footnote{We use the R package \texttt{mallet} \citep{mallet} for the topic modeling application.} First, we want to see whether the major topical themes that emerge are consistent with policy domains that we would expect to be prominently featured in texts that capture the diffusion of public policy. Second, we want to see whether we can identify topics that correspond to boilerplate/procedural text, which we may want to remove from the alignments to focus the analysis on substantive policy language. In our first cut we use a model with 20 topics. The average alignment is short, with little more than 25\% exceeding 140 characters -- the maximum length of a Tweet. There are 52,735 unique terms in our vocabulary, after removing a standard list of stop words. In Table \ref{tab:top100words} we present the top 100 terms appearing in our corpus. 
 
+\begin{table}[ht]
+\rule{\textwidth}{1pt} \\ \vspace{-1cm}
+\begin{quotation}
+\noindent state person section states act means health public member general commission department law information provided insurance including board subsection legislature benefit court individual property order services care action business time pursuant united date year subject interstate federal compact school insurer corporation required medical chapter provide party entity vehicle amount notice people assembly agreement tax qualified provisions attorney agency limited made service authority child purposes years commissioner education report days policy employer members company code contract employee interest authorized effective statement district purpose ii application period number credit plan include senate income system amended issued reasonable part program director patient requirements
+\end{quotation} \vspace{-.5cm}
+\rule{\textwidth}{1pt} \vspace{-.2cm}
+\caption{Top 100 words, listed left-to-right, in the alignments corpus.}
+\label{tab:top100words}
+\end{table}
 
-\begin{sidewaystable}
+The topic modeling results are presented in Table \ref{tab:topics}. We see that most topics correspond to recognizable policy domains. However, some topics, such as Topic 9, which appears to be a mix of automobile policy and abortion policy, appear to consist of more than one distinct policy domain. As such, we should try running this with more topics. Topic 17 appears to be a boilerplate topic. 
+
+\begin{table}[ht]
 \centering
-\scalebox{.425}{
-\begin{tabular}{rllllllllllllllllllll}
+\begin{tabular}{rl}
   \hline
- & 0.135 & 0.119 & 0.087 & 0.073 & 0.067 & 0.058 & 0.054 & 0.053 & 0.043 & 0.043 & 0.041 & 0.037 & 0.034 & 0.033 & 0.032 & 0.027 & 0.026 & 0.021 & 0.012 & 0.007 \\ 
   \hline
-1 & board & state & general & tax & state & property & section & child & means & health & medical & vehicle & employer & states & feet & benefit & commission & insurer & salts & state \\ 
-  2 & department & enacted & assembly & section & court & person & information & person & sale & care & person & insurance & individual & united & distance & school & state & insurance & isomers & party \\ 
-  3 & state & legislature & senate & income & order & principal & electronic & abortion & product & patient & department & motor & employee & state & amended & corporation & interstate & commissioner & substances & ring \\ 
-  4 & public & people & enacted & amount & person & interest & statement & medical & person & plan & applicant & policy & employment & member & point & public & compact & information & substance & consumer \\ 
-  5 & education & section & state & year & action & power & act & woman & manufacturer & services & patient & portable & service & presidential & read & student & member & section & preparation & jwh \\ 
-  6 & county & act & appointed & qualified & section & real & notice & parent & device & section & license & electronics & work & official & section & charter & states & company & compound & nurse \\ 
-  7 & services & firearm & house & revenue & law & company & date & degree & products & physician & marijuana & coverage & employees & election & south & district & rules & policy & mixture & substituted \\ 
-  8 & program & amended & members & taxable & violation & attorney & security & age & dealer & provider & qualifying & person & business & vote & west & director & compacting & association & controlled & extent \\ 
-  9 & director & read & member & credit & support & trust & record & physical & including & medical & identification & driver & performed & agreement & north & section & effective & contract & chemical & food \\ 
-  10 & office & ammunition & force & code & attorney & agent & subsection & physician & food & individual & application & travel & benefits & president & line & students & duties & state & quantity & practice \\ 
-  11 & local & represented & representatives & years & enforcement & agreement & provided & section & facility & act & registration & insurer & period & popular & minutes & specific & bylaws & life & material & indole \\ 
-  12 & agency & york & task & investment & jurisdiction & authority & service & death & equipment & person & section & vendor & services & votes & degrees & purpose & date & subsection & schedule & methyl \\ 
-  13 & fund & firearms & governor & internal & proceeding & owner & address & performed & drug & treatment & card & transportation & labor & slate & east & directors & law & financial & including & licensure \\ 
-  14 & year & texas & speaker & community & petition & entity & effective & means & retail & licensed & registry & customer & compensation & national & seconds & general & provided & contracts & specifically & information \\ 
-  15 & division & relating & committee & excess & subsection & means & financing & family & sold & coverage & registered & commercial & section & constitution & street & articles & act & subject & oil & compact \\ 
-  16 & health & chapter & court & percent & tribunal & business & person & abuse & energy & practice & gift & service & sex & article & code & interests & article & person & plant & agency \\ 
-  17 & secretary & arizona & commonwealth & january & act & limited & number & condition & distributor & provide & information & enrolled & race & elector & traffic & religious & members & including & listed & states \\ 
-  18 & fiscal & manufactured & president & date & civil & act & law & drug & system & qualified & caregiver & liability & time & number & adding & officer & rule & risk & grams & home \\ 
-  19 & provide & related & term & entity & subject & liability & debtor & unborn & property & provided & criminal & company & sexual & chief & intersection & report & person & documents & excepted & substitution \\ 
-  20 & city & federal & resolved & beginning & party & estate & days & years & include & means & board & section & organization & candidate & quarter & person & executive & report & milligrams & reporting \\ 
+6 & benefit corporation public director officer specific interests directors person purpose \\ 
+  16 & state order child section support law application employer enforcement court \\ 
+  14 & salts isomers food substances substance means preparation product compound mixture \\ 
+  3 & court state order person petition section proceeding law appraisal jurisdiction \\ 
+  8 & feet distance medical patient marijuana point qualifying south north west \\ 
+  20 & information electronic consumer service section insurance notice portable electronics means \\ 
+  9 & vehicle motor person means abortion woman medical child dealer death \\ 
+  18 & property interest statement section person trust real transfer agreement financing \\ 
+  5 & person offense age sexual years criminal court officer sex guilty \\ 
+  15 & states united state presidential election official member vote president popular \\ 
+  17 & state enacted legislature general assembly people amended section read senate \\ 
+  2 & action person section court state civil violation attorney reasonable degree \\ 
+  7 & qualified tax section investment revenue entity credit amount fund code \\ 
+  19 & health care patient practice medical physician licensed person means services \\ 
+  12 & department health state services act public year federal care program \\ 
+  4 & appointed members house attorney senate power principal member authority representatives \\ 
+  1 & individual employer year years taxable service income employee period january \\ 
+  10 & insurance insurer policy commissioner company section coverage contract state plan \\ 
+  11 & state commission interstate compact member states rules compacting effective law \\ 
+  13 & school student board district education public charter state students county \\ 
    \hline
 \end{tabular}
-}
-\end{sidewaystable}
+\caption{Results from 200 iterations of LDA with 10 iterations of hyper parameter optimization. Top 10 words in each topic listed for each topic. Topics listed in order of frequency of appearance within documents, beginning in the first row of the table with the most frequent topic.}
+\label{tab:topics}
+\end{table}
+
+\begin{table}[ht]
+\rule{\textwidth}{1pt} \\ \vspace{-1cm}
+\begin{quotation}
+\noindent state person section states act means health public member general commission department law information provided insurance including board subsection legislature benefit court individual property order services care action business time pursuant united date year subject interstate federal compact school insurer corporation required medical chapter provide party entity vehicle amount notice people assembly agreement tax qualified provisions attorney agency limited made service authority child purposes years commissioner education report days policy employer members company code contract employee interest authorized effective statement district purpose ii application period number credit plan include senate income system amended issued reasonable part program director patient requirements
+\end{quotation} \vspace{-.5cm}
+\rule{\textwidth}{1pt} \vspace{-.2cm}
+\caption{Top 100 words, listed left-to-right, in the alignments corpus.}
+\label{tab:top100words}
+\end{table}
+
+
+
 
 \subsection{Diffusion networks and Text re-use}
 

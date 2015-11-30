@@ -313,23 +313,20 @@ Results of the simple dyadic regression are presented in Table \ref{tab:qap.diff
 
 
 
+\subsection{Ideological Distance of Aligned Bills}
+
+The MALP dataset contains ideal points for about $20,000$ state legislators. The \texttt{openstates} API contains data and identifiers on $12,000$ legislators. Of these we where able to uniquely match about $8,000$ legislators. This allowed us to obtain ideal points for 395,474 ($69\%$) bills and 1,745,336 ($50\%$) pairs of bills. 
+
+In order to assess the validity of text reuse as a measure of substantive policy overlap, we expect the quality of the alignments to be inversely correlated to the distance of the bills sponsors' ideal points. The MALP ideal points are located on a common scale across all states, the distance between sponsors from different states is therefore meaningful. 
+
+In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. Table \ref{tab:ideo_reg} displays results for several methods of combining multiple alignments across sections of the same bill dyad as well as treating sections as the unit of analysis. For the case where we aggregate to the bill level, simple bivariate linear regression is used to test for a correlation. 
+For the section level results we estimate a hierarchical model with section pairs nested within bill pairs.
+
+\input{tables/ideology_regressions.tex}
+
+
 \subsection{Tasks}
 \begin{itemize}
-\item Develop bill metadata dataset (FL)
-\begin{itemize}
-\item unique bill identifier
-\item sponsor identifier from  MALP data
-\item state identifier
-\item chamber identifier
-\item Introduction date
-\item Anything else, even if some is missing (status, committees, etc)
-\end{itemize}
-\item Develop bill-to-bill edgelists (FL)
-\begin{itemize}
-\item Sparse dyadic dataset (i.e., no observations when there is 0 alignment/overlap)
-\item alignment score(s)
-\item name of a text file in which aligned text is stored
-\end{itemize}
 \item Topic models, possibly of a relational form, applied to aligned text
 \item Computationally intensive analysis of bill-to-bill alignment and sponsor ideology.
 \begin{itemize}

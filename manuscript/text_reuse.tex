@@ -22,6 +22,7 @@
 \setlength{\parindent}{0.0in}
 \setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
 \mmddyyyydate
+\doublespacing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -33,79 +34,35 @@
 
 \maketitle
 
-\begin{abstract}
-Much research has been focused on the diffusion of policy ideas in US state
-legislatures. Most of this research uses hand coded data sets that identify
-equivalent bills and analyze patterns of adoption of these bills. Bills on
-equivalent policies often contain the same language, since legislators use past
-legislation from other states or model legislation from interest groups as
-templates when drafting new bills or model legislation from interest groups. In
-this paper we evaluate the effectives of text reuse measures to detect bills
-that address the same policy issues. We find that... 
+\begin{abstract} Much research has been focused on the diffusion of policy ideas in US state legislatures. Most of this research uses hand coded data sets that identify equivalent bills and analyze patterns of adoption of these bills. Bills on equivalent policies often contain the same language, since legislators use past legislation from other states or model legislation from interest groups as templates when drafting new bills or model legislation from interest groups. In this paper we evaluate the effectives of text reuse measures to detect bills that address the same policy issues. We find that... 
 \end{abstract}
 
 \section{Introduction}
 
 Research on public policy adoption and diffusion has conventionally relied on modest hand-coded datasets encode when one or a handful of policies were adopted by each jurisdiction \citep{boehmke2012}. Scholars of public policy diffusion have recently turned their attention to the empirical identification of emulation ties connecting policy jurisdictions \citep{volden2006,boehmke2009,desmarais2015,garrett2015}. Identifying instances of policy emulation and explicit diffusion ties opens policy diffusion scholarship to an entirely new set of questions and theories that can be approached empirically. In this paper we draw upon a massive and nearly all-encompassing source of data from which to infer diffusion ties -- the text of legislation. If the computer-based analysis of bill text can be tuned to successfully identify policy adoption and emulation, we will be able to vastly scale up both the scale of data gathered and the precision of diffusion inferences.
 
-
-How ever, it is not clear, how well text reuse is suited to to detect real
-policy diffusion. There are several complications that we are addressing in this
-paper. First, every bill has procedural content that is not related to the
-policy content of the bill. Since every state legislature has a set of such
-standard or boiler plate text in each bill, there will be significant text reuse
-between bills in the same state and possibly also between bills from different
-states. Second, it is not obvious how much text reuse will mean substantive
-
-policy overlap. Given that each bill pair has a continuous proportion of
-overlapping text, setting the threshold too low might mean to classify bills as
-equivalent that are only in the same policy area, or are on a similar issue, but
-are opposed in content. On the other hand, setting the threshold too high could
-mean overlooking equivalent bills because of small insignificant changes to the
-text. 
-
-In this paper we address these issues and evaluate how much policy overlap can
-be detected using text reuse measures. Following Wilkerson et al. (2015) we use
-supervised machine learning to separate boiler plate from substantive text. We
-further more use an original data set on policy diffusion to evaluate how much
-equivalent policy can be detected using measures of text reuse. Using the system
-developed by Burges et al. (2015) we calculate text reuse scores for all pairs
-of bills in our dataset. 
-
+ How ever, it is not clear, how well text reuse is suited to to detect real policy diffusion. There are several complications that we are addressing in this paper. First, every bill has procedural content that is not related to the policy content of the bill. Since every state legislature has a set of such standard or boiler plate text in each bill, there will be significant text reuse between bills in the same state and possibly also between bills from different states. Second, it is not obvious how much text reuse will mean substantive policy overlap. Given that each bill pair has a continuous proportion of overlapping text, setting the threshold too low might mean to classify bills as equivalent that are only in the same policy area, or are on a similar issue, but are opposed in content. On the other hand, setting the threshold too high could mean overlooking equivalent bills because of small insignificant changes to the text. 
+ In this paper we address these issues and evaluate how much policy overlap can be detected using text reuse measures. Following Wilkerson et al. (2015) we use supervised machine learning to separate boiler plate from substantive text. We further more use an original data set on policy diffusion to evaluate how much equivalent policy can be detected using measures of text reuse. Using the system developed by Burges et al. (2015) we calculate text reuse scores for all pairs of bills in our dataset.  
 We will then assess the scientific value of the text reuse scores in several different ways. First, we use topic modeling on the discovered reused text sequences to assess the content of the matching text. Second, we investigate the relationship between the ideological distance of the legislators that proposed two bills and the text reuse scores between these bills. Third, we assess the how well policy diffusion networks that have been established by previous research can be discovered using the amount of text reuse between states. And fourth, we use data on equivalent bills collected by the National Council of State Legislatures to build an evaluation data set containing true policy overlap to assess the accuracy of text reuse in predicting policy overlap.
 
-This work has several important implications. First, it allows us to estimate,
-how policies are transferred between states. Do state legislators work mainly
-from templates from other states or interest groups, or to what extent do
-legislators draft their own bill text. Furthermore, text reuse is a relatively
-simple metric to calculate for large amounts of text. Previous scholars of
-policy diffusion mainly relied on case studies or manually coded data sets of
-policy diffusion in few policy areas. If working copying text forms a
-significant portion of how legislators adopt policies from other states, text
-reuse can be used to easily gather comprehensive data sets on policy diffusion. 
-
+This work has several important implications. First, it allows us to estimate, how policies are transferred between states. Do state legislators work mainly from templates from other states or interest groups, or to what extent do legislators draft their own bill text. Furthermore, text reuse is a relatively simple metric to calculate for large amounts of text. Previous scholars of policy diffusion mainly relied on case studies or manually coded data sets of policy diffusion in few policy areas. If working copying text forms a significant portion of how legislators adopt policies from other states, text reuse can be used to easily gather comprehensive data sets on policy diffusion.  
 
 \section{Background}
 
 Public policy diffusion -- the process by which policymakers emulate the policies implemented outside of their jurisdictions -- is a firmly established area of research in both Comparative \citep{simmons2004,gilardi2009} and American politics \citep{walker1969,berry1990,shipan2006,nicholson-crotty2009}. Until recently, policy diffusion studies have deployed quantitative research designs in which the relational component of policy diffusion (i.e., which jurisdiction is being emulated in a given diffusion instance), has been treated as completely unobservable or assumed to align with the geographic adjacency network (i.e., jurisdictions only emulate their geographic neighbors) \citep{volden2006,boehmke2009}. Recognizing the limitations in this approach, scholars have recently taken on the task of directly measuring the latent networks through which policies diffuse. \cite{desmarais2015} apply network inference algorithms to US state adoption sequences in over 100 policy domains to empirically infer the underlying network through which policies diffuse. \cite{garrett2015} analyze the text of US state legislation to measure the diffusion of policy in one domain -- restrictions on insurance coverage for abortion -- and identify the influence of model legislation, as introduced by interest groups.
 
 Previous research on policy diffusion relies almost exclusively on small subsamples of legislation and hand coded data. Little work has been invested in investigating automated ways of detecting equivalent bills in order to measure policy diffusion. 
-\citet{wilkerson2015tracing} use the Smith-Waterman local alignment algorithm 
-\citep{smith1981identification} to detect overlapping language in congressional bills in order to trace policy ideas through the legislative process of the US congress. 
+\citet{wilkerson2015tracing} use the Smith-Waterman local alignment algorithm (SW algorithm) \citep{smith1981identification} to detect overlapping language in congressional bills in order to trace policy ideas through the legislative process of the US congress. 
 
-\subsection{Tasks}
-\begin{itemize}
-\item Discuss and find some literature on copying legislative language: 
-    \begin{itemize}
-        \item Interest groups and model legislation
-        \item Legislator's resources
-    \end{itemize}
-\item Policy diffusion (FL expand paragraph)
-\item Text re-use in CBP in bills 
-\item Text re-use in general
-\item Alignment (FL expand review of Wilkerson et al)
-\item Discussion of text-based classification
-\end{itemize}
+
+
+\section{Detecting Text Reuse}
+
+In this study we use the same algorithm as \citet{wilkerson2015tracing} to detect matching sequences of text in state bills. We also follow their procedure in splitting the bills up in sections as the unit of analysis. However, our procedure differs in the pre-screening of sections that are compared with the Smith-Waterman algorithm and in the procedure to identify boiler plate text.
+
+\citet{wilkerson2015tracing}'s criterion for pre-screening bills is that they have to match at least 5 10-grams. This means that there has to be a minimum of a 15 character exact match between two bill sections in order to consider them for more in depth analysis with the SW algorithm. We see this as a too restrictive criterion and choose a different approach instead. Our text data is stored in an Elastic Search database. Elastic search is an open source web search engine which is designed to find document that match a search query. We utilize the `more like this' search engine, which is designed to find documents that are similar to a given document [FILL IN CITATION]. In principle it works in the following way: From the focus document, the $k$ n-grams with the highest tf-idf scores\footnote{[Explain these terms in this footnote]} are selected and transformed into a search vector. Then, for each document in the collection, a variation of the cosine similarity\footnote{[explain cosine similarity, and reference the exact fromula from the documentation]} is calculated and the $n$ with the highest scores are selected. This procedure is necessary, since the SW algorithm is computationally demanding and an exhaustive comparison is not feasible (we have about $500,000$ bills, assuming each bill consists on average of four sections this would amount to about $2 * 10^{12}$ comparisons). [FILL IN PARAMETER VALUES]
+
+Furthermore, we do not rely on human coders to extract and classify boiler plate text. We identified two types of boiler plate text: 1) Procedural language like bill and section headers, common legislative phrases etc. 2) Topic specific boiler plate, like definitions of tax brackets, [another example], etc. In order to detect these kinds of boiler plate language, we pre-screen all bill and discard $?-grams$ with a tf-idf score below a certain threshold. Boiler plate text is expected to have very low tf-idf scores, since it appears often across bills but with low frequency within bills. Additonally, in order to detect the second kind of boiler plate, we exclude $?-grams$ that where passes several times in the same legislature, assuming that the exact same provisions will not be introduced several times in the same legislature.
 
 \section{Data}
 
@@ -125,109 +82,12 @@ We additionally construct a validation dataset of equivalent bills from informat
 
 The alignment scores are calculated using the affine version of the local alignment algorithm proposed by \citet{smith1981identification} in order to match genetic sequences. The same algorithm has been used by \citet{wilkerson2015tracing} to trace bills through the legislative process in congress. When considering two bills, the algorithm treats each bill as a sequence of words and tries to find the best alignment between these two sequences. \citet{wilkerson2015tracing} split the bills into sections and search for text reuse across sections. Since this results in about 7 billion possible pairs, first filter out pairs that don't have an exact match of a sequence of at least ten words. We encounter the same problem in our analysis to a greater extent. Assuming each bill consists of ten sections on average, there would be approximately $1.25 * 10^{12}$ possible pairs of sections. 
 
-\begin{figure}[ht!]
-    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/time_size_selection.png}}
-\caption{Computation time for selection of bills. The Colors correspond to five selected bills (focus bill or left bill). For each of the bills, the best alignment with 1000 randomly selected bills (right bills) are calculated. The size of the dots corresponds to the logarithm of the length of the focus bill (in number of words), the x-axis corresponds to the logarithm of the size of the comparison bill and the y-axis corresponds to the logarithm of the computation time (in seconds).}
-\label{fig:time_size}
-\end{figure}
 
-In order to assess the computational burden the local alignment algorithm poses we test the implementation of the alignment algorithm (Burgess et al. 2015) on a set of 1000 randomly selected bills. In a first pass we calculate the alignments  between all pairs of the full bills (not divided into sections). Figure \ref{fig:time_size} displays the relationship between bill length and computation time. As expected the time increases exponentially with the length of the bills. Figure \ref{fig:time} displays a histogram of the logarithm of the computation time (in seconds). Computation time varies between $0.001s$ and $1,650s$ with $75\%$ of the distribution below $0.1s$ and a median time of $0.03s$.  This shows that an exhaustive comparison of just the full bills (not separated into sections) would take about 100 years on a single machine.
-
-\begin{figure}[ht!]
-    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/time.png}}
-\caption{Histogram of computation time for all analyzed bills.}
-\label{fig:time} 
-\end{figure}
-
-Since for this calculation there is no minimum threshold (as in \citet{wilkerson2015tracing} minimum of 5 matching 10-grams). Alignments between almost all bills are found and most of the alignments are procedural language. This is apparent in Figure \ref{fig:state_to_state} which displays the average alignment score for bills from Illinois (left panel) and Washington (right panel) for all other states in the sampled data set (x-axis). Especially for Illinois there is a much higher alignment score for bills from the same state. This shows that a minimum threshold and a classifier for procedural language are necessary.
-
-\begin{figure}[ht!]
-    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/state_to_state.png}}
-\caption{Average alignment scores between states. The left panel corresponds to `left bills' from Illinois, the right panel to bills from Washington. Each bar displays the average score of the best alignment found between bills of the states.}
-\label{fig:state_to_state} 
-\end{figure}
-
-
-In order to make the computation more feasible, we rely on a similar strategy as \citet{wilkerson2015tracing}. Our bills are stored in an elastic search database wich provides a variety of search algorithms that are designed to find similar documents. Since seaching the whole database for the full document is very time consuming the following search algorithm is used to first find a pre-selection of similar bills that are then exhaustively checked for text reuse:
-
-\begin{enumerate}
-\item All bills are stored in the database in n-grams of size 2-5
-\item Select the 25 n-grams with the highest tf-idf score in the query document
-\item Calculate a score slightly adapted cosine similarity score between the selected n-gram vector and all full document n-gram vectors in the database\footnote{See \url{https://lucene.apache.org/core/4_9_0/core/org/apache/lucene/search/similarities/TFIDFSimilarity.html} for details on the similarity scoring in Elastic Search}
-\end{enumerate}
-
-In order to evaluate how well the pre screening algorithms performs we select 1000 focus bills at random and retrieve the 1000 most similar bills according to the lucene score (described above). We then calculate find the best alignments between the sections of the focus bill and the section of each of the retrieved bills. This procedure generates a dataset of approximately 4 million alignments. 
-
-For a first assessment of the usefulness of the lucene scores to select document that align well, we investigate the relationship of these scores with the alignment scores. Figure \ref{fig:lu_al_scores} displays the lucene scores against the alignment scores for a random sample of 500,000 alignments. The color indicates if the bills from which the alignment was genrated are from the same state, the larger triangles indicate scores for a bill compared to itself. In order to assess which alignments would get selected if thresholding, that is selecting for example the 100 closest bills according to the lucene score, we plotted all alignments for a sample of 9 focus bills. The green points indicate alignments from the 100 bills with the highest lucene scores for the respective focus bill.
-
-\begin{figure}[ht!]
-    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/lu_al_scores.png}}
-    \caption{Alignment scores and lucene scores for a sample of 500,000 alignments (sections). The color indicates if the bills of the alignment are from the same state. The larger triangles indicate alignment and lucene scores for sections of bills compared to themselves.}
-\label{fig:lu_al_scores} 
-\end{figure}
-
-\begin{figure}[ht!]
-    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/closest100.png}}
-    \caption{Alignment and lucene scores for a sample of nine focus bills (panels). Each point in the plot is an alignment for a section of one comparison bill. The color indicates, if the section comes from a bill that is among the 100 bills with the highest lucene score for the specific focus bill. The large triangles indicate that an alignment is from a comparison of the focus bill with itself.}
-\label{fig:closest100} 
-\end{figure}
-
-
-\textit{Identifying procedural alignment text}
-
-Bills share a lot of language that is not related to the policy content of the bill. Especially within states bills have similar headers or formatting content. Further more there is procedural language and common phrases that are used across many, substantively unrelated bills and across states. In order to identify such alignments, we use the fact that we know that within states these matches are so common. We use the following procedure:
-
-
-For each state:\\
-\begin{itemize}
-    \item sample n bills
-    \item calculate alignments between all sections of these bills
-    \item Identify matching alignments with one of the following:
-        \begin{itemize}
-            \item Perfect string match
-            \item length normalized alignment score (threshold?)
-            \item String similarity measure (threshold?)
-        \end{itemize}
-    \item label these alignments as boilerplate
-    \item (Optional:) Train classifier on this labeled data
-    \item For all alignments found remove the ones that are labeled as boilerplate by the classifier
-\end{itemize}
-
-
-
-\subsection{Tasks}
-\begin{itemize}
-\item Scrape Google urls for NCSL tables (FL) -- lower priority
-    \begin{enumerate}
-        \item Scraped 64 urls. 
-        \item Can't get around the Google API limitation yet. Also get blocked when trying to scrape the search result.
-    \end{enumerate}
-
-\item Extract state  \& bill \# from tables (FL) -- lower priority
-    \begin{enumerate}
-        \item Didn't do this yet, let's first check how many are potentially suitable and then probably better to do by hand
-    \end{enumerate}
-\item See tasks in analysis -- create metadata file and dyadic file, then put them on the ACI (FL).
-    \begin{enumerate}
-        \item We have a preliminary dyadic file for all similar bill pairs and their alignment scores (this is from the LID approach: each bill is only compared to the 100 most similar ones)
-        \item Matt transfering the database to a new server at the moment, it is therefore unavailable. Should be online again sometime today.
-    \end{enumerate}
-\item Store MALP data on ACI and make sure the identifiers match those in the bill data (FL). 
-    \begin{enumerate}
-        \item data is on aci
-        \item Legislators can be matched by Name, State, Pary and Term. This information should be contained in the database. If not, the open state api has a legislator search method, that returns all necessary information.
-    \end{enumerate}
-\item Put policy diffusion data in project folder on ACI (BD).
-\end{itemize}
 
 \section{Analysis}
-Below we list X separate analyses designed to test the degree to which measuring text reuse measures policy overlap/diffusion. 
 
-\begin{itemize}
-\item We use statistical topic modeling to assess the major content areas represented by the text identified in the alignment algorithm. We consider whether the resultant topics align with policy areas.
-\item The Measuring American Legislators Project (MALP) provides data that we will use to assess the significance of text re-use in US state legislation \citet{shor2011}. The most recent release of the MALP data covers 1993-2014. The MALP data provide ideological scores of legislators on an annual basis. We conduct a bill-level statistical network analysis to see whether the rate of bill-to-bill alignment is positively related to the ideological similarity of their sponsors.
-\item We conduct a state-level analysis to see whether the volume of state-to-state text alignment is positively related to the policy diffusion networks inferred in \citet{desmarais2015}.
-\end{itemize}
+We use three strategies in order to assess the validity of text reuse as a measure of policy equivalence. First, we apply topic models to the sequences that are identified by the SW algorithm as matching sequences. This provides a rough idea of how many of the alignments are substantial and how much procedural language and not substantively significant language gets picked up by the algorithm. Second, we analyze how well the bill similarity aggregated to the state level corresponds with policy diffusion networks identified in previous research \citep{desmarais2015}. And third, we assess the correlation of the distance of the sponsors of a bill dyad and the dyads alignment scores. If substantive policy content, and importantly, the same ideological direction of the provisions is detected by the alignment algorithm, we will expect a high negative correlation between these two measures.
+
 
 \subsection{Topic Modeling}
 
@@ -312,40 +172,74 @@ Intercept & 5717.18 & 0.0000 & 8.0431 & 0.0000 \\
 Results of the simple dyadic regression are presented in Table \ref{tab:qap.diffusion}. In both specifications there is a positive relationship between the number of diffusion ties and the number of alignments, and the relationship is statistically significant at the 0.05 level (two-tailed). Furthermore, the magnitudes of the relationships are substantively significant. A shift from the minimum to the maximum number of diffusion ties corresponds to more than a half of a standard deviation increase in the expected number of cross-state alignments. On the log scale, the addition of a diffusion tie corresponds to a 40\% increase in the expected number of cross-state alignments.\footnote{Calculated as $100\times \left[ \exp(0.3288)-1\right] = 38.93$}. 
 
 
-
 \subsection{Ideological Distance of Aligned Bills}
 
 %R script for this analysis: '/analysis/ideology.R'
-
 
 The MALP dataset contains ideal points for about $20,000$ state legislators. The \texttt{openstates} API contains data and identifiers on $12,000$ legislators. Of these we where able to uniquely match about $8,000$ legislators. This allowed us to obtain ideal points for 395,474 ($69\%$) bills and 1,745,336 ($50\%$) pairs of bills. 
 
 In order to assess the validity of text reuse as a measure of substantive policy overlap, we expect the quality of the alignments to be inversely correlated to the distance of the bills sponsors' ideal points. The MALP ideal points are located on a common scale across all states, the distance between sponsors from different states is therefore meaningful. 
 
-In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. Table \ref{tab:ideo_reg} displays results for several methods of combining multiple alignments across sections of the same bill dyad as well as treating sections as the unit of analysis. For the case where we aggregate to the bill level, simple bivariate linear regression is used to test for a correlation. 
-For the section level results we estimate a hierarchical model with section pairs nested within bill pairs.
+In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. Table \ref{tab:ideo_reg} displays results for several methods of combining multiple alignments across sections of the same bill dyad as well as treating sections as the unit of analysis. For the case where we aggregate to the bill level, simple bivariate linear regression is used to test for a correlation, since the data has network structure we calculate standard errors with the quadratic assignment procedure (QAP) [note, Table \ref{tab:ideo_reg} still has normal standard errors, we are runnign the QAP at the moment] \citep{krackardt1987qap}. There are six models in Table \ref{tab:ideo_reg}. The unit of analysis of the first model is the bill section, the other five models are on the bill level. Model (1) has the alignment score of the section dyad as the dependent variable, models (2) - (5) use different methods to aggregate the scores on the section - dyad level to the bill - dyad level.
 
 \input{tables/ideology_regressions.tex}
 
 
-\subsection{Tasks}
-\begin{itemize}
-\item Topic models, possibly of a relational form, applied to aligned text
-\item Computationally intensive analysis of bill-to-bill alignment and sponsor ideology.
-\begin{itemize}
-\item Get big sample of bills
-\item Assess relationship between alignment between bills and ideological similarity between sponsors
-\end{itemize}
-\item Analysis of alignment aggregated at the state level.
-\begin{itemize}
-\item How do we score overlap at the bill and state level?
-\end{itemize}
-
-\end{itemize}
-
+\clearpage
 
 \bibliographystyle{chicago}
 \bibliography{bibliography}
+
+
+\section{Appendix}
+
+\begin{figure}[ht!]
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/time_size_selection.png}}
+\caption{Computation time for selection of bills. The Colors correspond to five selected bills (focus bill or left bill). For each of the bills, the best alignment with 1000 randomly selected bills (right bills) are calculated. The size of the dots corresponds to the logarithm of the length of the focus bill (in number of words), the x-axis corresponds to the logarithm of the size of the comparison bill and the y-axis corresponds to the logarithm of the computation time (in seconds).}
+\label{fig:time_size}
+\end{figure}
+
+In order to assess the computational burden the local alignment algorithm poses we test the implementation of the alignment algorithm (Burgess et al. 2015) on a set of 1000 randomly selected bills. In a first pass we calculate the alignments  between all pairs of the full bills (not divided into sections). Figure \ref{fig:time_size} displays the relationship between bill length and computation time. As expected the time increases exponentially with the length of the bills. Figure \ref{fig:time} displays a histogram of the logarithm of the computation time (in seconds). Computation time varies between $0.001s$ and $1,650s$ with $75\%$ of the distribution below $0.1s$ and a median time of $0.03s$.  This shows that an exhaustive comparison of just the full bills (not separated into sections) would take about 100 years on a single machine.
+
+\begin{figure}[ht!]
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/time.png}}
+\caption{Histogram of computation time for all analyzed bills.}
+\label{fig:time} 
+\end{figure}
+
+Since for this calculation there is no minimum threshold (as in \citet{wilkerson2015tracing} minimum of 5 matching 10-grams). Alignments between almost all bills are found and most of the alignments are procedural language. This is apparent in Figure \ref{fig:state_to_state} which displays the average alignment score for bills from Illinois (left panel) and Washington (right panel) for all other states in the sampled data set (x-axis). Especially for Illinois there is a much higher alignment score for bills from the same state. This shows that a minimum threshold and a classifier for procedural language are necessary.
+
+\begin{figure}[ht!]
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/state_to_state.png}}
+\caption{Average alignment scores between states. The left panel corresponds to `left bills' from Illinois, the right panel to bills from Washington. Each bar displays the average score of the best alignment found between bills of the states.}
+\label{fig:state_to_state} 
+\end{figure}
+
+
+In order to make the computation more feasible, we rely on a similar strategy as \citet{wilkerson2015tracing}. Our bills are stored in an elastic search database wich provides a variety of search algorithms that are designed to find similar documents. Since seaching the whole database for the full document is very time consuming the following search algorithm is used to first find a pre-selection of similar bills that are then exhaustively checked for text reuse:
+
+\begin{enumerate}
+\item All bills are stored in the database in n-grams of size 2-5
+\item Select the 25 n-grams with the highest tf-idf score in the query document
+\item Calculate a score slightly adapted cosine similarity score between the selected n-gram vector and all full document n-gram vectors in the database\footnote{See \url{https://lucene.apache.org/core/4_9_0/core/org/apache/lucene/search/similarities/TFIDFSimilarity.html} for details on the similarity scoring in Elastic Search}
+\end{enumerate}
+
+In order to evaluate how well the pre screening algorithms performs we select 1000 focus bills at random and retrieve the 1000 most similar bills according to the lucene score (described above). We then calculate find the best alignments between the sections of the focus bill and the section of each of the retrieved bills. This procedure generates a dataset of approximately 4 million alignments. 
+
+For a first assessment of the usefulness of the lucene scores to select document that align well, we investigate the relationship of these scores with the alignment scores. Figure \ref{fig:lu_al_scores} displays the lucene scores against the alignment scores for a random sample of 500,000 alignments. The color indicates if the bills from which the alignment was genrated are from the same state, the larger triangles indicate scores for a bill compared to itself. In order to assess which alignments would get selected if thresholding, that is selecting for example the 100 closest bills according to the lucene score, we plotted all alignments for a sample of 9 focus bills. The green points indicate alignments from the 100 bills with the highest lucene scores for the respective focus bill.
+
+\begin{figure}[ht!]
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/lu_al_scores.png}}
+    \caption{Alignment scores and lucene scores for a sample of 500,000 alignments (sections). The color indicates if the bills of the alignment are from the same state. The larger triangles indicate alignment and lucene scores for sections of bills compared to themselves.}
+\label{fig:lu_al_scores} 
+\end{figure}
+
+\begin{figure}[ht!]
+    \makebox[\textwidth]{\includegraphics[width=\textwidth]{figures/closest100.png}}
+    \caption{Alignment and lucene scores for a sample of nine focus bills (panels). Each point in the plot is an alignment for a section of one comparison bill. The color indicates, if the section comes from a bill that is among the 100 bills with the highest lucene score for the specific focus bill. The large triangles indicate that an alignment is from a comparison of the focus bill with itself.}
+\label{fig:closest100} 
+\end{figure}
+
 
 
 \end{document}

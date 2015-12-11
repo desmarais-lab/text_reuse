@@ -9,6 +9,7 @@ from pprint import pprint
 import pandas as pd
 import numpy as np
 import time
+import re
 
 BILL_FILE = '../data/extracted_bills_with_sponsers.json'
 OUTFILE = '../data/bill_metadata.csv'
@@ -22,6 +23,10 @@ header = ['unique_id', 'date_introduced', 'date_signed', 'date_last_action',
 header = ','.join(header)
 # Get a set of all legislators that we have ideology for
 known_legis = set(legislators['id'])
+
+# Regex to remove chars that mess up the csv
+re_nchar = re.compile(r'[,"\']')
+
 
 with io.open(BILL_FILE, 'r', encoding='utf-8') as infile,\
         io.open(OUTFILE, 'w+', encoding='utf-8') as outfile:
@@ -45,9 +50,9 @@ with io.open(BILL_FILE, 'r', encoding='utf-8') as infile,\
 
         # Take quote characters out of string fields
         if doc['short_title'] is not None:
-            doc['short_title'] = doc['short_title'].strip('"')
+            doc['short_title'] = re_nchar.sub('', doc['short_title'])
         if doc['bill_title'] is not None:
-            doc['bill_title'] = doc['bill_title'].strip('"')
+            doc['bill_title'] = re_nchar.sub('', doc['bill_title'])
         
         row = [doc['unique_id'], doc['date_introduced'], doc['date_signed'],
                doc['action_dates']['last'], doc['action_dates']['passed_upper'],

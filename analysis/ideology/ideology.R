@@ -166,14 +166,14 @@ load('qap_results.RData')
 # res <- data.frame(Intercept = sapply(mods, function(x) x$coef[1]),
 #                   Estimate = sapply(mods, function(x) x$coef[2]),
 #                   Std.Error = sapply(perms, function(x) sqrt(var(x))))
-# rownames(res) <- c("Sum", "Mean", "Max", "# Alignments")
 #
 # # Store results to disk
 # save(list = c("res", "perms"), file = "qap_results.RData")
 
 # Make latex results table
-sink(file = '../../manuscript/tables/qap_tab.tex')
-xtable(res, digits = 3, caption = "Log-Linear models for alignment and euclidian distance in ideology. Standard errors are generated from quadratic assignment procedure with 1000 iterations. The rows correspond to different methods of aggregating the section alignments to bill allignments: \\textit{Sum}: Sum of alignment scores of all alignments, \\textit{Mean}: Average alignment score accross secion pairs bill dyad, \\textit{Max}: Highest alignment score seciton pairs of bill dyad, \\textit{# Alignments}: Number of alignments for bill dyad.",
+rownames(res) <- c("Sum", "Mean", "Max", "No. Alignments")
+sink(file = '../../manuscript/tables/ideology_regs.tex')
+xtable(res, digits = 3, caption = "Log-Linear models for alignment and euclidian distance in ideology. Standard errors are generated from quadratic assignment procedure with 1000 iterations. The rows correspond to different methods of aggregating the section alignments to bill allignments: \\textit{Sum}: Sum of alignment scores of all alignments, \\textit{Mean}: Average alignment score accross secion pairs bill dyad, \\textit{Max}: Highest alignment score seciton pairs of bill dyad, \\textit{No. Alignments}: Number of alignments for bill dyad.",
        label = "tab:ideology_regs")
 sink()
 

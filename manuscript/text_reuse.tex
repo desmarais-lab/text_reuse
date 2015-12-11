@@ -18,11 +18,13 @@
 \usepackage{rotating}
 \usepackage{amsmath}
 \usepackage{hyperref}
+\usepackage{xr}
 
 \setlength{\parindent}{0.0in}
 \setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
 \mmddyyyydate
 \doublespacing
+\externaldocument{tables/ideology_regs.tex}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -180,9 +182,19 @@ The MALP dataset contains ideal points for about $20,000$ state legislators. The
 
 In order to assess the validity of text reuse as a measure of substantive policy overlap, we expect the quality of the alignments to be inversely correlated to the distance of the bills sponsors' ideal points. The MALP ideal points are located on a common scale across all states, the distance between sponsors from different states is therefore meaningful. 
 
-In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. Table \ref{tab:ideo_reg} displays results for several methods of combining multiple alignments across sections of the same bill dyad as well as treating sections as the unit of analysis. For the case where we aggregate to the bill level, simple bivariate linear regression is used to test for a correlation, since the data has network structure we calculate standard errors with the quadratic assignment procedure (QAP) [note, Table \ref{tab:ideo_reg} still has normal standard errors, we are runnign the QAP at the moment] \citep{krackardt1987qap}. There are six models in Table \ref{tab:ideo_reg}. The unit of analysis of the first model is the bill section, the other five models are on the bill level. Model (1) has the alignment score of the section dyad as the dependent variable, models (2) - (5) use different methods to aggregate the scores on the section - dyad level to the bill - dyad level.
+In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. Table \ref{tab:ideology_regs} displays results for several methods of combining multiple alignments across sections of the same bill dyad. Specifically we investigate four different ways of aggregating to the bill level: the sum of the alignment scores of the sections of a bill dyad, the mean of these scores, the maximum of the scores, and the number of alignments between two bills. 
 
-\input{tables/ideology_regressions.tex}
+Each model is a log-linear model regressing the logarithm of the aggregated measure on the ideological distance between the ideal point of the two bills forming the dyad. The ideal point of the bill is derived from the ideal point of the bill sponsor. In cases where several legislators sponsor a bill we use the average of all sponsors' ideal points as a summary. 
+
+The single observations (bill dyads) are not independent, due to the network structure of the data. In order to avoid spurious results, we use the quadratic assignment procedure (QAP), a common tool to control for spurious correlation in social network analysis \citet{krackardt1987qap}. We use 1000 QAP iterations for each model.
+
+The results in Table \ref{tab:ideology_regs} clearly show that there is a significant correlation between the ideological distance of the bills' sponsors and their text alignment score, regardless of the aggregation method.
+
+
+\input{tables/ideology_regs.tex}
+
+
+
 
 
 \clearpage

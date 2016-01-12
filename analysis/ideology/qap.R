@@ -2,8 +2,9 @@
 
 # Arguments:
 
-# bill_similarity: data.frame, left_id (chr), right_id(chr), score(dbl)
-# ideology: dataframe, mapping bill_id (chr) to ideology (dbl)
+# edges: Edgelist for similarity network. Bill IDs must be integers 
+# ideology: numeric vector of bill ideologies. Must be in same order as integer
+#   bill ids
 # nperm: number of quap iterations
 # cores: number of cores for parallelization of nperm loop
 

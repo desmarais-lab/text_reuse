@@ -19,6 +19,7 @@
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{xr}
+\usepackage{subfig}
 
 \setlength{\parindent}{0.0in}
 \setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
@@ -36,7 +37,8 @@
 
 \maketitle
 
-\begin{abstract} Much research has been focused on the diffusion of policy ideas in US state legislatures. Most of this research uses hand coded data sets that identify equivalent bills and analyze patterns of adoption of these bills. Bills on equivalent policies often contain the same language, since legislators use past legislation from other states or model legislation from interest groups as templates when drafting new bills or model legislation from interest groups. In this paper we evaluate the effectives of text reuse measures to detect bills that address the same policy issues. We find that... 
+\begin{abstract} 
+ Much political science research relies on identifying the substantive similarity of legislation, especially in the study of policy diffusion. Scholars mostly rely on hand-coded datasets. However, in order to study policy diffusion more broadly, for example by extending the study to dozens or more policy domains, prohibitive volumes of legislative text would have to be analyzed manually. Common text analysis algorithms such as topic models or bag-of-words based text similarity measures are too coarse to identify policy similarity. However, legislators often directly use text from bills introduced in other legislatures or bill text provided by interest groups in model legislation. We propose the use of text-sequencing algorithms to find matching text between bills. We describe a new approach to the application of sequence alignment algorithms to large amounts of legislative text, and assess the validity of text reuse as a measure of substantive bill similarity. Three key results, drawn from an analysis of 500,000 bills from US-state legislatures, demonstrate the validity of text reuse as a measure of policy similarity. First, we show that bills introduced by ideologically similar sponsors are more likely to exhibit a high degree of text reuse. Second, we show that the main topical themes underlying strings of reused text map closely onto major areas of public policy in the US States. Third, we show that rates of text reuse across state borders correlates strongly with the state policy diffusion ties data recently introduced by Desmarais, Harden and Boehmke (APSR, 2015).    
 \end{abstract}
 
 \section{Introduction}
@@ -184,16 +186,29 @@ In order to assess the validity of text reuse as a measure of substantive policy
 
 In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. Table \ref{tab:ideology_regs} displays results for several methods of combining multiple alignments across sections of the same bill dyad. Specifically we investigate four different ways of aggregating to the bill level: the sum of the alignment scores of the sections of a bill dyad, the mean of these scores, the maximum of the scores, and the number of alignments between two bills. 
 
-Each model is a log-linear model regressing the logarithm of the aggregated measure on the ideological distance between the ideal point of the two bills forming the dyad. The ideal point of the bill is derived from the ideal point of the bill sponsor. In cases where several legislators sponsor a bill we use the average of all sponsors' ideal points as a summary. 
+Each model is a log-linear model regressing the logarithm of the aggregated measure on the ideological distance between the ideal point of the two bills forming the dyad. The ideal point of the bill is derived from the ideal point of the bill sponsor. In cases where several legislators sponsor a bill we use the average of all sponsors' ideal points to obtain a single measure.
 
 The single observations (bill dyads) are not independent, due to the network structure of the data. In order to avoid spurious results, we use the quadratic assignment procedure (QAP), a common tool to control for spurious correlation in social network analysis \citet{krackardt1987qap}. We use 1000 QAP iterations for each model.
 
-The results in Table \ref{tab:ideology_regs} clearly show that there is a significant correlation between the ideological distance of the bills' sponsors and their text alignment score, regardless of the aggregation method.
-
-
 \input{tables/ideology_regs.tex}
 
+The results in Table \ref{tab:ideology_regs} clearly show that there is a significant correlation between the ideological distance of the bills' sponsors and their text alignment score, regardless of the aggregation method. For each aggregation method, assuming the null hypothesis of no correlation, the probability for the observed estimate estimated as zero. This is also clear from Figure \ref{fig:qap_dist}, which shows histograms of the permutation distributions of the regression coefficients and the actual estimates as a red line. 
 
+\begin{figure}[ht!]
+    \makebox[\textwidth]{\includegraphics[width=0.9\textwidth]{figures/qap_dist.png}}
+\caption{Statistical significance of regression results. The histogram in black shows the distribution of regression coefficients obtained from 1000 qap permutations. The red line displays the estimate obtained from the actual non-permuted network.}
+\label{fig:qap_dist}
+\end{figure}
+
+To asses the substantive importance of the effect size, Figure \ref{fig:ideo_interpret} displays the estimated decrease in mean alignment score when increasing the ideological distance of the bills. The vertical lines correspond to the ideological distances between the median democrat and republican, the 0.05 quantile and the 0.95 quantile of the total distribution of ideal points and the minimum and maximum of the total distribution. [FILL IN MORE INTERPRETATION WHEN NEW RESULTS ARE IN] 
+
+\begin{figure}[H]%
+\centering
+\subfloat[Substantive effects]{\includegraphics[width=0.5\textwidth]{figures/log_lin_effects.png}}
+\subfloat[Distribution of legislator ideal points]{\includegraphics[width=0.5\textwidth]{figures/ideo_distri.png}}
+\caption{Substantive interpretation of the effect size of the regression results. The left panel displays the predicted difference in mean alignment score for a change in the ideological distance of the bill. The colored lines connect the distance values to the political landscape. The first line corresponds to the distance between the median democrat and the median republican (across all states), that second line corresponds to the distance between the 0.05 and the 0.95 quantile of the full distribution of legislators' ideal points, and the third line corresponds to the distance from the leftmost to the rightmost legislator. For reference, the left panel displays the kernel density estimate of the distribution of ideal points by party. The vertical lines mark the median ideology for each party. The dependent variable in this illustration is the mean score. Results for different aggregation methods are similar. }
+\label{fig:ideo_interpret}
+\end{figure}
 
 
 

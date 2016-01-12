@@ -1,9 +1,13 @@
 library(dplyr)
 library(ggplot2)
 library(xtable)
+library(MCMCpack)
 
 source("qap.R")
 
+#Plotting colors
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
+               "#D55E00", "#CC79A7")
 # ==============================================================================
 # Data preprocessing
 # ==============================================================================
@@ -132,7 +136,7 @@ load('qap_results.RData')
 # ## Number of qap permutations
 # n_qap_perm <- 1000
 # ## Number of cores for permutations
-# n_cores <- 36
+# n_cores <- 4
 # 
 # ## Linear model for sum aggregation (with qap standard errors)
 # sum_score <- lm(log(sum_score) ~ ideology_dist, data = aggr)
@@ -140,7 +144,7 @@ load('qap_results.RData')
 # perm_dist_sum <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores)
 # 
 # ## Linear model for mean aggregation (with qap standard errors)
-# mean_score <- lm(log(mean_score) ~ ideology_dist, data = aggr)
+mean_score <- lm(log(mean_score) ~ ideology_dist, data = aggr)
 # edges[, 3] <- aggr$mean_score
 # perm_dist_mean <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores)
 # 
@@ -153,9 +157,9 @@ load('qap_results.RData')
 # n_align <- lm(log(n_align) ~ ideology_dist, data = aggr)
 # edges[, 3] <- aggr$n_align
 # perm_dist_n_align <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores)
-# 
-# 
-# # ==============================================================================
+
+
+# ==============================================================================
 # # Output results
 # # ==============================================================================
 # 
@@ -163,20 +167,33 @@ load('qap_results.RData')
 # mods <- list(sum_score, mean_score, max_score, n_align)
 # perms <- list(perm_dist_sum, perm_dist_mean, perm_dist_max, perm_dist_n_align)
 # 
+
 # res <- data.frame(Intercept = sapply(mods, function(x) x$coef[1]),
 #                   Estimate = sapply(mods, function(x) x$coef[2]),
-#                   Std.Error = sapply(perms, function(x) sqrt(var(x))))
+#                   Std.Dev = sapply(perms, function(x) sqrt(var(x))))
+rownames(res) <- c("Sum", "Mean", "Max", "No. Alignments")
 #
 # # Store results to disk
 # save(list = c("res", "perms"), file = "qap_results.RData")
+names(perms) <- rownames(res)
+res$p <- rep(NA, 4)
+for(i in c(1:4)){
+    res$p[i] <- length(which(abs(perms[[i]]) > abs(res[i, 2]))) / length(perms[[i]])
+}
 
 # Make latex results table
-rownames(res) <- c("Sum", "Mean", "Max", "No. Alignments")
 sink(file = '../../manuscript/tables/ideology_regs.tex')
-xtable(res, digits = 3, caption = "Log-Linear models for alignment and euclidian distance in ideology. Standard errors are generated from quadratic assignment procedure with 1000 iterations. The rows correspond to different methods of aggregating the section alignments to bill allignments: \\textit{Sum}: Sum of alignment scores of all alignments, \\textit{Mean}: Average alignment score accross secion pairs bill dyad, \\textit{Max}: Highest alignment score seciton pairs of bill dyad, \\textit{No. Alignments}: Number of alignments for bill dyad.",
+xtable(res, digits = 3, caption = "Log-Linear models for alignment and euclidian 
+       distance in ideology. Two tailed p-values are generated from quadratic 
+       assignment procedure with 1000 iterations. Std.Dev is the standard 
+       deviation of the null distribution. The rows correspond to 
+       different methods of aggregating the section alignments to bill 
+       allignments: \\textit{Sum}: Sum of alignment scores of all alignments, 
+       \\textit{Mean}: Average alignment score accross secion pairs bill dyad, 
+       \\textit{Max}: Highest alignment score seciton pairs of bill dyad, 
+       \\textit{No. Alignments}: Number of alignments for bill dyad.",
        label = "tab:ideology_regs")
 sink()
-
 
 # PLot distributions
 n_qap_perm <- length(perms[[1]])
@@ -188,27 +205,95 @@ ests <- data.frame(aggregation = c("Sum", "Mean", "Max", "# Alignments"),
                    beta = res$Estimate)
 
 ggplot(pdat) + 
-  geom_histogram(aes(permutations), color = "black", binwidth = 0.0005) + 
-  geom_vline(data = ests, aes(xintercept = beta), color = "red") +
-  facet_wrap(~ aggregation, scales = "fixed") +
-  theme_bw()
+    geom_histogram(aes(permutations), color = "white", binwidth = 0.0005,
+                 fill = "grey16") + 
+    geom_vline(data = ests, aes(xintercept = beta), color = cbPalette[2]) +
+    geom_text(data = ests, aes(x = (beta - 0.001), y = 200, angle = 90, 
+                               label = "Estimate", color = cbPalette[2]
+                               ), show_guide = FALSE) +
+    facet_wrap(~ aggregation, scales = "fixed") +
+    xlab("Coefficient") + ylab("Count") + 
+    theme_bw()
 ggsave('../../manuscript/figures/qap_dist.png')
 
-### Old stuff
 
-# Coefficient plot
-pdat <- data_frame(model = as.factor(names(mods)), 
-                   coefficient = sapply(mods, function(x) x$coef[2]),
-                   std_error = sapply(mods, function(x) coef(summary(x))[2, 2])
-                   ) %>% mutate(lower = coefficient - 2 * std_error, 
-                                upper = coefficient + 2 * std_error)
+# Substantive interpretation of effectsize
 
-ggplot(pdat) + 
-    geom_point(aes(x = model, y = coefficient), color = "orange") +
-    geom_errorbar(aes(x = model, ymax = upper, ymin = lower), width = 0.1) + 
-    theme_bw() + 
-    ylim(-0.05, 0.05)
+## Load Malp data to get median legislators of D and R
+malp <- tbl_df(read.table('../../data/malp/malp_individual.tab', header = TRUE,
+                          stringsAsFactors = FALSE, sep = "\t"))
+median_legs <- group_by(malp, party) %>% 
+    summarize(median_ideology = median(np_score),
+              mean_ideology = mean(np_score),
+              max_ideology = max(np_score),
+              min_ideology = min(np_score),
+              first_quart = quantile(np_score, 0.05),
+              third_quart = quantile(np_score, 0.95))
 
-#l ==============================================================================
-# Some sanity checks
-# ==============================================================================
+# Histogram of ideologies
+ggplot(malp) + 
+    geom_density(aes(np_score, fill = party, color = party), alpha = 0.5) +
+    scale_color_manual(values = cbPalette, 
+                      labels = c("Democrat", "Independent", "Republican")) +
+    scale_fill_manual(values = cbPalette, 
+                      labels = c("Democrat", "Independent", "Republican")) +
+    geom_segment(data = median_legs, aes(x = median_ideology, xend = median_ideology,
+                                         y = 1.25, yend = 0, color = party)) +
+    xlab("Ideology") + ylab("Density") +
+    theme_bw()
+ggsave('../../manuscript/figures/ideo_distri.png')
+
+med_to_med <- (median_legs$median_ideology[median_legs$party == "R"] - 
+                   median_legs$median_ideology[median_legs$party == "D"])^2
+ext_to_ext <- (median_legs$min_ideology[median_legs$party == "D"] - 
+                   median_legs$max_ideology[median_legs$party == "R"])^2
+q_to_q <- (median_legs$first_quart[median_legs$party == "D"] - 
+                   median_legs$third_quart[median_legs$party == "R"])^2
+delta_y <- function(dist, mod) {
+    exp(res[mod, "Intercept"] + res[mod, "Estimate"] * dist) -
+        exp(res[mod, "Intercept"] + res[mod, "Estimate"] * 0)    
+}
+
+line_df <- data.frame(x = c(med_to_med, q_to_q, ext_to_ext),
+                      val = c(delta_y(med_to_med, "Mean"), delta_y(q_to_q, "Mean"), 
+                              delta_y(ext_to_ext, "Mean")),
+                      label = c("Median Dem to Median Rep", "0.05 to 0.95 Quantile",
+                                "Min Dem to Max Rep"))
+
+dists <- seq(0, 100, length.out = 200)
+effects <- data.frame(distance = dists, delta_y = sapply(dists, delta_y, "Mean"))
+
+ggplot(effects) + 
+    geom_line(aes(x = distance, y = delta_y)) +
+    xlab("Increase in squared distance from 0") + ylab(expression(Delta[mean_score])) + 
+    geom_segment(data = line_df, 
+                 aes(x = x, y = 0, yend = val, xend = x, color = label)) +
+    scale_color_manual(values = cbPalette) +
+    theme_bw()
+ggsave('../../manuscript/figures/log_lin_effects.png')
+
+## Effects plot with uncertainty
+# 
+# Doesn't work because we don't have a good estimate of the variance covariance
+# matrix(?)
+# 
+# ## Draw betas
+# beta <- mvrnorm(n = 1000, mu = coef(mean_score), Sigma = vcov(mean_score))
+# 
+# ## Make design matrix
+# X <- cbind(rep(1, 200), seq(min(malp$np_score), max(malp$np_score), 
+#                             length.out = 200))
+# y_hat <- X %*% t(beta)
+# 
+# pdat <- data.frame(mean = apply(y_hat, 1, mean), 
+#                    lo = apply(y_hat, 1, quantile, 0.025),
+#                    hi = apply(y_hat, 1, quantile, 0.975))
+# 
+# ## Plot it
+# ggplot(pdat) +
+#     geom_segment(aes(x = X[, 2], xend = X[, 2], y = lo, yend = hi)) + 
+#     geom_point(aes(x = X[, 2], y = mean))
+#     
+
+
+

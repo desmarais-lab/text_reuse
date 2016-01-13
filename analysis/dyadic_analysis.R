@@ -55,15 +55,12 @@ for(i in 1:length(files)){
   right_doc <- c(right_doc,align_dati$right_doc_id)
   ## create the weight according to which each alignment will contribute
   alignment_score <- align_dati$alignment_score
-  alignment_threshold <- 1*(align_dati$alignment_score > 100)
   ## add in the weight
   for(j in 1:length(alignment_score)){
     align_amat[cbind(state1[j],state2[j])] <- align_amat[cbind(state1[j],state2[j])] + 1
     align_amat[cbind(state2[j],state1[j])] <- align_amat[cbind(state2[j],state1[j])] + 1
-    align_amat_score[cbind(state1[j],state2[j])] <- align_amat_score[cbind(state1[j],state2[j])] + alignment_score[j] 
-    align_amat_score[cbind(state2[j],state1[j])] <- align_amat_score[cbind(state2[j],state1[j])] + alignment_score[j]
-    align_amat_threshold[cbind(state1[j],state2[j])] <- align_amat_threshold[cbind(state1[j],state2[j])] + alignment_threshold[j] 
-    align_amat_threshold[cbind(state2[j],state1[j])] <- align_amat_threshold[cbind(state2[j],state1[j])] + alignment_threshold[j]
+    align_amat_score[cbind(state1[j],state2[j])] <- align_amat_score[cbind(state1[j],state2[j])] + log(alignment_score[j]) 
+    align_amat_score[cbind(state2[j],state1[j])] <- align_amat_score[cbind(state2[j],state1[j])] + log(alignment_score[j]) 
   }
   ## print to assess timing
   if(i/5==round(i/5)){
@@ -82,20 +79,20 @@ for(i in 1:length(ustates)){
 nbills_cov <- matrix(0,length(nbills),length(nbills))
 for(i in 2:length(nbills)){
 	for(j in 1:(i-1)){
-		nbills_cov[i,j] <- nbills_cov[j,i] <- nbills[i]+nbills[j]
+		nbills_cov[i,j] <- nbills_cov[j,i] <- nbills[i]*nbills[j]
 	}
 }
 
 
-# subset to 2009 edges
-state_diffusion_edges2009 <- subset(state_diffusion_edges,year==2009)
+# subset to 2008 edges
+state_diffusion_edges2008 <- subset(state_diffusion_edges,year==2008)
 
 # create diffusion adjacency matrix
 diff_amat <- matrix(0,length(ustates),length(ustates))
 # assure the nodes are consistent
 rownames(diff_amat) <- colnames(diff_amat) <- ustates
 # add in ties
-diff_amat[cbind(tolower(state_diffusion_edges2009$state_01),tolower(state_diffusion_edges2009$state_02))] <- state_diffusion_edges2009$src_35_300
+diff_amat[cbind(tolower(state_diffusion_edges2008$state_01),tolower(state_diffusion_edges2008$state_02))] <- state_diffusion_edges2008$src_35_300
 # make sure it is undirected
 diff_amat <- diff_amat + t(diff_amat)
 
@@ -106,14 +103,13 @@ diag(diff_amat) <- 0
 diag(align_amat) <- 0
 # Run ols with qap uncertainty
 set.seed(5)
-bivariate_qap <- netlm(align_amat/nbills_cov,diff_amat,mode="graph",reps=50)
+bivariate_qap <- netlm(align_amat_score,diff_amat,mode="graph",reps=5000)
 results <- cbind(bivariate_qap$coefficients,bivariate_qap$pgreqabs)
 rownames(results) <- c("Intercept","Diffusion Tie")
 colnames(results) <- c("Coefficient","p-value")
 
-###  on log scale
 set.seed(5)
-bivariate_qap_log <- netlm(log(align_amat),diff_amat,mode="graph",reps=5000)
+bivariate_qap_log <- netlm(log(align_amat_score),diff_amat,mode="graph",reps=5000)
 results_log <- cbind(bivariate_qap_log$coefficients,bivariate_qap_log$pgreqabs)
 rownames(results_log) <- c("Intercept","Diffusion Tie")
 colnames(results_log) <- c("Coefficient","p-value")

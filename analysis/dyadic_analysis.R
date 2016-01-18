@@ -1,5 +1,5 @@
 # Set my working directory
-setwd("/Volumes/Data/Dropbox/professional/Research/Active/Diffusion_Networks/text_reuse/data/lid/")
+setwd("~/dropbox/professional/Research/Active/Diffusion_Networks/text_reuse/data/lid/")
 
 # Note, the line below need only be run once, to split the big CSV into smaller files, sending to command line
 # pipe("split -l 100000 bill_to_bill_alignments.csv","r")
@@ -8,7 +8,7 @@ setwd("/Volumes/Data/Dropbox/professional/Research/Active/Diffusion_Networks/tex
 sample_dat <- read.csv("bill_to_bill_alignments.csv",nrows=10,stringsAsFactors=F)
 
 # Read in complete dyadic dataset from APSR 
-state_diffusion_edges <- read.csv("/Volumes/Data/Dropbox/professional/Research/Active/Diffusion_Networks/text_reuse/data/apsr_replication_files/dhb2015apsr-networks.csv",stringsAsFactors=F)
+state_diffusion_edges <- read.csv("~/dropbox/professional/Research/Active/Diffusion_Networks/text_reuse/data/apsr_replication_files/dhb2015apsr-networks.csv",stringsAsFactors=F)
 
 # Create empty adjacency matrix in which to store alignment scores
 ## unique state names
@@ -55,21 +55,34 @@ for(i in 1:length(files)){
   right_doc <- c(right_doc,align_dati$right_doc_id)
   ## create the weight according to which each alignment will contribute
   alignment_score <- align_dati$alignment_score
-  alignment_threshold <- 1*(align_dati$alignment_score > 100)
   ## add in the weight
   for(j in 1:length(alignment_score)){
     align_amat[cbind(state1[j],state2[j])] <- align_amat[cbind(state1[j],state2[j])] + 1
     align_amat[cbind(state2[j],state1[j])] <- align_amat[cbind(state2[j],state1[j])] + 1
-    align_amat_score[cbind(state1[j],state2[j])] <- align_amat_score[cbind(state1[j],state2[j])] + alignment_score[j] 
-    align_amat_score[cbind(state2[j],state1[j])] <- align_amat_score[cbind(state2[j],state1[j])] + alignment_score[j]
-    align_amat_threshold[cbind(state1[j],state2[j])] <- align_amat_threshold[cbind(state1[j],state2[j])] + alignment_threshold[j] 
-    align_amat_threshold[cbind(state2[j],state1[j])] <- align_amat_threshold[cbind(state2[j],state1[j])] + alignment_threshold[j]
+    align_amat_score[cbind(state1[j],state2[j])] <- align_amat_score[cbind(state1[j],state2[j])] + log(alignment_score[j]) 
+    align_amat_score[cbind(state2[j],state1[j])] <- align_amat_score[cbind(state2[j],state1[j])] + log(alignment_score[j]) 
   }
   ## print to assess timing
   if(i/5==round(i/5)){
     print(i)
   }
 }
+
+# number of bills in each state
+all_bills <- unique(c(left_doc,right_doc))
+bill_states <- substr(all_bills,1,2)
+nbills <- numeric(length(ustates))
+for(i in 1:length(ustates)){
+	nbills[i] <- length(which(bill_states==ustates[i]))
+}
+
+nbills_cov <- matrix(0,length(nbills),length(nbills))
+for(i in 2:length(nbills)){
+	for(j in 1:(i-1)){
+		nbills_cov[i,j] <- nbills_cov[j,i] <- nbills[i]*nbills[j]
+	}
+}
+
 
 # subset to 2008 edges
 state_diffusion_edges2008 <- subset(state_diffusion_edges,year==2008)
@@ -90,14 +103,13 @@ diag(diff_amat) <- 0
 diag(align_amat) <- 0
 # Run ols with qap uncertainty
 set.seed(5)
-bivariate_qap <- netlm(align_amat,diff_amat^2,mode="graph",reps=500)
+bivariate_qap <- netlm(align_amat_score,diff_amat,mode="graph",reps=5000)
 results <- cbind(bivariate_qap$coefficients,bivariate_qap$pgreqabs)
 rownames(results) <- c("Intercept","Diffusion Tie")
 colnames(results) <- c("Coefficient","p-value")
 
-###  on log scale
 set.seed(5)
-bivariate_qap_log <- netlm(log(align_amat),diff_amat,mode="graph",reps=5000)
+bivariate_qap_log <- netlm(log(align_amat_score),diff_amat,mode="graph",reps=5000)
 results_log <- cbind(bivariate_qap_log$coefficients,bivariate_qap_log$pgreqabs)
 rownames(results_log) <- c("Intercept","Diffusion Tie")
 colnames(results_log) <- c("Coefficient","p-value")

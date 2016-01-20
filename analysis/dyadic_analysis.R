@@ -119,6 +119,11 @@ library(xtable)
 results_all <- cbind(results,results_log)
 xtable(results_all,dig=4)
 
+# boxplots 
+x <- diff_amat[lower.tri(diff_amat)]
+y <- log(align_amat_score)[lower.tri(align_amat_score)]
+
+
 ## Descriptive statistics
 diag(align_amat) <- NA
 median(align_amat,na.rm=T)

@@ -76,6 +76,17 @@ identify substantively equivalent bills.
 \textit{Bill text}\\
 In order to calculate the alignment scores between bills, we rely on a database collected by Burgess et al. (2015) and the Sunlight foundation. This data base contains approximately 500,000 bills from 2008 to 2015. The available metadata for the bills includes a timestamp for introduction and approval of the bill, the name and party affiliation of the sponsor(s), the state and the bill id.  This collection of bills is based on all bills that are available through the \url{openstates.org} API. Open states is a website maintained by the Sunlight Foundation, in order to increase transparency in state politics. The Sunlight Foundation use web scrapers to access all bills that are available on the websites of legislatures in all US states. This includes enacted legislation as well as bill that is still in the legislative process, or where not enacted. The database contains the bill text as well as additional information on the legislative process for the bill. We have the first and the last version of the bill text, the sponsor of the bill and all legislative action that was taken on the bill. 
 
+Figure \ref{fig:bill_desc} displays the year ranges and number of bills in the bill data base.
+
+\begin{figure}[]
+    \centering
+    \includegraphics{figures/year_count_by_state.png}
+    \caption{Description of the bill database. The horizontal bars display the time range for which bills are available for each state. The color of the bar indicates how many bills are available for this state.}
+    \label{fig:bill_desc}
+\end{figure}<++>
+
+
+
 \textit{Ideological Scores}\\
 For the ideological matching, we rely on latent ideology scores measured by \citep{shor2011}. The data set contains scores for 20738 legislators from 50 state legislatures as well as their party affiliation and their time in office. 
 

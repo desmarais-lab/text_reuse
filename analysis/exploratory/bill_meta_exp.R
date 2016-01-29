@@ -39,7 +39,7 @@ ggplot(state_desc) +
                      yend = seq(1,length(state)), color = count), size = 2) + 
     theme_bw() + xlab("Year") + ylab("State") +
     scale_color_continuous(name = "# of Bils") + 
-    guides(size = FALSE) +
+    guides(size = FALSE)
 ggsave('../../manuscript/figures/year_count_by_state.png')
 
 

@@ -90,7 +90,29 @@ Figure \ref{fig:bill_desc} displays the year ranges and number of bills in the b
 \textit{Ideological Scores}\\
 For the ideological matching, we rely on latent ideology scores measured by \citep{shor2011}. The data set contains scores for 20738 legislators from 50 state legislatures as well as their party affiliation and their time in office. 
 
-We additionally construct a validation dataset of equivalent bills from information obtained from the National Conference of State Legislatures (NCSL). The NCSL publishes summary tables on specific policies, citing the relevant bills or sections in the state statutes of the states that have implemented regulations on this policy. We collected all these tables, and extracted all bills that address the same policy measure and that overlap with the time frame covered by our bill database.
+
+\textit{Ground truth - NCSL Tables}\\
+
+To build a ground truth data set, we rely on thematic tables published by the National Council of State Legislatures\footnote{\url{www.ncsl.org}} (NCSL). We collected a sample of these tables with the following procedure:
+
+\begin{singlespacing}
+
+\begin{enumerate}
+    \item Collect all urls returned by the web search query: ''site:ncsl.org ''legislation.aspx````\footnote{We used the bing websearch API to collect the urls.}
+    \item Sample 50 urls
+    \item Select bills that fulfill these three conditions:
+        \begin{enumerate}
+            \item The website is a NCSL table
+            \item The table refers (at least in part) to legislation introduced 2011 or later
+            \item The table contains less than 100 individual bills
+        \end{enumerate}
+    \item Scrape all information from these tables
+\end{enumerate}
+
+\end{singlespacing}
+
+Condition a) is necessary, since some of the urls returned by the web query refer to blog entries or to protected websites that require NCSL membership. The rationale behind condition b) is to maximize the number of bills we can match to our database (see Figure \ref{fig:bill_desc}). We additionally constrain the number of bills per table to be below 100, in order to assure, that the topic of the table is not too broad. We chose 100 since this number would correspond roughly to two bills per state (often there is a house and a senate bill in each state for a particular policy).
+The web query from step 1 returned 266 urls. From the 50 sampled urls 22 fulfilled the three criteria. From these 23 tables we constructed a dataset of [???] bills, of wich we could match [???] to our data base of bill text.
 
 
 \section{Alignments}

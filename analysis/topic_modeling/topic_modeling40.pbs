@@ -1,0 +1,10 @@
+#!/bin/sh
+#PBS -l nodes=1:ppn=4
+#PBS -l walltime=09:30:00
+#PBS -l mem=48gb
+#PBS -N test_program
+#PBS -m abe
+#PBS -M bdesmarais@psu.edu
+
+cd $PBS_O_WORKDIR
+R CMD BATCH topic_modeling40.R

@@ -1,7 +1,7 @@
 
 %DIF LATEXDIFF DIFFERENCE FILE
-%DIF DEL temp             Wed Jan 20 14:24:44 2016
-%DIF ADD text_reuse.tex   Wed Jan 20 14:24:44 2016
+%DIF DEL temp             Wed Feb  3 08:56:56 2016
+%DIF ADD text_reuse.tex   Wed Feb  3 08:56:56 2016
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass[12pt]{article} %a4paper
 
@@ -57,35 +57,25 @@
 
 \begin{document} 
 
-\title{\DIFaddbegin \DIFadd{Text as Policy: }\DIFaddend Identifying Equivalent State Bills through Text Reuse. \large Subtitle.}
+\title{Text as Policy: Identifying Equivalent State Bills through Text Reuse. \large Subtitle.}
 \date{\today}
 \author{Bruce Desmarais, Matt Burgess, Fridolin Linder, Eugenia Giraudi}
 
 \maketitle
 
 \begin{abstract} 
- Much political science research relies on identifying the substantive similarity of legislation, especially in the study of policy diffusion. Scholars mostly rely on hand-coded datasets. However, in order to study policy diffusion more broadly, for example by extending the study to dozens or more policy domains, prohibitive volumes of legislative text would have to be analyzed manually. Common text analysis algorithms such as topic models or bag-of-words based text similarity measures are too coarse to identify policy similarity. However, legislators often directly use text from bills introduced in other legislatures or bill text provided by interest groups in model legislation. We propose the use of text-sequencing algorithms to find matching text between bills. We describe a new approach to the application of sequence alignment algorithms to large amounts of legislative text, and assess the validity of text reuse as a measure of substantive bill similarity. Three key results, drawn from an analysis of 500,000 bills from US-state legislatures, demonstrate the validity of text reuse as a measure of policy similarity. First, we show that bills introduced by ideologically similar sponsors are more likely to exhibit a high degree of text reuse. Second, we show that the main topical themes underlying strings of reused text map closely onto major areas of public policy in the US States. Third, we show that rates of text reuse across state borders correlates strongly with the state policy diffusion ties data recently introduced by Desmarais, Harden and Boehmke (APSR, 2015).    
+    Much political science research relies on identifying the substantive similarity of legislation, especially in the study of policy diffusion. Scholars mostly rely on hand-coded datasets. However, in order to study policy diffusion more broadly, for example by extending the study to dozens or more policy domains, prohibitive volumes of legislative text would have to be analyzed manually. Common text analysis algorithms such as topic models or bag-of-words based text similarity measures are too coarse to identify policy similarity. However, legislators often directly use text from bills introduced in other legislatures or bill text provided by interest groups in model legislation. We propose the use of text-sequencing algorithms to find matching text between bills. We describe a new approach to the application of sequence alignment algorithms to large amounts of legislative text, and assess the validity of text reuse as a measure of substantive bill similarity. Three key results, drawn from an analysis of 500,000 bills from US-state legislatures, demonstrate the validity of text reuse as a measure of policy similarity. First, we show that bills introduced by ideologically similar sponsors are more likely to exhibit a high degree of text reuse. Second, we show that the main topical themes underlying strings of reused text map closely onto major areas of public policy in the US States. Third, we show that rates of text reuse across state borders correlates strongly with the state policy diffusion ties data recently introduced by \DIFdelbegin \DIFdel{Desmarais, Harden and Boehmke (APSR, 2015)}\DIFdelend \DIFaddbegin \DIFadd{\mbox{%DIFAUXCMD
+\citet{desmarais2015}}%DIFAUXCMD
+}\DIFaddend .
 \end{abstract}
 
 \section{Introduction}
 
-\DIFaddbegin \DIFadd{The diffusion of public policy has been a central focus in political science research since at least \mbox{%DIFAUXCMD
-\citet{walker1969}}%DIFAUXCMD
-. }\DIFaddend Research on public policy adoption and diffusion has conventionally relied on modest hand-coded datasets \DIFdelbegin \DIFdel{encode when }\DIFdelend \DIFaddbegin \DIFadd{that record when a set of jurisdictions adopt }\DIFaddend one or a handful of \DIFdelbegin \DIFdel{policies were adopted by each jurisdiction \mbox{%DIFAUXCMD
-\citep{boehmke2012}}%DIFAUXCMD
-. Scholars of public policy diffusion have recently turned their attention to the empirical identification of emulation ties connecting policy jurisdictions \mbox{%DIFAUXCMD
-\citep{volden2006,boehmke2009,desmarais2015,garrett2015}}%DIFAUXCMD
-. Identifying instances of policy emulation and explicit diffusion ties opens policy diffusion scholarship to an entirely new set of questions and theories that can be approached empirically. }\DIFdelend \DIFaddbegin \DIFadd{similar policies \mbox{%DIFAUXCMD
-\citep{boehmke2012}}%DIFAUXCMD
-. }\DIFaddend In this paper we draw upon a massive and nearly all-encompassing source of data \DIFdelbegin \DIFdel{from which to infer diffusion ties }\DIFdelend \DIFaddbegin \DIFadd{with which to measure the consideration and adoption of similar policies }\DIFaddend -- the text of legislation \DIFdelbegin \DIFdel{. If the }\DIFdelend \DIFaddbegin \DIFadd{considered in US state legislatures. We take an automated, }\DIFaddend computer-based\DIFaddbegin \DIFadd{, approach to the }\DIFaddend analysis of bill text\DIFdelbegin \DIFdel{can be tuned to successfully identify policy adoption and emulation, we will be able to vastly scale up both the scale of data gathered and the precision of diffusion inferences}\DIFdelend \DIFaddbegin \DIFadd{. This vastly increases the volume of data that can be included in policy diffusion research}\DIFaddend . 
+The diffusion of public policy has been a central focus in political science research since at least \citet{walker1969}. Research on public policy adoption and diffusion has conventionally relied on modest hand-coded datasets that record when a set of jurisdictions adopt one or a handful of similar policies \citep{boehmke2012}. In this paper we draw upon a massive and nearly all-encompassing source of data with which to measure the consideration and adoption of similar policies -- the text of legislation considered in US state legislatures. We take an automated, computer-based, approach to the analysis of bill text. This vastly increases the volume of data that can be included in policy diffusion research. 
 
-\DIFdelbegin \DIFdel{How ever, it is not clear, how well text reuse is suited to to detect real policy diffusion }\DIFdelend \DIFaddbegin \DIFadd{Through the development of automated text-analytic methods of measuring policy diffusion we consider several methodological challenges and broader conceptual hurdles. The central methodological puzzles are two-fold}\DIFaddend . \DIFdelbegin \DIFdel{There are several complications that we are addressing in this paper. }\DIFdelend First, \DIFdelbegin \DIFdel{every bill has procedural content that is not related to the policy content of the bill. Since every state legislature has a set of such standard or boiler plate text in each bill, there will be significant text reusebetween bills in the same state and possibly also between bills from different states}\DIFdelend \DIFaddbegin \DIFadd{we need to extract the substantive text of the legislation---minimizing the affect of procedural text on our measures of text reuse}\DIFaddend . Second, \DIFdelbegin \DIFdel{it is not obvious how much text reuse will mean substantive policy overlap. Given that each bill pair has a continuous proportion of overlapping text, setting the threshold too low might mean to classify billsas equivalent that are only in the same policy area, or are on a similar issue, but are opposed in content. On the other hand, setting the threshold too high could mean overlooking equivalent bills because of small insignificant changes to the text. 
- In this paper we address these issues and evaluate how much policy overlap can be detected using text reuse measures. Following Wilkerson et al. (2015) we use supervised machine learning to separate boiler plate from substantive text. We further more use an original data set on policy diffusion to evaluate how much equivalent policy can be detected using measures of text reuse.
-Using the system developed by Burges et al. (2015) we calculate text reuse scores for all pairs of bills in our dataset.  
-We will then assess the scientific value of the text reuse scores in several different ways}\DIFdelend \DIFaddbegin \DIFadd{we need to develop a method for quantitatively scoring the reused text between bills. The main conceptual puzzle with which we engage is the potential ambiguity regarding whether two policies should be considered the same for the purpose of policy diffusion research. We cannot define a standard in the literature according to which two policies can be deemed equivalent, and argue instead for conceptualizing policy diffusion in terms of a continuum of similar policy rather than a dichotomy of equivalence.
-}
+Through the development of automated text-analytic methods of measuring policy diffusion we consider several methodological challenges and broader conceptual hurdles. The central methodological puzzles are two-fold. First, we need to extract the substantive text of the legislation---minimizing the affect of procedural text on our measures of text reuse. Second, we need to develop a method for quantitatively scoring the reused text between bills. The main conceptual puzzle with which we engage is the potential ambiguity regarding whether two policies should be considered the same for the purpose of policy diffusion research. We cannot define a standard in the literature according to which two policies can be deemed equivalent, and argue instead for conceptualizing policy diffusion in terms of a continuum of similar policy rather than a dichotomy of equivalence.
 
-\DIFadd{We take a multi-pronged approach to evaluating the performance of text reuse in measuring the consideration and adoption of similar laws}\DIFaddend . First, we use topic modeling on the discovered reused text sequences to assess the content of the matching text. Second, we investigate the relationship between the ideological distance of the legislators that proposed two bills and the text reuse scores between these bills. Third, we assess the how well policy diffusion networks that have been established by previous research can be \DIFdelbegin \DIFdel{discovered }\DIFdelend \DIFaddbegin \DIFadd{predicted }\DIFaddend using the amount of text reuse between states. And fourth, we use data on equivalent bills collected by the National Council of State Legislatures to build an evaluation data set containing true policy overlap to assess the accuracy of text reuse in predicting policy overlap.
+We take a multi-pronged approach to evaluating the performance of text reuse in measuring the consideration and adoption of similar laws. First, we use topic modeling on the discovered reused text sequences to assess the content of the matching text. Second, we investigate the relationship between the ideological distance of the legislators that proposed two bills and the text reuse scores between these bills. Third, we assess the how well policy diffusion networks that have been established by previous research can be predicted using the amount of text reuse between states. And fourth, we use data on equivalent bills collected by the National Council of State Legislatures to build an evaluation data set containing true policy overlap to assess the accuracy of text reuse in predicting policy overlap.
 
 This work has several important implications. First, it allows us to estimate, how policies are transferred between states. Do state legislators work mainly from templates from other states or interest groups, or to what extent do legislators draft their own bill text. Furthermore, text reuse is a relatively simple metric to calculate for large amounts of text. Previous scholars of policy diffusion mainly relied on case studies or manually coded data sets of policy diffusion in few policy areas. If working copying text forms a significant portion of how legislators adopt policies from other states, text reuse can be used to easily gather comprehensive data sets on policy diffusion.  
 
@@ -114,22 +104,45 @@ identify substantively equivalent bills.
 \textit{Bill text}\\
 In order to calculate the alignment scores between bills, we rely on a database collected by Burgess et al. (2015) and the Sunlight foundation. This data base contains approximately 500,000 bills from 2008 to 2015. The available metadata for the bills includes a timestamp for introduction and approval of the bill, the name and party affiliation of the sponsor(s), the state and the bill id.  This collection of bills is based on all bills that are available through the \url{openstates.org} API. Open states is a website maintained by the Sunlight Foundation, in order to increase transparency in state politics. The Sunlight Foundation use web scrapers to access all bills that are available on the websites of legislatures in all US states. This includes enacted legislation as well as bill that is still in the legislative process, or where not enacted. The database contains the bill text as well as additional information on the legislative process for the bill. We have the first and the last version of the bill text, the sponsor of the bill and all legislative action that was taken on the bill. 
 
-\DIFaddbegin \DIFadd{Figure \ref{fig:bill_desc} displays the year ranges and number of bills in the bill data base.
-}
+Figure \ref{fig:bill_desc} displays the year ranges and number of bills in the bill data base.
 
 \begin{figure}[ht!]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/year_count_by_state.png}
-    \caption{\DIFaddFL{Description of the bill database. The horizontal bars display the time range for which bills are available for each state. The color of the bar indicates how many bills are available for this state.}}
+    \caption{Description of the bill database. The horizontal bars display the time range for which bills are available for each state. The color of the bar indicates how many bills are available for this state.}
     \label{fig:bill_desc}
 \end{figure}
 
 
 
-\DIFaddend \textit{Ideological Scores}\\
+\textit{Ideological Scores}\\
 For the ideological matching, we rely on latent ideology scores measured by \citep{shor2011}. The data set contains scores for 20738 legislators from 50 state legislatures as well as their party affiliation and their time in office. 
 
-We additionally construct a validation dataset of equivalent bills from information obtained from the National Conference of State Legislatures (NCSL). The NCSL publishes summary tables on specific policies, citing the relevant bills or sections in the state statutes of the states that have implemented regulations on this policy. We collected all these tables, and extracted all bills that address the same policy measure and that overlap with the time frame covered by our bill database.
+
+\DIFdelbegin \DIFdel{We additionally construct a validation dataset of equivalent bills from information obtained from the National Conference }\DIFdelend \DIFaddbegin \textit{\DIFadd{Ground truth - NCSL Tables}}\\
+
+\DIFadd{To build a ground truth data set, we rely on thematic tables published by the National Council }\DIFaddend of State Legislatures\DIFaddbegin \footnote{\url{www.ncsl.org}} \DIFaddend (NCSL). \DIFdelbegin \DIFdel{The NCSL publishes summary tables
+on specific policies, citing the relevant bills or sections in the state statutes of the states that have implemented regulations on this policy. We collected all these tables, and extracted all billsthat address the same policy measure and that overlap with the time frame covered by }\DIFdelend \DIFaddbegin \DIFadd{We collected a sample of these tables with the following procedure:
+}
+
+\begin{singlespacing}
+
+\begin{enumerate}
+    \item \DIFadd{Collect all urls returned by the web search query: ''site:ncsl.org ''legislation.aspx````}\footnote{\DIFadd{We used the bing websearch API to collect the urls.}}
+    \item \DIFadd{Sample 50 urls
+    }\item \DIFadd{Select bills that fulfill these three conditions:
+        }\begin{enumerate}
+            \item \DIFadd{The website is a NCSL table
+            }\item \DIFadd{The table refers (at least in part) to legislation introduced 2011 or later
+            }\item \DIFadd{The table contains less than 100 individual bills
+        }\end{enumerate}
+    \item \DIFadd{Scrape all information from these tables
+}\end{enumerate}
+
+\end{singlespacing}
+
+\DIFadd{Condition a) is necessary, since some of the urls returned by the web query refer to blog entries or to protected websites that require NCSL membership. The rationale behind condition b) is to maximize the number of bills we can match to our database (see Figure \ref{fig:bill_desc}). We additionally constrain the number of bills per table to be below 100, in order to assure, that the topic of the table is not too broad. We chose 100 since this number would correspond roughly to two bills per state (often there is a house and a senate bill in each state for a particular policy).
+The web query from step 1 returned 266 urls. From the 50 sampled urls 22 fulfilled the three criteria. From these 23 tables we constructed a dataset of 950 bills, of which we could match 581 to }\DIFaddend our bill database.
 
 
 \section{Alignments}
@@ -205,7 +218,7 @@ The topic modeling results are presented in Table \ref{tab:topics}. We see that 
 
 \subsection{Diffusion networks and Text re-use}
 
-To evaluate whether text re-use corresponds to the transfer of policy, we test whether the presence of a diffusion network tie between two states is a predictor of text reuse. We use the policy diffusion networks inferred in \citet{desmarais2015}. We use [FL FILL IN] to measure the incidence of dyadic text alignment between all state bills covering the time period 200--[??]. For each bill, we first gather the 100 closest bills based on cosine similarity in the term vectors characterizing the bills. We then represent a dyad of bills by the text alignments between them. For each state-pair we calculate the \DIFdelbegin \DIFdel{number of alignments between bills from each state. The median number of alignments between states is 3,491 with a mean of 6,309 and standard deviation of 8,809. The }\DIFdelend \DIFaddbegin \DIFadd{sum of the natural logs of the alignment scores. The }\DIFaddend ``Diffusion Ties'' variable measures the number of diffusion edges between states in the 2008 diffusion network, as measured by \citet{desmarais2015}. The number of diffusion edges between two states is either 0, 1, or 2. The diffusion network in 2008 is inferred using policy adoptions in the 35 years preceding (and excluding) 2008. As such, we do not risk double-counting bills in the policy adoption and text re-use data. There is one observation in the analysis for each of the 1,225 unique state-pairs. Since this is dyadic data, we use a matrix permutation method, quadratic assignment procedure, to calculate $p$-values \citep{krackhardt1988}. As a robustness check, we run the model with both the identity and log link.\footnote{The $p$-values were calculated using 5,000 random matrix permutations.}
+To evaluate whether text re-use corresponds to the transfer of policy, we test whether the presence of a diffusion network tie between two states is a predictor of text reuse. We use the policy diffusion networks inferred in \citet{desmarais2015}. We use [FL FILL IN] to measure the incidence of dyadic text alignment between all state bills covering the time period 200--[??]. For each bill, we first gather the 100 closest bills based on cosine similarity in the term vectors characterizing the bills. We then represent a dyad of bills by the text alignments between them. For each state-pair we calculate the sum of the natural logs of the alignment scores. The ``Diffusion Ties'' variable measures the number of diffusion edges between states in the 2008 diffusion network, as measured by \citet{desmarais2015}. The number of diffusion edges between two states is either 0, 1, or 2. The diffusion network in 2008 is inferred using policy adoptions in the 35 years preceding (and excluding) 2008. As such, we do not risk double-counting bills in the policy adoption and text re-use data. There is one observation in the analysis for each of the 1,225 unique state-pairs. Since this is dyadic data, we use a matrix permutation method, quadratic assignment procedure, to calculate $p$-values \citep{krackhardt1988}. As a robustness check, we run the model with both the identity and log link.\footnote{The $p$-values were calculated using 5,000 random matrix permutations.}
 
 \begin{table}[ht]
 \centering
@@ -215,8 +228,8 @@ To evaluate whether text re-use corresponds to the transfer of policy, we test w
   \hline
  & Coefficient & p-value & Coefficient & p-value \\ 
   \hline
-Intercept & \DIFdelbeginFL \DIFdelFL{5717.18 }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{21220.1435 }\DIFaddendFL & 0.0000 & \DIFdelbeginFL \DIFdelFL{8.0431 }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{9.3643 }\DIFaddendFL & 0.0000 \\ 
-  Diffusion Ties & \DIFdelbeginFL \DIFdelFL{2417.00 }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{8551.8602 }\DIFaddendFL & \DIFdelbeginFL \DIFdelFL{0.0308 }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{0.0352 }\DIFaddendFL & \DIFdelbeginFL \DIFdelFL{0.3288 }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{0.3190 }\DIFaddendFL & \DIFdelbeginFL \DIFdelFL{0.0452 }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{0.0494 }\DIFaddendFL \\ 
+Intercept & 21220.1435 & 0.0000 & 9.3643 & 0.0000 \\ 
+  Diffusion Ties & 8551.8602 & 0.0352 & 0.3190 & 0.0494 \\ 
    \hline
 \end{tabular}
 \caption{Predicting number of alignments in legislation across states with diffusion ties. Coefficients calculated with OLS regression. $p$-values based on 5,000 QAP permuations.}

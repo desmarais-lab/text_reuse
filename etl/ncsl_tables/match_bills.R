@@ -6,6 +6,8 @@ ncsl_bills <- read.csv('../../data/ncsl/ncsl_data_from_sample.csv',
 db_bills <- read.csv('../../data/bill_metadata.csv', header = TRUE,
                      stringsAsFactors = FALSE)
 
+alignments <- tbl_df(read.csv('../../data/lid/bill_to_bill_scores_only.csv',
+                              stringsAsFactors = FALSE))
 
 # Preprocess db bills
 
@@ -32,6 +34,7 @@ db_bills <- tbl_df(db_bills) %>% select(state, year, id, num_id, let_id)
 no_match <- 0
 multi_match <- 0
 one_match <- 0
+ncsl_bills$matched_from_db <- NA
 
 for(i in 1:nrow(ncsl_bills)) {
     id_ <- ncsl_bills$id[i]
@@ -43,19 +46,21 @@ for(i in 1:nrow(ncsl_bills)) {
     # Get relevant subset
     subs <- filter(db_bills, state == state_, year == year_, num_id == num_)
     if(nrow(subs) == 0) {
-        print(paste('(LVL1)No match for:', state_, id_))
+        print(paste('(LVL1)No match for:', state_, id_, year_))
         no_match <- no_match + 1
         next
     } else {
         if(nrow(subs) == 1) {
             print(paste('(LVL2)Found match for:', state_, id_, year_))
             one_match <- one_match + 1
+            ncsl_bills$matched_from_db[i] <- subs$id
         } else {
             # Match multiple
             subs_ <- filter(subs, let_id == let_)
             if(nrow(subs_) == 1) {
                 print(paste('(LVL3)Found match for:', state_, id_, year_))
                 one_match <- one_match + 1
+                ncsl_bills$matched_from_db[i] <- subs_$id
             } else {
                 if(nrow(subs_) == 0) {
                     # Distance matching procedure
@@ -67,6 +72,7 @@ for(i in 1:nrow(ncsl_bills)) {
                         print(paste('(LVL4)Found match for:', state_, id_, 
                                     year_))
                         one_match <- one_match + 1
+                        ncsl_bills$matched_from_db[i] <- subs$id
                     } else {
                         if(nrow(subs) == 0){
                             print(paste('(LVL4)No match for:', state_, id_, 
@@ -82,7 +88,7 @@ for(i in 1:nrow(ncsl_bills)) {
                 } else {
                     print(paste('(LVL3)Multiple matches on num and let for:', state_, 
                           id_, year_))
-                    print(subs)
+                    print(subs_)
                     multi_match <- multi_match + 1
                 }
             }
@@ -96,3 +102,5 @@ print(paste('Found', one_match, 'matches'))
 print(paste(no_match, 'not matched'))
 print(paste(multi_match, 'multiple matches'))
 
+write.csv(ncsl_bills, file = '../../data/ncsl/ncsl_data_from_sample_matched.csv', 
+          row.names = FALSE)

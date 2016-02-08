@@ -43,26 +43,21 @@ load("qap_data.RData")
 # 
 # # Alignments
 # alignments <- tbl_df(read.csv('../../data/lid/bill_to_bill_scores_only.csv', 
-#                               colClasses = c("factor", "factor", "numeric"),
-#                               skip = 1, 
-#                               #nrows = 1000
-#                               ) )
+#                               header = TRUE, stringsAsFactors = FALSE))
 # 
 # ## Match alignments with ideology scores
 # temp <- mutate(meta, left_doc_id = unique_id, left_ideology = sponsor_idology) %>%
-#     select(left_doc_id, left_ideology)
+#     dplyr::select(left_doc_id, left_ideology)
 # df <- left_join(alignments, temp, by = "left_doc_id")
 # temp <- mutate(meta, right_doc_id = unique_id, right_ideology = sponsor_idology) %>%
-#     select(right_doc_id, right_ideology)
+#     dplyr::select(right_doc_id, right_ideology)
 # df <- left_join(df, temp, by = "right_doc_id")
 # df <- mutate(df, ideology_dist = (left_ideology - right_ideology)^2,
 #              dyad_id = as.factor(paste0(left_doc_id, right_doc_id)))
 # 
-# ## Aggregate to bill level
+# # Aggregate to bill level
 # aggr <- group_by(df, left_doc_id, right_doc_id) %>%
-#     summarize(sum_score = sum(alignment_score), n_align = n(),
-#               mean_score = mean(alignment_score), 
-#               max_score = max(alignment_score),
+#     summarize(sum_score = sum(alignment_score), 
 #               ideology_dist = ideology_dist[1],
 #               left_ideology = left_ideology[1],
 #               right_ideology = right_ideology[1]) %>% 
@@ -71,19 +66,19 @@ load("qap_data.RData")
 # rm(df, alignments, temp)
 # gc()
 # 
-# # ==============================================================================
-# # Descriptives
-# # ==============================================================================
-# 
-# # Number of bills with ideology scores
-# length(which(!is.na(meta$sponsor_idology))) / nrow(meta)
-# 
-# # Number of dyads with ideology distance
-# length(which(!is.na(aggr$ideology_dist))) / nrow(aggr)
-# 
-# # Distribution of distance and log(score)
-# ggplot(aggr) + geom_histogram(aes(ideology_dist), color = "white")
-# 
+# ==============================================================================
+# Descriptives
+# ==============================================================================
+
+# Number of bills with ideology scores
+length(which(!is.na(meta$sponsor_idology))) / nrow(meta)
+
+# Number of dyads with ideology distance
+length(which(!is.na(aggr$ideology_dist))) / nrow(aggr)
+
+# Distribution of distance and log(score)
+ggplot(aggr) + geom_histogram(aes(ideology_dist), color = "white")
+
 # # ==============================================================================
 # # Analyses
 # # ==============================================================================
@@ -93,7 +88,7 @@ load("qap_data.RData")
 # aggr <- as.data.frame(aggr)
 # 
 # ## Get ideology scores
-# ideology <- select(meta, unique_id, sponsor_idology)
+# ideology <- dplyr::select(meta, unique_id, sponsor_idology)
 # ideology <- as.data.frame(ideology)
 # 
 # ## Generate fast lookup objects
@@ -143,63 +138,33 @@ load('qap_results.RData')
 # edges[, 3] <- aggr$sum_score
 # perm_dist_sum <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores)
 # 
-# ## Linear model for mean aggregation (with qap standard errors)
-mean_score <- lm(log(mean_score) ~ ideology_dist, data = aggr)
-# edges[, 3] <- aggr$mean_score
-# perm_dist_mean <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores)
-# 
-# ## Linear model for max aggregation (with qap standard errors)
-# max_score <- lm(log(max_score) ~ ideology_dist, data = aggr)
-# edges[, 3] <- aggr$max_score
-# perm_dist_max <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores)
-# 
-# ## Linear model for max aggregation (with qap standard errors)
-# n_align <- lm(log(n_align) ~ ideology_dist, data = aggr)
-# edges[, 3] <- aggr$n_align
-# perm_dist_n_align <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores)
-
-
-# ==============================================================================
+# # ==============================================================================
 # # Output results
 # # ==============================================================================
 # 
 # # Table for regression results
-# mods <- list(sum_score, mean_score, max_score, n_align)
-# perms <- list(perm_dist_sum, perm_dist_mean, perm_dist_max, perm_dist_n_align)
+# res <- data.frame(Intercept = sum_score$coef[1],
+#                   Estimate = sum_score$coef[2],
+#                   Std.Dev = sqrt(var(perm_dist_sum)))
+# rownames(res) <- NULL
 # 
+# # # Store results to disk
+# save(list = c("sum_score", "perm_dist_sum"), file = "qap_results.RData")
 
-# res <- data.frame(Intercept = sapply(mods, function(x) x$coef[1]),
-#                   Estimate = sapply(mods, function(x) x$coef[2]),
-#                   Std.Dev = sapply(perms, function(x) sqrt(var(x))))
-rownames(res) <- c("Sum", "Mean", "Max", "No. Alignments")
-#
-# # Store results to disk
-# save(list = c("res", "perms"), file = "qap_results.RData")
-names(perms) <- rownames(res)
-res$p <- rep(NA, 4)
-for(i in c(1:4)){
-    res$p[i] <- length(which(abs(perms[[i]]) > abs(res[i, 2]))) / length(perms[[i]])
-}
+res$p <- length(which(abs(perm_dist_sum) > abs(res[1, 2]))) / length(perm_dist_sum)
 
 # Make latex results table
 sink(file = '../../manuscript/tables/ideology_regs.tex')
-xtable(res, digits = 3, caption = "Log-Linear models for alignment and euclidian 
+xtable(res, digits = 3, caption = "Log-Linear model for alignment and euclidian 
        distance in ideology. Two tailed p-values are generated from quadratic 
        assignment procedure with 1000 iterations. Std.Dev is the standard 
-       deviation of the null distribution. The rows correspond to 
-       different methods of aggregating the section alignments to bill 
-       allignments: \\textit{Sum}: Sum of alignment scores of all alignments, 
-       \\textit{Mean}: Average alignment score accross secion pairs bill dyad, 
-       \\textit{Max}: Highest alignment score seciton pairs of bill dyad, 
-       \\textit{No. Alignments}: Number of alignments for bill dyad.",
+       deviation of the null distribution.",
        label = "tab:ideology_regs")
 sink()
 
 # PLot distributions
-n_qap_perm <- length(perms[[1]])
-pdat <- data.frame(permutations = do.call(c, perms), 
-                   aggregation = rep(c("Sum", "Mean", "Max", "# Alignments"), 
-                                     each = n_qap_perm))
+n_qap_perm <- length(perm_dist_sum)
+pdat <- data.frame(permutations = perm_dist_sum)
 
 ests <- data.frame(aggregation = c("Sum", "Mean", "Max", "# Alignments"), 
                    beta = res$Estimate)
@@ -207,11 +172,10 @@ ests <- data.frame(aggregation = c("Sum", "Mean", "Max", "# Alignments"),
 ggplot(pdat) + 
     geom_histogram(aes(permutations), color = "white", binwidth = 0.0005,
                  fill = "grey16") + 
-    geom_vline(data = ests, aes(xintercept = beta), color = cbPalette[2]) +
+    geom_vline(aes(xintercept = res$Estimate), color = cbPalette[2]) +
     geom_text(data = ests, aes(x = (beta - 0.001), y = 200, angle = 90, 
                                label = "Estimate", color = cbPalette[2]
                                ), show_guide = FALSE) +
-    facet_wrap(~ aggregation, scales = "fixed") +
     xlab("Coefficient") + ylab("Count") + 
     theme_bw()
 ggsave('../../manuscript/figures/qap_dist.png')
@@ -249,19 +213,18 @@ ext_to_ext <- (median_legs$min_ideology[median_legs$party == "D"] -
                    median_legs$max_ideology[median_legs$party == "R"])^2
 q_to_q <- (median_legs$first_quart[median_legs$party == "D"] - 
                    median_legs$third_quart[median_legs$party == "R"])^2
-delta_y <- function(dist, mod) {
-    exp(res[mod, "Intercept"] + res[mod, "Estimate"] * dist) -
-        exp(res[mod, "Intercept"] + res[mod, "Estimate"] * 0)    
+delta_y <- function(dist) {
+    exp(res$Intercept + res$Estimate * dist) - exp(res$Intercept)    
 }
 
 line_df <- data.frame(x = c(med_to_med, q_to_q, ext_to_ext),
-                      val = c(delta_y(med_to_med, "Mean"), delta_y(q_to_q, "Mean"), 
-                              delta_y(ext_to_ext, "Mean")),
+                      val = c(delta_y(med_to_med), delta_y(q_to_q), 
+                              delta_y(ext_to_ext)),
                       label = c("Median Dem to Median Rep", "0.05 to 0.95 Quantile",
                                 "Min Dem to Max Rep"))
 
 dists <- seq(0, 100, length.out = 200)
-effects <- data.frame(distance = dists, delta_y = sapply(dists, delta_y, "Mean"))
+effects <- data.frame(distance = dists, delta_y = sapply(dists, delta_y))
 
 ggplot(effects) + 
     geom_line(aes(x = distance, y = delta_y)) +

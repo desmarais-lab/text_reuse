@@ -43,4 +43,10 @@ gc()
 df <- mutate(bill_pairs, alignment_score_zeros = ifelse(is.na(alignment_score), 
                                                         0, alignment_score))
 
-ggplot(df) + geom_histogram(aes(x = alignment_score_zeros, fill = same_table))
+# Exclue one big outlier
+df <- df[-which.max(df$alignment_score), ]
+
+ggplot(df) + 
+    geom_point(aes(x = same_table, y = alignment_score_zeros), 
+               position = "jitter", alpha = 0.6, size = 0.4) +
+    scale_y_log10()

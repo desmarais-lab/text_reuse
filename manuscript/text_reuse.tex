@@ -231,15 +231,13 @@ The MALP dataset contains ideal points for about $20,000$ state legislators. The
 
 In order to assess the validity of text reuse as a measure of substantive policy overlap, we expect the quality of the alignments to be inversely correlated to the distance of the bills sponsors' ideal points. The MALP ideal points are located on a common scale across all states, the distance between sponsors from different states is therefore meaningful. 
 
-In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. Table \ref{tab:ideology_regs} displays results for several methods of combining multiple alignments across sections of the same bill dyad. Specifically we investigate four different ways of aggregating to the bill level: the sum of the alignment scores of the sections of a bill dyad, the mean of these scores, the maximum of the scores, and the number of alignments between two bills. 
-
-Each model is a log-linear model regressing the logarithm of the aggregated measure on the ideological distance between the ideal point of the two bills forming the dyad. The ideal point of the bill is derived from the ideal point of the bill sponsor. In cases where several legislators sponsor a bill we use the average of all sponsors' ideal points to obtain a single measure.
+In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. We generate an alignment score for a bill dyad by summing over all section dyads of the bill dyad.  Table \ref{tab:ideology_regs} displays regression results from a log-linear model regressing the logarithm of the bill dyad alignment score on the ideological distance between the ideal point of the two bills forming the dyad. The ideal point of the bill is derived from the ideal point of the bill sponsor. In cases where several legislators sponsor a bill we use the average of all sponsors' ideal points to obtain a single measure.
 
 The single observations (bill dyads) are not independent, due to the network structure of the data. In order to avoid spurious results, we use the quadratic assignment procedure (QAP), a common tool to control for spurious correlation in social network analysis \citet{krackardt1987qap}. We use 1000 QAP iterations for each model.
 
 \input{tables/ideology_regs.tex}
 
-The results in Table \ref{tab:ideology_regs} clearly show that there is a significant correlation between the ideological distance of the bills' sponsors and their text alignment score, regardless of the aggregation method. For each aggregation method, assuming the null hypothesis of no correlation, the probability for the observed estimate estimated as zero. This is also clear from Figure \ref{fig:qap_dist}, which shows histograms of the permutation distributions of the regression coefficients and the actual estimates as a red line. 
+The results in Table \ref{tab:ideology_regs} clearly show that there is a significant correlation between the ideological distance of the bills' sponsors and their text alignment score The null hypothesis of no correlation, the probability for the observed estimate estimated as zero. This is also clear from Figure \ref{fig:qap_dist}, which shows histograms of the permutation distributions of the regression coefficients and the actual estimates as a red line. 
 
 \begin{figure}[ht!]
     \makebox[\textwidth]{\includegraphics[width=0.9\textwidth]{figures/qap_dist.png}}
@@ -247,7 +245,7 @@ The results in Table \ref{tab:ideology_regs} clearly show that there is a signif
 \label{fig:qap_dist}
 \end{figure}
 
-To asses the substantive importance of the effect size, Figure \ref{fig:ideo_interpret} displays the estimated decrease in mean alignment score when increasing the ideological distance of the bills. The vertical lines correspond to the ideological distances between the median democrat and republican, the 0.05 quantile and the 0.95 quantile of the total distribution of ideal points and the minimum and maximum of the total distribution. [FILL IN MORE INTERPRETATION WHEN NEW RESULTS ARE IN] 
+To asses the substantive importance of the effect size, Figure \ref{fig:ideo_interpret} displays the estimated decrease in alignment score when increasing the ideological distance of the bills. The vertical lines correspond to the ideological distances between the median democrat and republican, the 0.05 quantile and the 0.95 quantile of the total distribution of ideal points and the minimum and maximum of the total distribution. [FILL IN MORE INTERPRETATION WHEN NEW RESULTS ARE IN] 
 
 \begin{figure}[H]%
 \centering

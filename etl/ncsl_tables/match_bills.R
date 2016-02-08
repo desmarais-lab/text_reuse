@@ -6,9 +6,6 @@ ncsl_bills <- read.csv('../../data/ncsl/ncsl_data_from_sample.csv',
 db_bills <- read.csv('../../data/bill_metadata.csv', header = TRUE,
                      stringsAsFactors = FALSE)
 
-alignments <- tbl_df(read.csv('../../data/lid/bill_to_bill_scores_only.csv',
-                              stringsAsFactors = FALSE))
-
 # Preprocess db bills
 
 ## Extract id from unique id

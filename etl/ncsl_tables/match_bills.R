@@ -1,5 +1,4 @@
 library(dplyr)
-library(lubridate)
 
 ncsl_bills <- read.csv('../../data/ncsl/ncsl_data_from_sample.csv', 
                        header = TRUE, stringsAsFactors = FALSE)
@@ -27,7 +26,7 @@ ncsl_bills$let_id <- gsub('[[:digit:]]', '', ncsl_bills$id)
 
 
 # Matching
-db_bills <- tbl_df(db_bills) %>% select(state, year, id, num_id, let_id)
+db_bills <- tbl_df(db_bills) %>% select(state, year, id, num_id, let_id, unique_id)
 no_match <- 0
 multi_match <- 0
 one_match <- 0
@@ -50,14 +49,14 @@ for(i in 1:nrow(ncsl_bills)) {
         if(nrow(subs) == 1) {
             print(paste('(LVL2)Found match for:', state_, id_, year_))
             one_match <- one_match + 1
-            ncsl_bills$matched_from_db[i] <- subs$id
+            ncsl_bills$matched_from_db[i] <- subs$unique_id
         } else {
             # Match multiple
             subs_ <- filter(subs, let_id == let_)
             if(nrow(subs_) == 1) {
                 print(paste('(LVL3)Found match for:', state_, id_, year_))
                 one_match <- one_match + 1
-                ncsl_bills$matched_from_db[i] <- subs_$id
+                ncsl_bills$matched_from_db[i] <- subs_$unique_id
             } else {
                 if(nrow(subs_) == 0) {
                     # Distance matching procedure
@@ -69,7 +68,7 @@ for(i in 1:nrow(ncsl_bills)) {
                         print(paste('(LVL4)Found match for:', state_, id_, 
                                     year_))
                         one_match <- one_match + 1
-                        ncsl_bills$matched_from_db[i] <- subs$id
+                        ncsl_bills$matched_from_db[i] <- subs$unique_id
                     } else {
                         if(nrow(subs) == 0){
                             print(paste('(LVL4)No match for:', state_, id_, 

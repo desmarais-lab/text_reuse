@@ -1,0 +1,337 @@
+
+R version 3.1.2 (2014-10-31) -- "Pumpkin Helmet"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-redhat-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> setwd("/storage/group/bbd5087_collab/text_reuse/analysis")
+> load("text_for_mallet.RData")
+> 
+> options( java.parameters = "-Xmx80g" )
+> 
+> #install.packages("mallet",lib="/storage/group/bbd5087_collab/r_packages",repos="http://cran.stat.ucla.edu/")
+> 
+> .libPaths("/storage/group/bbd5087_collab/r_packages")
+> 
+> library(mallet)
+Loading required package: rJava
+> 
+> set.seed(10)
+> 
+> filenamesRS <- filenames
+> aligned_textRS <- aligned_text
+> 
+> mallet.instances <- mallet.import(filenamesRS,aligned_textRS,"en.txt")
+> 
+> topic.model <- MalletLDA(num.topics=20)
+Nov 16, 2015 7:59:37 PM cc.mallet.topics.ParallelTopicModel <init>
+INFO: Coded LDA: 20 topics, 5 topic bits, 11111 topic mask
+> 	
+> topic.model$loadDocuments(mallet.instances)
+Nov 16, 2015 7:59:48 PM cc.mallet.topics.ParallelTopicModel initializeHistograms
+INFO: max tokens: 9995
+Nov 16, 2015 7:59:48 PM cc.mallet.topics.ParallelTopicModel initializeHistograms
+INFO: total tokens: 186146507
+> 	
+> vocabulary <- topic.model$getVocabulary()
+> word.freqs <- mallet.word.freqs(topic.model)
+> 
+> topic.model$setAlphaOptimization(20, 50)
+> 
+> topic.model$train(300)
+Nov 16, 2015 8:05:28 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <10> LL/token: -8.30486
+Nov 16, 2015 8:10:04 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <20> LL/token: -7.54842
+Nov 16, 2015 8:14:22 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <30> LL/token: -7.49001
+Nov 16, 2015 8:18:42 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <40> LL/token: -7.46542
+Nov 16, 2015 8:22:27 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: 
+0	0.25	commission state interstate compact member states rules 
+1	0.25	states state united member election official presidential 
+2	0.25	order state child support section employer law 
+3	0.25	action person section court state civil degree 
+4	0.25	qualified section entity revenue code investment tax 
+5	0.25	state enacted legislature general assembly people amended 
+6	0.25	information electronic consumer service notice section means 
+7	0.25	vehicle motor county medical means death city 
+8	0.25	school student education district public board charter 
+9	0.25	feet distance medical department point patient qualifying 
+10	0.25	salts isomers vehicle drug motor means product 
+11	0.25	insurance insurer policy commissioner company contract coverage 
+12	0.25	benefit corporation public director section act board 
+13	0.25	appointed power members house principal attorney senate 
+14	0.25	property interest statement trust real section transfer 
+15	0.25	department health services board state year plan 
+16	0.25	care health state patient practice licensed physician 
+17	0.25	person court officer offense criminal age years 
+18	0.25	state court order section person law petition 
+19	0.25	year tax years amount individual service income 
+
+Nov 16, 2015 8:22:55 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <50> LL/token: -7.4532
+Nov 16, 2015 8:27:07 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.00996] 
+Nov 16, 2015 8:27:10 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <60> LL/token: -7.42015
+Nov 16, 2015 8:31:17 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <70> LL/token: -7.37133
+Nov 16, 2015 8:35:26 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01006] 
+Nov 16, 2015 8:35:29 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <80> LL/token: -7.34947
+Nov 16, 2015 8:39:33 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <90> LL/token: -7.31059
+Nov 16, 2015 8:43:14 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: 
+0	0.1086	commission state interstate compact member states rules 
+1	0.10937	states united state member election presidential official 
+2	0.12512	state order child support section law employer 
+3	0.10681	action person section court state civil degree 
+4	0.13268	qualified section revenue entity tax investment credit 
+5	0.24255	state enacted legislature general assembly people amended 
+6	0.11936	information electronic consumer service notice section means 
+7	0.14211	vehicle motor means person medical abortion death 
+8	0.12383	school board student education district public charter 
+9	0.07191	feet distance medical point patient marijuana qualifying 
+10	0.06037	salts isomers substance product drug substances manufacturer 
+11	0.10074	insurance insurer policy commissioner company contract coverage 
+12	0.10423	benefit corporation public director section officer person 
+13	0.12095	appointed members house power principal attorney senate 
+14	0.12993	property interest statement trust real person section 
+15	0.19061	department health services state act year plan 
+16	0.1265	care health patient practice state physician medical 
+17	0.12976	person court officer offense age criminal years 
+18	0.10634	state court order person section petition law 
+19	0.15784	year years tax individual service amount taxable 
+
+Nov 16, 2015 8:43:41 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01026] 
+Nov 16, 2015 8:43:44 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <100> LL/token: -7.29505
+Nov 16, 2015 8:47:49 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <110> LL/token: -7.26292
+Nov 16, 2015 8:51:56 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01052] 
+Nov 16, 2015 8:51:58 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <120> LL/token: -7.25174
+Nov 16, 2015 8:56:03 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <130> LL/token: -7.2254
+Nov 16, 2015 8:59:56 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01081] 
+Nov 16, 2015 8:59:58 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <140> LL/token: -7.21669
+Nov 16, 2015 9:03:17 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: 
+0	0.03966	commission state interstate compact member states rules 
+1	0.04528	states united state member election presidential official 
+2	0.06149	state order child support section law employer 
+3	0.04024	action person section court state civil violation 
+4	0.05898	qualified section tax revenue entity investment credit 
+5	0.1323	state enacted legislature general assembly people section 
+6	0.0479	information electronic consumer service notice section portable 
+7	0.06699	vehicle motor means person abortion medical child 
+8	0.0619	school board student education district public charter 
+9	0.02301	feet distance medical point patient marijuana qualifying 
+10	0.02128	salts isomers food substance substances product means 
+11	0.0379	insurance insurer policy commissioner company contract coverage 
+12	0.03227	benefit corporation public director person section officer 
+13	0.05578	appointed house members power principal attorney senate 
+14	0.0602	property interest statement person trust section real 
+15	0.11177	department health state services act public year 
+16	0.05577	care health patient practice state physician medical 
+17	0.06068	person court offense officer age criminal years 
+18	0.03894	court state order person petition section law 
+19	0.07813	year years individual tax service taxable income 
+
+Nov 16, 2015 9:03:41 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <150> LL/token: -7.19549
+Nov 16, 2015 9:07:26 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01107] 
+Nov 16, 2015 9:07:28 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <160> LL/token: -7.18917
+Nov 16, 2015 9:11:13 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <170> LL/token: -7.17193
+Nov 16, 2015 9:14:58 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01134] 
+Nov 16, 2015 9:15:00 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <180> LL/token: -7.16657
+Nov 16, 2015 9:18:45 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <190> LL/token: -7.15258
+Nov 16, 2015 9:22:24 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: 
+0	0.0248	commission state interstate compact member states rules 
+1	0.03064	states united state member presidential election official 
+2	0.04669	state order child section support law employer 
+3	0.02576	action person section state court civil violation 
+4	0.04126	qualified section tax revenue entity investment credit 
+5	0.09613	state enacted legislature general assembly people section 
+6	0.03135	information electronic consumer service notice section portable 
+7	0.04763	vehicle motor person means abortion woman medical 
+8	0.04486	school board student education district public charter 
+9	0.01541	feet distance medical patient point marijuana qualifying 
+10	0.01378	salts isomers food substances substance means product 
+11	0.02532	insurance insurer policy commissioner company coverage contract 
+12	0.01884	benefit corporation public director person section officer 
+13	0.04094	appointed members house power principal attorney senate 
+14	0.04235	property interest statement person trust section real 
+15	0.08215	department health state services act public program 
+16	0.03806	care health patient practice state physician medical 
+17	0.04301	person court offense age criminal years sexual 
+18	0.02477	court state order person petition section law 
+19	0.05413	year individual years service taxable employer income 
+
+Nov 16, 2015 9:22:51 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01159] 
+Nov 16, 2015 9:22:53 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <200> LL/token: -7.1483
+Nov 16, 2015 9:27:02 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <210> LL/token: -7.13704
+Nov 16, 2015 9:31:07 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01182] 
+Nov 16, 2015 9:31:09 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <220> LL/token: -7.13369
+Nov 16, 2015 9:35:11 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <230> LL/token: -7.1239
+Nov 16, 2015 9:39:15 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01204] 
+Nov 16, 2015 9:39:16 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <240> LL/token: -7.12119
+Nov 16, 2015 9:42:54 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: 
+0	0.01511	commission state interstate compact member states rules 
+1	0.02028	states state united member presidential election official 
+2	0.03578	state order child section support law employer 
+3	0.0161	action person section court state civil violation 
+4	0.02868	qualified section tax investment revenue entity credit 
+5	0.06964	state enacted legislature general assembly people section 
+6	0.0201	information electronic consumer service notice section insurance 
+7	0.03345	vehicle motor person means abortion woman medical 
+8	0.03091	school student board education district public charter 
+9	0.0106	feet distance medical patient point marijuana qualifying 
+10	0.00943	salts isomers food substances substance means preparation 
+11	0.01647	insurance insurer policy commissioner company coverage contract 
+12	0.01106	benefit corporation public director person section officer 
+13	0.03211	appointed members house power attorney senate principal 
+14	0.02917	property interest statement person trust section real 
+15	0.05866	department health state services act public program 
+16	0.02603	health care patient practice medical physician state 
+17	0.02981	person court offense age criminal sexual years 
+18	0.01611	court state order person petition section law 
+19	0.03578	individual year years service taxable employer income 
+
+Nov 16, 2015 9:43:20 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <250> LL/token: -7.11266
+Nov 16, 2015 9:47:24 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01221] 
+Nov 16, 2015 9:47:26 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <260> LL/token: -7.10997
+Nov 16, 2015 9:51:29 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <270> LL/token: -7.10303
+Nov 16, 2015 9:55:33 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.0124] 
+Nov 16, 2015 9:55:35 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <280> LL/token: -7.10105
+Nov 16, 2015 9:59:39 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <290> LL/token: -7.0955
+Nov 16, 2015 10:03:17 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: 
+0	0.01196	commission state interstate compact member states rules 
+1	0.01673	states state united presidential member election official 
+2	0.03164	state order child section support law application 
+3	0.01291	action person section court state civil violation 
+4	0.02434	qualified tax section investment revenue credit entity 
+5	0.06016	state enacted legislature general assembly people section 
+6	0.016	information electronic consumer service notice section insurance 
+7	0.02851	vehicle motor person means abortion woman medical 
+8	0.0257	school student board district education public charter 
+9	0.00878	feet distance medical patient point marijuana qualifying 
+10	0.00794	salts isomers food substances substance means preparation 
+11	0.01336	insurance insurer policy commissioner company coverage contract 
+12	0.00888	benefit corporation public director person section business 
+13	0.02875	appointed members house power senate attorney principal 
+14	0.02428	property interest statement person trust section real 
+15	0.04982	department state health services act public care 
+16	0.02192	health care patient practice medical physician person 
+17	0.02495	person court offense sexual age years criminal 
+18	0.01348	court state order person petition section law 
+19	0.02911	individual year years employer service taxable income 
+
+Nov 16, 2015 10:03:44 PM cc.mallet.topics.ParallelTopicModel optimizeBeta
+INFO: [beta: 0.01254] 
+Nov 16, 2015 10:03:46 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: <300> LL/token: -7.09369
+Nov 16, 2015 10:03:46 PM cc.mallet.topics.ParallelTopicModel estimate
+INFO: 
+Total time: 2 hours 3 minutes 47 seconds
+> 	
+> topic.model$maximize(10)
+Nov 16, 2015 10:04:12 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 0	24431ms	21687125	-6.902624189175204
+Nov 16, 2015 10:04:35 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 1	21332ms	3579213	-6.88814695296782
+Nov 16, 2015 10:04:58 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 2	21279ms	1327679	-6.884267798427216
+Nov 16, 2015 10:05:21 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 3	21354ms	609651	-6.882808758977381
+Nov 16, 2015 10:05:44 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 4	21226ms	312632	-6.882161267411098
+Nov 16, 2015 10:06:07 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 5	21084ms	169059	-6.881840621754603
+Nov 16, 2015 10:06:29 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 6	21083ms	96122	-6.881675900476783
+Nov 16, 2015 10:06:52 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 7	20998ms	56247	-6.881589028954336
+Nov 16, 2015 10:07:15 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 8	20969ms	36787	-6.881536282391257
+Nov 16, 2015 10:07:37 PM cc.mallet.topics.ParallelTopicModel maximize
+INFO: 9	21001ms	22773	-6.881501979405839
+> 	
+> doc.topics <- mallet.doc.topics(topic.model, smoothed=T, normalized=T)
+> topic.words <- mallet.topic.words(topic.model, smoothed=T, normalized=T)
+> 
+> topic.probs <- apply(doc.topics,2,mean)
+> 
+> mallet.top.words(topic.model, topic.words[6,],20)
+          words     weights
+1         state 0.165764109
+2       enacted 0.147375613
+3   legislature 0.075380582
+4       general 0.053661687
+5      assembly 0.047234112
+6        people 0.042655991
+7       amended 0.031045904
+8       section 0.030706366
+9          read 0.024970626
+10       senate 0.018544114
+11         ring 0.015872591
+12          jwh 0.012536344
+13  substituted 0.010358381
+14       extent 0.010296321
+15       indole 0.009704554
+16         code 0.009250994
+17       methyl 0.008801953
+18         laws 0.007935499
+19 commonwealth 0.007625330
+20  represented 0.007065988
+> 
+> save(list=c("topic.model","doc.topics","topic.words","topic.probs","vocabulary","word.freqs"),file="topic_model_results.RData")
+> 
+> proc.time()
+    user   system  elapsed 
+8434.042   29.534 8075.522 

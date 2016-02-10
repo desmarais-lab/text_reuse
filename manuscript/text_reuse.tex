@@ -136,7 +136,18 @@ The alignment scores are calculated using the affine version of the local alignm
 \section{Analysis}
 
 We use three strategies in order to assess the validity of text reuse as a measure of policy equivalence. First, we apply topic models to the sequences that are identified by the SW algorithm as matching sequences. This provides a rough idea of how many of the alignments are substantial and how much procedural language and not substantively significant language gets picked up by the algorithm. Second, we analyze how well the bill similarity aggregated to the state level corresponds with policy diffusion networks identified in previous research \citep{desmarais2015}. And third, we assess the correlation of the distance of the sponsors of a bill dyad and the dyads alignment scores. If substantive policy content, and importantly, the same ideological direction of the provisions is detected by the alignment algorithm, we will expect a high negative correlation between these two measures.
+\subsection{NCSL Tables}
 
+\begin{table}[ht!]
+\centering
+\caption{My caption}
+\label{my-label}
+\begin{tabular}{lll}
+               & alignment & no alignment \\
+not same table & 11        & 232287       \\
+same table     & 3083      & 20639       
+\end{tabular}
+\end{table}
 
 \subsection{Topic Modeling}
 

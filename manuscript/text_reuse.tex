@@ -26,6 +26,7 @@
 \mmddyyyydate
 \doublespacing
 \externaldocument{tables/ideology_regs.tex}
+\externaldocument{tables/ncsl_crosstab.tex}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -138,18 +139,11 @@ The alignment scores are calculated using the affine version of the local alignm
 We use three strategies in order to assess the validity of text reuse as a measure of policy equivalence. First, we apply topic models to the sequences that are identified by the SW algorithm as matching sequences. This provides a rough idea of how many of the alignments are substantial and how much procedural language and not substantively significant language gets picked up by the algorithm. Second, we analyze how well the bill similarity aggregated to the state level corresponds with policy diffusion networks identified in previous research \citep{desmarais2015}. And third, we assess the correlation of the distance of the sponsors of a bill dyad and the dyads alignment scores. If substantive policy content, and importantly, the same ideological direction of the provisions is detected by the alignment algorithm, we will expect a high negative correlation between these two measures.
 \subsection{NCSL Tables}
 
-\begin{table}[ht!]
-\centering
-\caption{My caption}
-\label{my-label}
-\begin{tabular}{lll}
-               & alignment & no alignment \\
-not same table & 11        & 232287       \\
-same table     & 3083      & 20639       
-\end{tabular}
-\end{table}
+
+\input{tables/ncsl_crosstab.tex}
 
 \subsection{Topic Modeling}
+
 
 We apply statistical topic modeling via Latent Dirichlet Allocation (LDA) \citep{blei2003} to the alignment text with two objectives.\footnote{We use the R package \texttt{mallet} \citep{mallet} for the topic modeling application.} First, we want to see whether the major topical themes that emerge are consistent with policy domains that we would expect to be prominently featured in texts that capture the diffusion of public policy. Second, we want to see whether we can identify topics that correspond to boilerplate/procedural text, which we may want to remove from the alignments to focus the analysis on substantive policy language. In our first cut we use a model with 20 topics. The average alignment is short, with little more than 25\% exceeding 140 characters -- the maximum length of a Tweet. There are 52,735 unique terms in our vocabulary, after removing a standard list of stop words. In Table \ref{tab:top100words} we present the top 100 terms appearing in our corpus. 
 

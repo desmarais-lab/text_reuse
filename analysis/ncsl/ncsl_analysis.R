@@ -1,6 +1,6 @@
 library(dplyr)
-library(network)
 library(ggplot2)
+library(xtable)
 
 # Load and preprocess data
 alignments <- tbl_df(read.csv('../../data/lid/bill_to_bill_scores_only.csv',
@@ -15,6 +15,11 @@ ncsl_bills <- tbl_df(read.csv('../../data/ncsl/ncsl_data_from_sample_matched.csv
 bill_pairs <- tbl_df(as.data.frame(t(combn(ncsl_bills$matched_from_db, 2))))
 colnames(bill_pairs) <- c("left_doc_id", "right_doc_id") 
 
+# Remove pairs from same state
+incl <- substr(as.character(bill_pairs$left_doc_id), 1, 2) != 
+    substr(as.character(bill_pairs$right_doc_id), 1, 2)
+bill_pairs <- bill_pairs[incl, ]
+
 
 # Get 'same-table-indicator'
 ## Join with topic tables
@@ -25,9 +30,6 @@ temp <- mutate(ncsl_bills, right_doc_id = matched_from_db, right_table = topic) 
     select(right_doc_id, right_table)
 df <- left_join(df, temp, by = "right_doc_id") %>% 
     mutate(same_table = ifelse(left_table == right_table, 1, 0))
-rm(temp)
-gc()
-
 
 # Join with alignment data
 ## Calculate bill level alignments
@@ -37,11 +39,16 @@ bill_alignments <- group_by(alignments, left_doc_id, right_doc_id) %>%
 ## Join
 bill_pairs <- left_join(df, alignments, 
                         by = c("left_doc_id", "right_doc_id"))
-rm(df)
-gc()
+df <- mutate(bill_pairs, alignment_score_NA = ifelse(is.na(alignment_score), 
+                                                        1, 0))
+eda_tab <- xtabs( ~ same_table + alignment_score_NA, data = df)
 
-df <- mutate(bill_pairs, alignment_score_zeros = ifelse(is.na(alignment_score), 
-                                                        0, alignment_score))
+sink(file = '../../manuscript/tables/ncsl_crosstab.tex')
+xtable(eda_tab, caption = "Crosstable of being in the same table against having 
+       an alignment score for all bill dyads in the ncsl dataset.", 
+       label = "tab:ncsl_crosstab")
+sink()
+
 
 # Exclue one big outlier
 df <- df[-which.max(df$alignment_score), ]

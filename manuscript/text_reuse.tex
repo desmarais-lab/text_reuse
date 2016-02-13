@@ -56,9 +56,9 @@ Public policy diffusion -- the process by which policymakers emulate the policie
 Previous research on policy diffusion relies almost exclusively on small subsamples of legislation and hand coded data. Little work has been invested in investigating automated ways of detecting equivalent bills in order to measure policy diffusion. 
 \citet{wilkerson2015tracing} use the Smith-Waterman local alignment algorithm (SW algorithm) \citep{smith1981identification} to detect overlapping language in congressional bills in order to trace policy ideas through the legislative process of the US congress. 
 
-\section{Considering  Policy Similarity}
+\section{Considering Policy Similarity}
 
-Before 
+Before we describe the algorithm we use for detecting text re-use, and validate that algorithm, we should clearly define the latent variable we seek to measure through the assessment of text overlap. The latent variable that we argue below is measured effectively through text re-use is {\em policy similarity}. The text in legislation is an aggregate representation of the dimensions underlying the policies proposed therein. These dimensions include the domain of the policy, the ideological position enacted by the policy, the level of specificity in the policy enactment, and several other salient features of policy that are communicated through the text in legislation. We do not claim that the re-use of text can be used to measure these dimensions in a specific, disaggregated way. Rather, text re-use serves as a summary measure of similarity across all relevant policy dimensions represented in legislative text.
 
 Active within a domain, but possibly moving the status quo in opposite directions. (Glick)
 Moving the status quo in a uniform direction, but with different specific policies. (berry berry)

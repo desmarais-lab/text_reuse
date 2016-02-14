@@ -101,7 +101,7 @@ The alignment scores are calculated using the affine version of the local alignm
 {\bf \textcolor{red}{Put in some example allignments}}: Possibly finding a few that appear in bills across several states.
 
 
-\section{Validation Analysis}
+\section{Evaluation of Validity}
 
 We use three strategies in order to assess the validity of text reuse as a measure of policy equivalence. First, we evaluate whether there is a disproportionately high number of alignments between bills on the same policy area. This is done using the NCSL tables to identify bills on the same policy area.  Second, we analyze how well the bill similarity aggregated to the state level corresponds with policy diffusion networks identified in previous research \citep{desmarais2015}. And third, we assess the correlation of the distance of the sponsors of a bill dyad and the dyads alignment scores. If substantive policy content, and importantly, the same ideological direction of the provisions is detected by the alignment algorithm, we will expect a high negative correlation between these two measures.
 \subsection{NCSL Tables}
@@ -169,6 +169,10 @@ In order to assess the validity of text reuse as a measure of substantive policy
 
 In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. We generate an alignment score for a bill dyad by summing over all section dyads of the bill dyad.  Table \ref{tab:ideology_regs} displays regression results from a log-linear model regressing the logarithm of the bill dyad alignment score on the ideological distance between the ideal point of the two bills forming the dyad. The ideal point of the bill is derived from the ideal point of the bill sponsor. In cases where several legislators sponsor a bill we use the average of all sponsors' ideal points to obtain a single measure.
 
+
+{\bf \textcolor{red}{Need clarity on multiple sponsors}}: If this is frequently a big list of co-sponsors, we should limit to just the first, if the first is the lead sponsor.
+
+
 The single observations (bill dyads) are not independent, due to the network structure of the data. In order to avoid spurious results, we use the quadratic assignment procedure (QAP), a common tool to control for spurious correlation in social network analysis \citet{krackardt1987qap}. We use 1000 QAP iterations for each model.
 
 \input{tables/ideology_regs.tex}
@@ -195,7 +199,7 @@ To asses the substantive importance of the effect size, Figure \ref{fig:ideo_int
 
 \section{Conclusion}
 
-Scholarship on public policy and legislative politics relies heavily on measuring the content of legislation, especially with a relative or comparative approach. Manual comparison of bills is prohibitively time consuming when it comes to covering a large proportion of legislation introduced in one or more legislatures. We show that the automated detection of 
+Scholarship on public policy and legislative politics relies heavily on measuring the content of legislation, especially with a relative or comparative approach. Manual comparison of bills is prohibitively time consuming when it comes to covering a large proportion of legislation introduced in one or more legislatures. We show that the automated detection of similar text strings in bills provides an effective approach to comparing bill contents. The log alignment scores serve as a highly valid summary measure of the similarity of two bills. We show high validity of this measure in three complimentary tests. First, it correlates with the presence of a diffusion tie inferred from patterns of policy diffusion. Second, it correlates with the ideological similarity between bill sponsors. Third, it exhibits extremely high precision in predicting whether two bills are listed in the NCSL policy area tables. We demonstrate the potential for using this data to test new or unexplored hypotheses on lawmaking in the states by testing whether bill text similarity correlates with campaign contributions to US state legislators.
 
 \clearpage
 

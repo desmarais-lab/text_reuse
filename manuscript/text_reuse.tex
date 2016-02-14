@@ -22,7 +22,7 @@
 \usepackage{subfig}
 
 \setlength{\parindent}{0.0in}
-\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+\setlength{\parskip}{2ex plus 0.5ex minus 0.2ex}
 \mmddyyyydate
 \doublespacing
 \externaldocument{tables/ideology_regs.tex}
@@ -38,13 +38,14 @@
 
 \maketitle
 
+\singlespacing
 \begin{abstract} 
-    Much political science research relies on identifying the substantive similarity of legislation, especially in the study of policy diffusion. Scholars mostly rely on hand-coded datasets. However, in order to study policy diffusion more broadly, for example by extending the study to dozens or more policy domains, prohibitive volumes of legislative text would have to be analyzed manually. Common text analysis algorithms such as topic models or bag-of-words based text similarity measures are too coarse to identify policy similarity. However, legislators often directly use text from bills introduced in other legislatures or bill text provided by interest groups in model legislation. We propose the use of text-sequencing algorithms to find matching text between bills. We describe a new approach to the application of sequence alignment algorithms to large amounts of legislative text, and assess the validity of text reuse as a measure of substantive bill similarity. Three key results, drawn from an analysis of 500,000 bills from US-state legislatures, demonstrate the validity of text reuse as a measure of policy similarity. First, we show that bills introduced by ideologically similar sponsors are more likely to exhibit a high degree of text reuse. Second, we show that the main topical themes underlying strings of reused text map closely onto major areas of public policy in the US States. Third, we show that rates of text reuse across state borders correlates strongly with the state policy diffusion ties data recently introduced by \citet{desmarais2015}.
+    \noindent The identification of substantively similar legislation is important to scholars of public policy diffusion and state legislative politics. The conventional approach involves hand-coding a small number of policy issues. However, in order to study policy more broadly, prohibitive volumes of legislative text would have to be analyzed manually. Common bag-of-words based text analysis algorithms text similarity measures are too coarse to identify policy similarity. However, legislators often directly use text from bills introduced in other legislatures or bill text provided by interest groups in model legislation. We propose the use of text-sequencing algorithms to find matching text between bills. We describe a new approach to the application of sequence alignment algorithms to large amounts of legislative text, and assess the validity of text reuse as a measure of substantive bill similarity. Three key results, drawn from an analysis of 500,000 bills from US-state legislatures, demonstrate the validity of text reuse as a measure of policy similarity. First, we show that bills introduced by ideologically similar sponsors are more likely to exhibit a high degree of text reuse. Second, we show that bills classified by the National Council of State Legislatures as covering the same policy areas exhibit a high degree of text re-use. Third, we show that rates of text reuse across state borders correlates strongly with the state policy diffusion ties data recently introduced by \citet{desmarais2015}.
 \end{abstract}
+\doublespacing
+\clearpage
 
-\section{Introduction}
-
-The diffusion of public policy has been a central focus in political science research since at least \citet{walker1969}. Research on public policy adoption and diffusion has conventionally relied on modestly-sized, hand-coded datasets that record when a set of jurisdictions adopt one or a handful of similar policies \citep{boehmke2012}. In this paper we draw upon a voluminous and comprehensive source of data with which to measure the consideration and adoption of similar policies -- the text of legislation considered in US state legislatures. We take an automated, text-as-data, approach to the analysis of bill text. This vastly increases the volume of data that can be included in policy adoption research. 
+\section{Introduction} The diffusion of public policy has been a central focus in political science research since at least \citet{walker1969}. Research on public policy adoption and diffusion has conventionally relied on modestly-sized, hand-coded datasets that record when a set of jurisdictions adopt one or a handful of similar policies \citep{boehmke2012}. In this paper we draw upon a voluminous and comprehensive source of data with which to measure the consideration and adoption of similar policies -- the text of legislation considered in US state legislatures. We take an automated, text-as-data, approach to the analysis of bill text. This vastly increases the volume of data that can be included in policy adoption research. 
 
 Through the development of automated text-analytic methods of measuring policy diffusion we consider several methodological challenges and broader conceptual hurdles. The central methodological puzzles are two-fold. First, we need to extract the substantive text of the legislation---minimizing the affect of procedural text on our measures of text reuse. Second, we need to develop a method for quantitatively scoring the reused text between bills. The main conceptual puzzle with which we engage is the potential ambiguity regarding whether two policies should be considered the same for the purpose of policy diffusion research. Considering precedents in the literature, we argue for conceptualizing policy adoption in terms of a continuum of similar policy rather than a dichotomy of equivalence.
 
@@ -80,10 +81,10 @@ Furthermore, we do not rely on human coders to extract and classify boiler plate
 
 \section{Data}
 
-We will rely on two main data sources to assess the reliability of text reuse to
+We will rely on three main data sources to assess the reliability of text reuse to
 identify substantively equivalent bills. 
 
-\textit{Bill text}\\
+\subsection{Bill text}\\
 In order to calculate the alignment scores between bills, we rely on a database collected by Burgess et al. (2015) and the Sunlight foundation. This data base contains approximately 500,000 bills from 2008 to 2015. The available metadata for the bills includes a timestamp for introduction and approval of the bill, the name and party affiliation of the sponsor(s), the state and the bill id.  This collection of bills is based on all bills that are available through the \url{openstates.org} API. Open states is a website maintained by the Sunlight Foundation, in order to increase transparency in state politics. The Sunlight Foundation use web scrapers to access all bills that are available on the websites of legislatures in all US states. This includes enacted legislation as well as bill that is still in the legislative process, or where not enacted. The database contains the bill text as well as additional information on the legislative process for the bill. We have the first and the last version of the bill text, the sponsor of the bill and all legislative action that was taken on the bill. 
 
 Figure \ref{fig:bill_desc} displays the year ranges and number of bills in the bill data base.
@@ -97,13 +98,12 @@ Figure \ref{fig:bill_desc} displays the year ranges and number of bills in the b
 
 
 
-\textit{Ideological Scores}\\
+\subsection{Ideological Scores}\\
 For the ideological matching, we rely on latent ideology scores measured by \citep{shor2011}. The data set contains scores for 20738 legislators from 50 state legislatures as well as their party affiliation and their time in office. 
 
+\subsection{Ground truth - NCSL Tables}\\
 
-\textit{Ground truth - NCSL Tables}\\
-
-To build a ground truth data set, we rely on thematic tables published by the National Council of State Legislatures\footnote{\url{www.ncsl.org}} (NCSL). We collected a sample of these tables with the following procedure:
+To build a ground truth data set, we rely on thematic tables published by the National Council of State Legislatures (NCSL).\footnote{\url{www.ncsl.org}}  We collected a sample of these tables with the following procedure:
 
 \begin{singlespacing}
 

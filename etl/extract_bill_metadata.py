@@ -19,7 +19,7 @@ legislators = pd.read_csv('../data/legislators.csv')
 header = ['unique_id', 'date_introduced', 'date_signed', 'date_last_action', 
           'date_passed_upper', 'date_passed_lower', 'state', 'chamber', 
           'bill_type', 'short_title', 'session', 'bill_title', 
-          'sponsor_idology', 'num_sponsors']
+          'sponsor_idology', 'num_sponsors', 'first_sponsor_ideology']
 header = ','.join(header)
 # Get a set of all legislators that we have ideology for
 known_legis = set(legislators['id'])
@@ -70,15 +70,18 @@ with io.open(BILL_FILE, 'r', encoding='utf-8') as infile,\
             else:
                 score = legislators.ideology[legislators['id'] == sponsor].tolist()
             scores.extend(score)
-      
+        
         if len(scores) > 0:
             score = np.mean(scores)
+            first_score = scores[0]
         else:
             score = None
+            first_score = None
 
         # Append average score and number of sponsors to df-row
         row.append(score)
         row.append(l)
+        row.append(first_score)
         row_str = ['"{}"'.format(el) for el in row]
         out_line = ','.join(row_str) + '\n'
         

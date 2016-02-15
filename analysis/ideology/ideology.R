@@ -66,22 +66,22 @@ load("qap_data.RData")
 # rm(df, alignments, temp)
 # gc()
 # 
-# ==============================================================================
-# Descriptives
-# ==============================================================================
-
-# Number of bills with ideology scores
-length(which(!is.na(meta$sponsor_idology))) / nrow(meta)
-
-# Number of dyads with ideology distance
-length(which(!is.na(aggr$ideology_dist))) / nrow(aggr)
-
-# Distribution of distance and log(score)
-ggplot(aggr) + geom_histogram(aes(ideology_dist), color = "white")
-
 # # ==============================================================================
-# # Analyses
+# # Descriptives
 # # ==============================================================================
+# 
+# # Number of bills with ideology scores
+# length(which(!is.na(meta$sponsor_idology))) / nrow(meta)
+# 
+# # Number of dyads with ideology distance
+# length(which(!is.na(aggr$ideology_dist))) / nrow(aggr)
+# 
+# # Distribution of distance and log(score)
+# ggplot(aggr) + geom_histogram(aes(ideology_dist), color = "white")
+# 
+# # # ==============================================================================
+# # # Analyses
+# # # ==============================================================================
 # 
 # 
 # # Prepare objects for the qap procedure
@@ -131,7 +131,7 @@ load('qap_results.RData')
 # ## Number of qap permutations
 # n_qap_perm <- 1000
 # ## Number of cores for permutations
-# n_cores <- 4
+# n_cores <- 40
 # 
 # ## Linear model for sum aggregation (with qap standard errors)
 # sum_score <- lm(log(sum_score) ~ ideology_dist, data = aggr)
@@ -154,7 +154,7 @@ load('qap_results.RData')
 res$p <- length(which(abs(perm_dist_sum) > abs(res[1, 2]))) / length(perm_dist_sum)
 
 # Make latex results table
-sink(file = '../../manuscript/tables/ideology_regs.tex')
+sink(file = '../../4344753rddtnd/tables/ideology_regs.tex')
 xtable(res, digits = 3, caption = "Log-Linear model for alignment and euclidian 
        distance in ideology. Two tailed p-values are generated from quadratic 
        assignment procedure with 1000 iterations. Std.Dev is the standard 
@@ -178,7 +178,7 @@ ggplot(pdat) +
                                ), show_guide = FALSE) +
     xlab("Coefficient") + ylab("Count") + 
     theme_bw()
-ggsave('../../manuscript/figures/qap_dist.png')
+ggsave('../../4344753rddtnd/figures/qap_dist.png')
 
 
 # Substantive interpretation of effectsize
@@ -205,7 +205,7 @@ ggplot(malp) +
                                          y = 1.25, yend = 0, color = party)) +
     xlab("Ideology") + ylab("Density") +
     theme_bw()
-ggsave('../../manuscript/figures/ideo_distri.png')
+ggsave('../../4344753rddtnd/figures/ideo_distri.png')
 
 med_to_med <- (median_legs$median_ideology[median_legs$party == "R"] - 
                    median_legs$median_ideology[median_legs$party == "D"])^2
@@ -233,7 +233,7 @@ ggplot(effects) +
                  aes(x = x, y = 0, yend = val, xend = x, color = label)) +
     scale_color_manual(values = cbPalette) +
     theme_bw()
-ggsave('../../manuscript/figures/log_lin_effects.png')
+ggsave('../../4344753rddtnd/figures/log_lin_effects.png')
 
 ## Effects plot with uncertainty
 # 

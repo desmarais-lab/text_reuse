@@ -79,6 +79,32 @@ load("qap_data.RData")
 # # Distribution of distance and log(score)
 # ggplot(aggr) + geom_histogram(aes(ideology_dist), color = "white")
 # 
+
+# Ideological distance vs sum_score
+samp <- tbl_df(aggr[sample(c(1:nrow(aggr)), 1000), ])
+ggplot(aggr, aes(x = ideology_dist, y = sum_score)) + 
+    geom_point(alpha = 0.3, size = 1) + 
+    #geom_smooth(method = "loess", size = 1.5) +
+    scale_y_log10() + 
+    xlab("Ideological Distance") +
+    ylab("log Alignment Score (Sum)") + 
+    theme_bw() 
+ggsave('../../4344753rddtnd/figures/ideology_alignment.png')
+
+#    Distribution of number of sponsors
+nsp <- table(meta$num_sponsors)
+pdat <- data.frame(cumu <- cumsum(as.integer(nsp)), 
+                   nsp <- as.integer(names(nsp)))
+
+ggplot(pdat) +
+    geom_point(aes(x = nsp, y = cumu)) + theme_bw() + ylim(0, 7e5) +
+    xlab("Number of Sponsors") + ylab("Cumulative Number of Bills")
+
+
+many_sponsors <- filter(meta, num_sponsors > 50) %>% 
+    arrange(-num_sponsors)
+table(many_sponsors$state)
+
 # # # ==============================================================================
 # # # Analyses
 # # # ==============================================================================

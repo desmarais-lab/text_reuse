@@ -18,7 +18,7 @@ N_SPON = 3
 legislators = pd.read_csv('../data/legislators.csv')
 header = ['unique_id', 'date_introduced', 'date_signed', 'date_last_action', 
           'date_passed_upper', 'date_passed_lower', 'state', 'chamber', 
-          'bill_type', 'short_title', 'session', 'bill_title', 
+          'bill_type', 'short_title', 'session', 'bill_title', 'bill_length',
           'sponsor_idology', 'num_sponsors']
 header = ','.join(header)
 # Get a set of all legislators that we have ideology for
@@ -51,13 +51,17 @@ with io.open(BILL_FILE, 'r', encoding='utf-8') as infile,\
         if doc['bill_title'] is not None:
             doc['bill_title'] = re_nchar.sub('', doc['bill_title'])
         
+        try:
+            bill_length = len(doc['bill_document_last'])
+        except TypeError:
+            bill_length = None
         row = [doc['unique_id'], doc['date_introduced'], doc['date_signed'],
                doc['action_dates']['last'], doc['action_dates']['passed_upper'],
                doc['action_dates']['passed_lower'], doc['state'], doc['chamber'],
                doc['bill_type'][0], doc['short_title'], doc['session'], 
-               doc['bill_title']
+               doc['bill_title'], bill_length
                ]
-    
+         
         # Calculate the average ideology
         
         sponsors = [d['leg_id'] for d in doc['sponsers'] if d['type'] == 'primary']

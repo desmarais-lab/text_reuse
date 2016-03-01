@@ -18,72 +18,89 @@ load("qap_data.RData")
 # If not available uncommet code below
 
 
-# # Metadata
-# meta <- read.csv('../../data/bill_metadata.csv', stringsAsFactors = FALSE,
-#                  header = TRUE, quote = '"')
-# 
-# ## Clean it up
-# meta$session <- NULL
-# ### Make 'None' NA
-# meta[meta == 'None'] <- NA
-# ### Fix column classes
-# for(i in grep("date_", names(meta))){
-#     var <- sapply(as.character(meta[, i]), substr, 1, 10)
-#     var
-#     meta[, i] <- as.Date(x = var)
-# }
-# for(col in c("state", "chamber", "bill_type")){
-#     meta[, col] <- as.factor(meta[, col])
-# }
-# meta$sponsor_idology <- as.numeric(meta$sponsor_idology)
-# meta$num_sponsors <- as.integer(meta$num_sponsors)
-# 
-# ## Make dplyr object
-# meta <- tbl_df(meta)
-# 
-# # Alignments
-# alignments <- tbl_df(read.csv('../../data/lid/bill_to_bill_scores_only.csv', 
-#                               header = TRUE, stringsAsFactors = FALSE))
-# 
-# ## Match alignments with ideology scores
-# temp <- mutate(meta, left_doc_id = unique_id, left_ideology = sponsor_idology) %>%
-#     dplyr::select(left_doc_id, left_ideology)
-# df <- left_join(alignments, temp, by = "left_doc_id")
-# temp <- mutate(meta, right_doc_id = unique_id, right_ideology = sponsor_idology) %>%
-#     dplyr::select(right_doc_id, right_ideology)
-# df <- left_join(df, temp, by = "right_doc_id")
-# df <- mutate(df, ideology_dist = (left_ideology - right_ideology)^2,
-#              dyad_id = as.factor(paste0(left_doc_id, right_doc_id)))
-# 
-# # Aggregate to bill level
-# aggr <- group_by(df, left_doc_id, right_doc_id) %>%
-#     summarize(sum_score = sum(alignment_score), 
-#               ideology_dist = ideology_dist[1],
-#               left_ideology = left_ideology[1],
-#               right_ideology = right_ideology[1]) %>% 
-#     filter(!is.na(ideology_dist))
-# 
-# rm(df, alignments, temp)
-# gc()
-# 
-# # ==============================================================================
-# # Descriptives
-# # ==============================================================================
-# 
-# # Number of bills with ideology scores
-# length(which(!is.na(meta$sponsor_idology))) / nrow(meta)
-# 
-# # Number of dyads with ideology distance
-# length(which(!is.na(aggr$ideology_dist))) / nrow(aggr)
-# 
-# # Distribution of distance and log(score)
-# ggplot(aggr) + geom_histogram(aes(ideology_dist), color = "white")
-# 
+# Metadata
+meta <- read.csv('../../data/bill_metadata.csv', stringsAsFactors = FALSE,
+                 header = TRUE, quote = '"')
+
+## Clean it up
+meta$session <- NULL
+### Make 'None' NA
+meta[meta == 'None'] <- NA
+### Fix column classes
+for(i in grep("date_", names(meta))){
+    var <- sapply(as.character(meta[, i]), substr, 1, 10)
+    var
+    meta[, i] <- as.Date(x = var)
+}
+for(col in c("state", "chamber", "bill_type")){
+    meta[, col] <- as.factor(meta[, col])
+}
+meta$sponsor_idology <- as.numeric(meta$sponsor_idology)
+meta$num_sponsors <- as.integer(meta$num_sponsors)
+meta$bill_length <- as.integer(meta$bill_length)
+
+## Make dplyr object
+meta <- tbl_df(meta)
+
+# Alignments
+alignments <- tbl_df(read.csv('../../data/lid/bill_to_bill_scores_only.csv', 
+                              header = TRUE, stringsAsFactors = FALSE))
+
+## Match alignments with ideology scores and document length
+### Join info on left bill
+temp <- mutate(meta, left_doc_id = unique_id, left_ideology = sponsor_idology,
+               left_length = bill_length) %>%
+    dplyr::select(left_doc_id, left_ideology, left_length)
+df <- left_join(alignments, temp, by = "left_doc_id")
+
+### Join info on right bill
+temp <- mutate(meta, right_doc_id = unique_id, right_ideology = sponsor_idology,
+               right_length = bill_length) %>%
+    dplyr::select(right_doc_id, right_ideology, right_length)
+df <- left_join(df, temp, by = "right_doc_id")
+
+# Calculate ideological distance and combined doc length
+df <- mutate(df, ideology_dist = (left_ideology - right_ideology)^2,
+             combined_length = left_length + right_length,
+             dyad_id = as.factor(paste0(left_doc_id, right_doc_id)))
+
+# Aggregate to bill level
+aggr <- group_by(df, left_doc_id, right_doc_id) %>%
+    summarize(sum_score = sum(alignment_score), 
+              sum_score_length = sum(alignment_score) / combined_length[1],
+              ideology_dist = ideology_dist[1],
+              left_ideology = left_ideology[1],
+              right_ideology = right_ideology[1],
+              left_length = left_length[1],
+              right_length = right_length[1],
+              combined_length = combined_length[1]) %>% 
+    filter(!is.na(ideology_dist))
+
+rm(df, alignments, temp)
+gc()
+
+# Write bill dyads to disk
+write.csv(aggr, file = "../../data/lid/aggregate_btb_alignments.csv", 
+          row.names = FALSE, fileEncoding = "utf-8")
+
+# ==============================================================================
+# Descriptives
+# ==============================================================================
+
+# Number of bills with ideology scores
+length(which(!is.na(meta$sponsor_idology))) / nrow(meta)
+
+# Number of dyads with ideology distance
+length(which(!is.na(aggr$ideology_dist))) / nrow(aggr)
+
+# Distribution of distance and log(score)
+ggplot(aggr) + geom_histogram(aes(ideology_dist), color = "white")
+
 
 # Ideological distance vs sum_score
-samp <- tbl_df(aggr[sample(c(1:nrow(aggr)), 1000), ])
+samp <- tbl_df(aggr[sample(c(1:nrow(aggr)), 10000), ])
 ggplot(aggr, aes(x = ideology_dist, y = sum_score)) + 
-    geom_point(alpha = 0.3, size = 1) + 
+    geom_point(alpha = 0.3, size = 0.5) + 
     #geom_smooth(method = "loess", size = 1.5) +
     scale_y_log10() + 
     xlab("Ideological Distance") +
@@ -148,7 +165,7 @@ table(many_sponsors$state)
 # save.image("qap_data.RData")
 
 
-# Run the models for different aggregation methods
+# Run the model
 
 # This loads the results:
 load('qap_results.RData')

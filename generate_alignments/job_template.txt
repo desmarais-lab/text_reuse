@@ -1,0 +1,9 @@
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=24:00:00
+#PBS -l pmem=5gb
+#PBS -mae
+#PBS -M fridolin.linder@gmail.com
+#PBS -j oe
+
+cd $PBS_O_WORKDIR
+{bill_id_chunk} | python generate_bill_to_bill_matches.py

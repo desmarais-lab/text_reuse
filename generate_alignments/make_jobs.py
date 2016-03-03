@@ -60,7 +60,7 @@ with io.open(id_file_name, 'r', encoding='utf-8') as id_file:
 with io.open('job_template.txt', 'r') as template:
     pbs_template = template.read()
 
-for i in range(1, n_jobs):
+for i in range(1, (n_jobs + 1)):
     
     # Get the id input chunk for the job
     input_file_name = '../id_batches/bill_ids_{}.txt'.format(i)

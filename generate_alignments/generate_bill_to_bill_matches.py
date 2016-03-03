@@ -1,7 +1,6 @@
-#!/opt/anaconda/bin/python
-
+#!/opt/anaconda/bin/python 
 import sys 
-sys.path.append('../lid/')
+sys.path.append('../policy_diffusion/lid/')
 from lid import LID
 from text_alignment import AffineLocalAligner,LocalAligner
 import database
@@ -16,10 +15,11 @@ import sys
 from utils.general_utils import deadline,TimedOutExc
 from database import ElasticConnection
 import time
+import io
+
 
 class NoneDocException(Exception):
     pass
-
 
 @deadline(10000)
 def get_alignments(query_doc, bill_id):
@@ -29,62 +29,72 @@ def get_alignments(query_doc, bill_id):
     return result_docs
 
 
-def test(model_doc):
-    return model_doc
-
-
 if __name__ == "__main__":
-    
-    #elastic host ip
-    ip_addy = "54.244.236.175"
+
+    input_file_name = sys.argv[1]
+    ES_IP = "54.244.236.175" 
 
     #configure logging
-    logging.basicConfig(filename="{0}/logs/state_legislation_alignment.log".format("/Users/flinder/projects/text_reuse/policy_diffusion"),
-                level=logging.DEBUG)
+    logfile_name = 'b2b_logfile_job_{}.log'.format(re.sub('[^0-9]', '',
+        input_file_name))
+    
+    log_path = os.path.join(os.environ['TEXT_REUSE'], 
+            'generate_alignments/logs', logfile_name)
+
+    logging.basicConfig(filename=log_path,level=logging.DEBUG)
     logging.getLogger('elasticsearch').setLevel(logging.ERROR)
     logging.getLogger('urllib3').setLevel(logging.ERROR)
     logging.getLogger('json').setLevel(logging.ERROR)
-    
-    
-    #instantiate lid,aligner and elasticsearch objects
-    
+ 
+    # Initialize aligner
     aligner = AffineLocalAligner(match_score=4, mismatch_score=-1, gap_start=-3, 
-            gap_extend = -1.5)
-    
-    ec = ElasticConnection(host = ip_addy)
+                                 gap_extend = -1.5)
 
-    lidy = LID(query_results_limit=1000, elastic_host=ip_addy, 
-            lucene_score_threshold=0, aligner=aligner)
+    # Initialize Elastic Search connectino
+    ec = ElasticConnection(host = ES_IP)
     
-    #for line in sys.stdin: 
-    try: 
-        bill_id = sys.argv[1]
-        query_doc =  ec.get_bill_by_id(bill_id)['bill_document_last']
+    # Initialize LID
+    lidy = LID(query_results_limit=1000, elastic_host=ES_IP, 
+               lucene_score_threshold=0, aligner=aligner)
 
-        if query_doc is None:
-            raise NoneDocException
-        
-        result_doc = get_alignments(query_doc,bill_id)
-        logging.info("obtained alignments for {0}".format(bill_id))
-        print json.dumps(result_doc)
+    # Loop through the input files and get alignments
+    with io.open(input_file_name, 'r') as infile: 
+
+        for line in infile:
+
+            try:
+                t = time.time() 
+                bill_id = line.strip('\n') 
+                print bill_id
+
+                # Retrieve left bill
+                query_doc =  ec.get_bill_by_id(bill_id)['bill_document_last']         
+
+                # Retrieve all candidate right bills and align
+                result_doc = get_alignments(query_doc,bill_id)
+
+                # Dump out the resutls
+                #print json.dumps(result_doc) 
+
+                print time.time() - t
+
+            except (KeyboardInterrupt, SystemExit):
+                raise
     
-    except (KeyboardInterrupt, SystemExit):
-        raise
-    
-    except NoneDocException: 
-        m = "none doc error query_id {0}: {1}".format(bill_id, "None doc error")
-        logging.error(m)
-        print json.dumps({"query_document_id": bill_id,"error":"none doc error"})
+            except NoneDocException: 
+                m = "none doc error query_id {0}: {1}".format(bill_id, "None doc error")
+                logging.error(m)
+                print json.dumps({"query_document_id": bill_id,"error":"none doc error"})
 
-    except TimedOutExc: 
-        m = "timeout error query_id {0}: {1}".format(bill_id, "timeout error")
-        logging.error(m)
-        print json.dumps({"query_document_id": bill_id,"error":"timeout error"})
+            except TimedOutExc: 
+                m = "timeout error query_id {0}: {1}".format(bill_id, "timeout error")
+                logging.error(m)
+                print json.dumps({"query_document_id": bill_id,"error":"timeout error"})
 
-    except:
-        trace_message = re.sub("\n+", "\t", traceback.format_exc())
-        trace_message = re.sub("\s+", " ", trace_message)
-        trace_message = "<<{0}>>".format(trace_message)
-        m = "random error query_id {0}: {1}".format(bill_id, trace_message)
-        logging.error(m)
-        print json.dumps({"query_document_id": bill_id,"error":"trace_message"})
+            except:
+                trace_message = re.sub("\n+", "\t", traceback.format_exc())
+                trace_message = re.sub("\s+", " ", trace_message)
+                trace_message = "<<{0}>>".format(trace_message)
+                m = "random error query_id {0}: {1}".format(bill_id, trace_message)
+                logging.error(m)
+                print json.dumps({"query_document_id": bill_id,"error":"trace_message"})

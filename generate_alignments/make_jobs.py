@@ -65,8 +65,20 @@ for i in range(1, n_jobs):
     # Get the id input chunk for the job
     input_file_name = '../id_batches/bill_ids_{}.txt'.format(i)
 
-    # FIll it into the template
-    script = pbs_template.format(bill_id_chunk=input_file_name)
+    # Fill it into the template
+    hpc_dir = "/storage/group/bbd5087_collab/text_reuse"
+    err_log_file = "pbs_err_log_job_{}.log".format(i) 
+    output_file = "alignments_{}.json".format(i)
+    script = pbs_template.format(bill_id_chunk=input_file_name,
+                                 pbs_error_log=os.path.join(hpc_dir,
+                                                            "generate_alignments/logs",
+                                                            "pbs_error_logs/", 
+                                                            err_log_file),
+                                  pbs_output_file=os.path.join(hpc_dir, 
+                                                               "data/alignments/",
+                                                               output_file),
+                                  main_dir_path=hpc_dir
+                                  )
     
     # Write the script to file
     script_file_name = 'pbs_scripts/b2b_job_{}.sh'.format(i)

@@ -4,6 +4,10 @@
 #PBS -mae
 #PBS -M fridolin.linder@gmail.com
 #PBS -j oe
+#PBS -e {pbs_error_log}
+#PBS -o {pbs_output_file}
+#PBS -A bbd5087_collab
 
 cd $PBS_O_WORKDIR
-{bill_id_chunk} | python generate_bill_to_bill_matches.py
+export TEXT_REUSE={main_dir_path}
+python generate_bill_to_bill_matches.py {bill_id_chunk}

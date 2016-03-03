@@ -13,3 +13,6 @@ literature/
 *.fls
 bing_key.txt
 bak
+logs/
+id_batches/
+pbs_scripts/

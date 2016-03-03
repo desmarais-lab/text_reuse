@@ -16,3 +16,4 @@ bak
 logs/
 id_batches/
 pbs_scripts/
+*.swp

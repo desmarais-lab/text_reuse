@@ -1,13 +1,11 @@
 #PBS -l nodes=1:ppn=1
 #PBS -l walltime=96:00:00
 #PBS -l pmem=5gb
-#PBS -mae
-#PBS -M fridolin.linder@gmail.com
 #PBS -j oe
 #PBS -e {pbs_error_log}
 #PBS -o {pbs_output_file}
 #PBS -A bbd5087_collab
 
-cd $PBS_O_WORKDIR
+cd {main_dir_path}/generate_alignments
 export TEXT_REUSE={main_dir_path}
-python ../generate_bill_to_bill_matches.py {bill_id_chunk}
+python generate_bill_to_bill_matches.py {bill_id_chunk}

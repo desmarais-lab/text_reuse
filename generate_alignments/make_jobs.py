@@ -63,7 +63,7 @@ with io.open('job_template.txt', 'r') as template:
 for i in range(1, (n_jobs + 1)):
     
     # Get the id input chunk for the job
-    input_file_name = '../id_batches/bill_ids_{}.txt'.format(i)
+    input_file_name = 'id_batches/bill_ids_{}.txt'.format(i)
 
     # Fill it into the template
     hpc_dir = "/storage/group/bbd5087_collab/text_reuse"

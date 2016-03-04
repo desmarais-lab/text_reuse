@@ -1,4 +1,5 @@
 #!/opt/anaconda/bin/python 
+from __future__ import unicode_literals
 import sys 
 sys.path.append('../policy_diffusion/lid/')
 from lid import LID
@@ -29,17 +30,26 @@ def get_alignments(query_doc, bill_id):
     return result_docs
 
 
+def write_output(doc):
+    with io.open(outfile_name, 'a+', encoding='utf-8') as outfile:
+	outfile.write(unicode(json.dumps(doc)) + '\n')
+
+
 if __name__ == "__main__":
 
     input_file_name = sys.argv[1]
+    output_dir = sys.argv[2]
+
     ES_IP = "54.244.236.175" 
 
     #configure logging
     logfile_name = 'b2b_logfile_job_{}.log'.format(re.sub('[^0-9]', '',
         input_file_name))
+    outfile_name = os.path.join(output_dir, 
+	'alignemnt_results_{}.json'.format(re.sub('[^0-9]', '',input_file_name)))
     
     log_path = os.path.join(os.environ['TEXT_REUSE'], 
-            'generate_alignments/logs', logfile_name)
+         	'generate_alignments/logs', logfile_name)
 
     logging.basicConfig(filename=log_path,level=logging.DEBUG)
     logging.getLogger('elasticsearch').setLevel(logging.ERROR)
@@ -63,9 +73,7 @@ if __name__ == "__main__":
         for line in infile:
 
             try:
-                t = time.time() 
                 bill_id = line.strip('\n') 
-                print bill_id
 
                 # Retrieve left bill
                 query_doc =  ec.get_bill_by_id(bill_id)['bill_document_last']         
@@ -74,9 +82,8 @@ if __name__ == "__main__":
                 result_doc = get_alignments(query_doc,bill_id)
 
                 # Dump out the resutls
-                #print json.dumps(result_doc) 
+		write_output(result_doc)
 
-                print time.time() - t
 
             except (KeyboardInterrupt, SystemExit):
                 raise
@@ -84,12 +91,12 @@ if __name__ == "__main__":
             except NoneDocException: 
                 m = "none doc error query_id {0}: {1}".format(bill_id, "None doc error")
                 logging.error(m)
-                print json.dumps({"query_document_id": bill_id,"error":"none doc error"})
+		write_output({"query_document_id": bill_id,"error":"none doc error"})
 
             except TimedOutExc: 
                 m = "timeout error query_id {0}: {1}".format(bill_id, "timeout error")
                 logging.error(m)
-                print json.dumps({"query_document_id": bill_id,"error":"timeout error"})
+                write_output({"query_document_id": bill_id,"error":"timeout error"})
 
             except:
                 trace_message = re.sub("\n+", "\t", traceback.format_exc())
@@ -97,4 +104,4 @@ if __name__ == "__main__":
                 trace_message = "<<{0}>>".format(trace_message)
                 m = "random error query_id {0}: {1}".format(bill_id, trace_message)
                 logging.error(m)
-                print json.dumps({"query_document_id": bill_id,"error":"trace_message"})
+                write_output({"query_document_id": bill_id,"error":"trace_message"})

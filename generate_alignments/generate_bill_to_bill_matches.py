@@ -37,6 +37,8 @@ def write_output(doc):
 
 if __name__ == "__main__":
 
+    t = time.time() 
+
     input_file_name = sys.argv[1]
     output_dir = sys.argv[2]
 
@@ -46,7 +48,7 @@ if __name__ == "__main__":
     logfile_name = 'b2b_logfile_job_{}.log'.format(re.sub('[^0-9]', '',
         input_file_name))
     outfile_name = os.path.join(output_dir, 
-	'alignemnt_results_{}.json'.format(re.sub('[^0-9]', '',input_file_name)))
+	'alignment_results_{}.json'.format(re.sub('[^0-9]', '',input_file_name)))
     
     log_path = os.path.join(os.environ['TEXT_REUSE'], 
          	'generate_alignments/logs', logfile_name)
@@ -105,3 +107,5 @@ if __name__ == "__main__":
                 m = "random error query_id {0}: {1}".format(bill_id, trace_message)
                 logging.error(m)
                 write_output({"query_document_id": bill_id,"error":"trace_message"})
+
+    print "Finished successfully in {}".format(time.time() - t)

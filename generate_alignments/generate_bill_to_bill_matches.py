@@ -69,6 +69,10 @@ if __name__ == "__main__":
     lidy = LID(query_results_limit=1000, elastic_host=ES_IP, 
                lucene_score_threshold=0, aligner=aligner)
 
+    # Wipe the outfile in case it already exists
+    with io.open(outfile_name, 'w+', encoding='utf-8') as outfile:
+	outfile.write(unicode())
+
     # Loop through the input files and get alignments
     with io.open(input_file_name, 'r') as infile: 
 

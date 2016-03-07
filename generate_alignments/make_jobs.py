@@ -14,6 +14,11 @@ id_file_name = sys.argv[2]
 # Output directories
 out_dirs = ['id_batches', 'pbs_scripts']
 
+
+# Get jobs that are already done
+with io.open('completed_jobs.txt') as infile:
+    done_jobs = set([int(l.strip('\n')) for l in infile.readlines()])
+
 # Clear the output directories
 for out_dir in out_dirs:
     if os.path.exists(out_dir):
@@ -65,6 +70,9 @@ with io.open('job_template.txt', 'r') as template:
 r_n_jobs = int(math.ceil(n_bills / n_per_job))
 
 for i in range(1, (r_n_jobs + 1)):
+    
+    if i in done_jobs:
+        continue
     
     # Get the id input chunk for the job
     input_file_name = 'id_batches/bill_ids_{}.txt'.format(i)

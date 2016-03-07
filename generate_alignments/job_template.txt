@@ -2,7 +2,9 @@
 #PBS -l walltime=96:00:00
 #PBS -l pmem=5gb
 #PBS -j oe
-#PBS -A bbd5087_collab
+#PBS -A bbd5087-himem_collab
+#PBS -e {main_dir_path}/generate_alignments/logs/{job_id}_error.txt
+#PBS -o {main_dir_path}/generate_alignments/logs/{job_id}_output.txt
 
 cd {main_dir_path}/generate_alignments
 export TEXT_REUSE={main_dir_path}

@@ -27,7 +27,8 @@ with io.open(id_file_name, 'r', encoding='utf-8') as id_file:
     n_bills = len(ids)
 
     # Approx number of left bills per job (the last one will have less)
-    n_per_job = math.ceil(n_bills / n_jobs)
+    n_per_job = int(math.ceil(n_bills / n_jobs))
+    print "Assigning {} ids to each job".format(n_per_job)
 
     # Job counter
     k = 0
@@ -60,7 +61,10 @@ with io.open(id_file_name, 'r', encoding='utf-8') as id_file:
 with io.open('job_template.txt', 'r') as template:
     pbs_template = template.read()
 
-for i in range(1, (n_jobs + 1)):
+# Real number of jobs:
+r_n_jobs = int(math.ceil(n_bills / n_per_job))
+
+for i in range(1, (r_n_jobs + 1)):
     
     # Get the id input chunk for the job
     input_file_name = 'id_batches/bill_ids_{}.txt'.format(i)
@@ -71,11 +75,11 @@ for i in range(1, (n_jobs + 1)):
     output_file = "alignments_{}.json".format(i)
     script = pbs_template.format(bill_id_chunk=input_file_name,
                                  main_dir_path=hpc_dir,
-				 output_dir='../data/alignments/'
-                                  )
+				 output_dir='../data/alignments/',
+				 job_id=i
+                                 )
     
     # Write the script to file
     script_file_name = 'pbs_scripts/b2b_job_{}.sh'.format(i)
     with io.open(script_file_name, 'w+', encoding='utf-8') as script_file:
         script_file.write(script)
-

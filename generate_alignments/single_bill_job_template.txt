@@ -1,0 +1,10 @@
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=96:00:00
+#PBS -l pmem=50gb
+#PBS -A bbd5087-himem_collab
+#PBS -e /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/logs/pbs_error/
+#PBS -o /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/logs/pbs_output/
+
+export TEXT_REUSE=/storage/home/fjl128/bruce_shared/text_reuse/
+cd /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/logs
+python /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/single_bill_to_bill_matches.py "{bill_id}"

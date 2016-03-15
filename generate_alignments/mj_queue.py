@@ -7,6 +7,7 @@ import time
 import argparse
 import datetime
 import sys
+import shutil
 
 
 class PBSQueue(object):
@@ -25,7 +26,8 @@ class PBSQueue(object):
     job_template: str, template with one placeholder
     '''
 
-    def __init__(self, user_id, num_jobs, bill_list, job_template):
+    def __init__(self, user_id, num_jobs, bill_list, job_template, job_dir,
+            sleep_time):
         self.split_regex = re.compile(r'\s+')
         self.status = None
         self.num_jobs = num_jobs
@@ -34,7 +36,15 @@ class PBSQueue(object):
         self.bill_queue = bill_list
         self.last_difference = 0
         self.template = job_template
-        
+
+        self.job_dir = job_dir
+        if os.path.exists(self.job_dir):
+            shutil.rmtree(self.job_dir)
+            os.makedirs(self.job_dir)
+        else:
+            os.makedirs(self.job_dir) 
+
+        self.sleep_time = sleep_time
 
     def update(self):        
         '''
@@ -69,8 +79,6 @@ class PBSQueue(object):
         '''
         subprocess.check_output(['qsub', job_file])
 	print "submitting {}".format(job_file)
-        time.sleep(30)
-        os.remove(job_file)
 
 
     def submit_jobs(self):
@@ -92,6 +100,7 @@ class PBSQueue(object):
             new_job = self._make_job(self.bill_queue[0])
             self.bill_queue.pop(0)
             self._submit_job(new_job) 
+            time.sleep(self.sleep_time)
 
     def _parse_output(self, output):
         '''
@@ -125,11 +134,19 @@ class PBSQueue(object):
         
         job = self.template.format(bill_id=bill_id)
         bill_id = re.sub(' ', '_', bill_id)
-        jobname = 'b2b_job_' + bill_id + '.sh'
+        name = 'b2b_job_' + bill_id + '.sh'
+        jobname = os.path.join(self.job_dir, name)
         with io.open(jobname, 'w+') as jobfile:
             jobfile.write(job)
 
         return jobname
+
+    def clear_job_dir(self):
+
+        jobfiles = glob.glob(os.path.join(self.job_dir, "b2b_*"))
+        for f in jobfiles:
+            os.remove(f)
+
 
 
 
@@ -148,8 +165,9 @@ if __name__ == "__main__":
     
     # Initialize Queue monitor
     print 'Initialize queue with {} jobs'.format(len(bill_list))
-    queue = PBSQueue(user_id='fjl128', num_jobs=80, bill_list=bill_list, 
-                     job_template=template)
+    queue = PBSQueue(user_id='fjl128', num_jobs=90, bill_list=bill_list, 
+                     job_template=template, job_dir='pbs_scripts', 
+                     sleep_time=3)
 
     while True:
         queue.update()
@@ -158,8 +176,10 @@ if __name__ == "__main__":
 
         if queue.running_jobs >= queue.num_jobs:
             print "[{}]: {} jobs running. No new jobs.".format(st, queue.running_jobs)
+            time.sleep(5)
         else:
             queue.submit_jobs()
 	    print "[{}]: {} jobs running. Submitted {} jobs".format(st, queue.running_jobs,
                                                                 queue.last_difference)
-        time.sleep(5)
+            time.sleep(60)
+            queue.clear_job_dir()

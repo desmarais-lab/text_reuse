@@ -12,21 +12,28 @@ print result_files
 outfile = io.open('processed_bills.txt', 'w+', encoding='utf=8')
 reg = re.compile(r',.+')
 
-for f in result_files:
+for j,f in enumerate(result_files):
     print f 
-    
+
     with io.open(f) as infile:
 
         for i,line in enumerate(infile):
+
+            if i % 100 == 0:
+                print i
+             
             line = reg.sub('}', line)
+
             try:
                 doc = json.loads(line)
             except ValueError:
                 print "json error in line {}".format(i)
+                continue
+
             id_ = doc['query_document_id']
+            
             outfile.write(id_)
             outfile.write('\n')
-            if i % 100 == 0:
-                print i
+            
 
 outfile.close()

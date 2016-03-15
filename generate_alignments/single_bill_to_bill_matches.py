@@ -48,8 +48,12 @@ if __name__ == "__main__":
     log_path = os.path.join(os.environ['TEXT_REUSE'], 
          	'generate_alignments/logs/single_bill_jobs.log')
 
-    outfile_name = os.path.join(os.environ['TEXT_REUSE'], 'data/alignments_new/alignments_1000.json')
+    outfile_name = os.path.join(os.environ['TEXT_REUSE'],
+            'data/alignments_new/alignments_1000_wo_doc.json')
+    #outfile_name = 'lid_test.json' 
+            
     
+
     logging.basicConfig(filename=log_path,level=logging.DEBUG)
     logging.getLogger('elasticsearch').setLevel(logging.ERROR)
     logging.getLogger('urllib3').setLevel(logging.ERROR)
@@ -72,8 +76,14 @@ if __name__ == "__main__":
         # Retrieve left bill
         query_doc =  ec.get_bill_by_id(bill_id)['bill_document_last']         
 
+        if query_doc is None:
+            query_doc =  ec.get_bill_by_id(bill_id)['bill_document_first']         
+
         # Retrieve all candidate right bills and align
         result_doc = get_alignments(query_doc,bill_id)
+        
+        # Don't save the query document in the results
+        del result_doc['query_document']
 
         # Dump out the resutls
         write_output(result_doc)

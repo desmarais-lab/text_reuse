@@ -87,7 +87,6 @@ if __name__ == "__main__":
 
         # Dump out the resutls
         write_output(result_doc)
-        print "Finished successfully in {}".format(time.time() - t)
 
     except (KeyboardInterrupt, SystemExit):
         raise
@@ -109,4 +108,6 @@ if __name__ == "__main__":
         m = "random error query_id {0}: {1}".format(bill_id, trace_message)
         logging.error(m)
         write_output({"query_document_id": bill_id,"error":"trace_message"})
+    
 
+    print "Finished successfully in {}".format(time.time() - t)

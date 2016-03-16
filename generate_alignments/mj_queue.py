@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import subprocess
 import re
 import os
@@ -36,6 +37,7 @@ class PBSQueue(object):
         self.bill_queue = bill_list
         self.last_difference = 0
         self.template = job_template
+        self.prog_f_name = 'mj_queue_prog.txt'
 
         self.job_dir = job_dir
         if os.path.exists(self.job_dir):
@@ -45,6 +47,16 @@ class PBSQueue(object):
             os.makedirs(self.job_dir) 
 
         self.sleep_time = sleep_time
+
+    def _update_prog_file(self, job):
+        '''
+        Update the permanent progress file
+        '''
+
+        with io.open(self.prog_f_name, 'a+', encoding='utf-8') as progfile:
+            progfile.write(job)
+            progfile.write(u'\n')
+            
 
     def update(self):        
         '''
@@ -98,9 +110,11 @@ class PBSQueue(object):
         while c <= self.last_difference:
             c += 1
             new_job = self._make_job(self.bill_queue[0])
-            self.bill_queue.pop(0)
             self._submit_job(new_job) 
+            self._update_prog_file(self.bill_queue[0])
+            self.bill_queue.pop(0)
             time.sleep(self.sleep_time)
+
 
     def _parse_output(self, output):
         '''
@@ -165,7 +179,7 @@ if __name__ == "__main__":
     
     # Initialize Queue monitor
     print 'Initialize queue with {} jobs'.format(len(bill_list))
-    queue = PBSQueue(user_id='fjl128', num_jobs=90, bill_list=bill_list, 
+    queue = PBSQueue(user_id='fjl128', num_jobs=85, bill_list=bill_list, 
                      job_template=template, job_dir='pbs_scripts', 
                      sleep_time=3)
 

@@ -49,7 +49,7 @@ if __name__ == "__main__":
          	'generate_alignments/logs/single_bill_jobs.log')
 
     outfile_name = os.path.join(os.environ['TEXT_REUSE'],
-            'data/alignments_new/alignments_1000_wo_doc.json')
+            'data/alignments_new/alignments_1000.json')
     #outfile_name = 'lid_test.json' 
             
     

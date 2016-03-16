@@ -1,0 +1,11 @@
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=96:00:00
+#PBS -l pmem=15gb
+#PBS -A bbd5087-himem_collab
+#PBS -j oe
+#PBS -e pbs_output.txt
+#PBS -o pbs_output.txt
+
+cd $PBS_WORKDIR
+export TEXT_REUSE={main_dir_path}
+python generate_bill_to_bill_matches.py {bill_id_chunk}

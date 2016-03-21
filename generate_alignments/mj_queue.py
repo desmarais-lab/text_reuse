@@ -72,7 +72,18 @@ class PBSQueue(object):
         Updates the running_jobs attribute of the queue
         '''
         # Request status through shell
-        response = subprocess.check_output(['qstat', '-u', self.user_id])
+        response = None
+        while respones is None:
+            try:
+                response = subprocess.check_output(['qstat', '-u', self.user_id])
+            except CalledProcessError as error:
+                rc = error.returncode
+                print "Error in qsub in _submit_job(). Returncode:
+                    {}".format(rc) 
+                print "Taking a break..."
+                time.sleep(60)
+                pass
+
         # Get the parsed job list
         jobs = self._parse_output(response)
         self.running_jobs = sum(j['status'] in ['R', 'Q'] for j in jobs)
@@ -110,7 +121,16 @@ class PBSQueue(object):
         while c <= self.last_difference:
             c += 1
             new_job = self._make_job(self.bill_queue[0])
-            self._submit_job(new_job) 
+            try:
+                self._submit_job(new_job) 
+            except CalledProcessError as error:
+                c -= 1
+                rc = error.returncode
+                print "Error in qsub in _submit_job(). Returncode:
+                    {}".format(rc) 
+                print "Taking a break..."
+                time.sleep(60)
+                continue
             self._update_prog_file(self.bill_queue[0])
             self.bill_queue.pop(0)
             time.sleep(self.sleep_time)
@@ -167,7 +187,7 @@ class PBSQueue(object):
 if __name__ == "__main__":
     
     print "Preparing inputs..."
-    temp = io.open('processed_bills.txt').readlines()
+    temp = io.open('mj_queue_prog.txt').readlines()
     processed_bills = set([e.strip('\n') for e in temp])
 
     temp = io.open('bill_ids_random.txt').readlines()

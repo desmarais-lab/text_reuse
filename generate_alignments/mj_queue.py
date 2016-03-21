@@ -73,13 +73,12 @@ class PBSQueue(object):
         '''
         # Request status through shell
         response = None
-        while respones is None:
+        while response is None:
             try:
                 response = subprocess.check_output(['qstat', '-u', self.user_id])
             except CalledProcessError as error:
                 rc = error.returncode
-                print "Error in qsub in _submit_job(). Returncode:
-                    {}".format(rc) 
+                print "Error in qsub in _submit_job(). Returncode: {}".format(rc) 
                 print "Taking a break..."
                 time.sleep(60)
                 pass
@@ -126,8 +125,7 @@ class PBSQueue(object):
             except CalledProcessError as error:
                 c -= 1
                 rc = error.returncode
-                print "Error in qsub in _submit_job(). Returncode:
-                    {}".format(rc) 
+                print "Error in qsub in _submit_job(). Returncode: {}".format(rc) 
                 print "Taking a break..."
                 time.sleep(60)
                 continue

@@ -1,3 +1,8 @@
+## PBS job submission for text reuse project
+#
+# 
+#
+
 from __future__ import unicode_literals
 import subprocess
 import re
@@ -76,7 +81,7 @@ class PBSQueue(object):
         while response is None:
             try:
                 response = subprocess.check_output(['qstat', '-u', self.user_id])
-            except CalledProcessError as error:
+            except subprocess.CalledProcessError as error:
                 rc = error.returncode
                 print "Error in qsub in _submit_job(). Returncode: {}".format(rc) 
                 print "Taking a break..."
@@ -122,7 +127,7 @@ class PBSQueue(object):
             new_job = self._make_job(self.bill_queue[0])
             try:
                 self._submit_job(new_job) 
-            except CalledProcessError as error:
+            except subprocess.CalledProcessError as error:
                 c -= 1
                 rc = error.returncode
                 print "Error in qsub in _submit_job(). Returncode: {}".format(rc) 
@@ -178,7 +183,6 @@ class PBSQueue(object):
         jobfiles = glob.glob(os.path.join(self.job_dir, "b2b_*"))
         for f in jobfiles:
             os.remove(f)
-
 
 
 

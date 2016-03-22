@@ -18,3 +18,4 @@ id_batches/
 pbs_scripts/
 *.swp
 processed_bills.txt
+mj_queue_prog.txt

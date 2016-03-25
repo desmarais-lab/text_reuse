@@ -79,14 +79,18 @@ class PBSQueue(object):
         '''
         # Request status through shell
         response = None
+        ntry = 0
         while response is None:
             try:
+                ntry += 1
                 response = subprocess.check_output(['qstat', '-u', self.user_id])
             except subprocess.CalledProcessError as error:
+                if ntry > 5:
+                    raise
                 rc = error.returncode
                 print "Error in qsub in _submit_job(). Returncode: {}".format(rc) 
                 print "Taking a break..."
-                time.sleep(60)
+                time.sleep(10)
                 pass
 
         # Get the parsed job list

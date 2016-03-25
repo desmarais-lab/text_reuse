@@ -40,3 +40,15 @@ nc_2015_HB366 <- as.data.frame(filter(btb, (left_doc_id == "nc_2015_HB366" |
     mutate(matched_bill = other_bill(left_doc_id, right_doc_id, "nc_2015_HB366")) %>%
     dplyr::select(matched_bill, sum_score, ideology_dist, 
                   left_length, right_length)
+
+st <- sapply(strsplit(nc_2015_HB366$matched_bill, "_"), ret_first)
+sess <- sapply(strsplit(nc_2015_HB366$matched_bill, "_"), function(x) x[2])
+id_ <- sapply(strsplit(nc_2015_HB366$matched_bill, "_"), function(x) x[3])
+
+res_tab <- data.frame("ID" = id_, State = toupper(st), Session = sess, 
+                      score = nc_2015_HB366$sum_score)
+
+colnames(res_tab) <- c("Matched Bill", "Alignment Score")
+xtable(res_tab, caption = "Bills that align with NC HB366 (2015). The first three
+       columns identify the bill, the fourth column contains the alignment score
+       for the bill dyad. The score is the sum of the section alignments.")

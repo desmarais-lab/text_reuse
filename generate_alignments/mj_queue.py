@@ -32,7 +32,7 @@ class PBSQueue(object):
     job_template: str, template with one placeholder
     '''
 
-    def __init__(self, user_id, num_jobs, bill_list, job_template, job_dir,
+    def __init__(self, user_id, allocation, num_jobs, bill_list, job_template, job_dir,
             sleep_time):
         self.split_regex = re.compile(r'\s+')
         self.status = None
@@ -43,6 +43,7 @@ class PBSQueue(object):
         self.last_difference = 0
         self.template = job_template
         self.prog_f_name = 'mj_queue_prog.txt'
+        self.allocation = allocation
 
         self.job_dir = job_dir
         if os.path.exists(self.job_dir):
@@ -90,7 +91,10 @@ class PBSQueue(object):
 
         # Get the parsed job list
         jobs = self._parse_output(response)
-        self.running_jobs = sum(j['status'] in ['R', 'Q'] for j in jobs)
+        if self.allocation != "open":
+            self.running_jobs = sum(j['status'] in ['R', 'Q'] and j['queue'] == "batch" for j in jobs)
+        else:
+            self.running_jobs = sum(j['status'] in ['R', 'Q'] and j['queue'] == "open" for j in jobs)
 
     def _submit_job(self, job_file): 
         '''
@@ -105,7 +109,7 @@ class PBSQueue(object):
         None
         '''
         subprocess.check_output(['qsub', job_file])
-	print "submitting {}".format(job_file)
+	#print "submitting {}".format(job_file)
 
 
     def submit_jobs(self):
@@ -122,17 +126,21 @@ class PBSQueue(object):
         '''
         self.last_difference = self.num_jobs - self.running_jobs
         c = 1
+        ntry = 0
         while c <= self.last_difference:
             c += 1
             new_job = self._make_job(self.bill_queue[0])
             try:
+                ntry += 1
                 self._submit_job(new_job) 
             except subprocess.CalledProcessError as error:
+                if ntry > 10:
+                    raise
                 c -= 1
                 rc = error.returncode
                 print "Error in qsub in _submit_job(). Returncode: {}".format(rc) 
                 print "Taking a break..."
-                time.sleep(60)
+                time.sleep(10)
                 continue
             self._update_prog_file(self.bill_queue[0])
             self.bill_queue.pop(0)
@@ -169,8 +177,9 @@ class PBSQueue(object):
 
     def _make_job(self, bill_id):
         
-        job = self.template.format(bill_id=bill_id)
-        bill_id = re.sub(' ', '_', bill_id)
+        job = self.template.format(bill_id=bill_id,
+                                   allocation=self.allocation)
+        bill_id = re.sub('[^A-Za-z0-9]', '_', bill_id)
         name = 'b2b_job_' + bill_id + '.sh'
         jobname = os.path.join(self.job_dir, name)
         with io.open(jobname, 'w+') as jobfile:
@@ -187,12 +196,20 @@ class PBSQueue(object):
 
 
 if __name__ == "__main__":
-    
+   
+    # Important parameters to set:
+    # allocation
+    # bill ids
+    # number of jobs
+    # script directory
+
+
+
     print "Preparing inputs..."
     temp = io.open('mj_queue_prog.txt').readlines()
     processed_bills = set([e.strip('\n') for e in temp])
 
-    temp = io.open('bill_ids_random.txt').readlines()
+    temp = io.open('bill_ids_batch_1.txt').readlines()
     all_bills = [e.strip('\n') for e in temp]
 
     bill_list = [e for e in all_bills if e not in processed_bills]
@@ -201,9 +218,9 @@ if __name__ == "__main__":
     
     # Initialize Queue monitor
     print 'Initialize queue with {} jobs'.format(len(bill_list))
-    queue = PBSQueue(user_id='fjl128', num_jobs=85, bill_list=bill_list, 
-                     job_template=template, job_dir='pbs_scripts', 
-                     sleep_time=3)
+    queue = PBSQueue(user_id='fjl128', num_jobs=25, bill_list=bill_list, 
+                     job_template=template, job_dir='pbs_scripts_open', 
+                     sleep_time=3, allocation='open')
 
     while True:
         queue.update()

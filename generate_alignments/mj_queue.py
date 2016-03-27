@@ -96,6 +96,7 @@ class PBSQueue(object):
 
         # Get the parsed job list
         jobs = self._parse_output(response)
+
         # Counte the number of jobs that are runnign or queued
         if self.allocation != "open":
             self.running_jobs = sum(j['status'] in ['R', 'Q'] and j['queue'] == "batch" for j in jobs)
@@ -121,9 +122,7 @@ class PBSQueue(object):
         while c <= self.last_difference:
             c += 1
             new_job = self._make_job(self.bill_queue[0])
-
-
-            
+ 
             # Try 5 times in 50 seconds, in case the qbs system is not reponsive
             ntry = 0
             response = None
@@ -143,7 +142,7 @@ class PBSQueue(object):
                     print "Error in qsub in _submit_job(). Returncode: {}".format(rc) 
                     print "Taking a break..."
                     # Wait before re-trying
-                    time.sleep(10)
+                    time.sleep(60)
                     pass
 
             self._update_prog_file(self.bill_queue[0])
@@ -215,8 +214,8 @@ class PBSQueue(object):
 if __name__ == "__main__":
    
     # Parameteres
-    USER_ID = 'fjl_128'
-    NUM_JOBS = 25
+    USER_ID = 'fjl128'
+    NUM_JOBS = 20
     BILL_IDS = 'bill_ids_batch_1.txt'
     ALLOCATION = 'open'
 
@@ -244,7 +243,7 @@ if __name__ == "__main__":
                      bill_list=bill_list, 
                      job_template=template, 
                      job_dir=job_dir, 
-                     sleep_time=3, 
+                     sleep_time=2, 
                      allocation=ALLOCATION)
 
     # Main loop
@@ -253,7 +252,7 @@ if __name__ == "__main__":
 	ts = time.time()
 	st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
         
-        if len(queue.bill_list) == 0:
+        if len(queue.bill_queue) == 0:
             print "Finished"
             break
 

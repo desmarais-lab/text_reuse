@@ -14,32 +14,13 @@ prefixes <- group_by(df, state, prefix) %>% summarize(count = n())
 # State distribution
 state_desc <- mutate(df, date_introduced = as.Date(df$date_introduced)) %>%
     mutate(year_introduced = format(date_introduced, "%Y")) %>%
-    group_by(state) %>% 
-    summarize(year_min = min(year_introduced, na.rm = TRUE),
-              year_max = max(year_introduced, na.rm = TRUE),
-              count = n())
+    group_by(state, year_introduced) %>% 
+    summarize(count = n())
 
-regions <- data.frame(region = c(rep("Northeast", 9),
-                                 rep("Midwest", 12),
-                                 rep("South", 18),
-                                 rep("West", 13)),
-                      state = c("ct", "me", "ma", "nh", "ri", "vt", "nj", "ny",
-                                "pa", "il", "in", "mi", "oh", "wi", "ia", "ks",
-                                "mn", "mo", "ne", "nd", "sd", "de", "fl", "ga",
-                                "md", "nc", "sc", "va", "dc", "wv", "al", "ky",
-                                "ms", "tn", "ar", "la", "pr", "ok", "tx", "az", "co",
-                                "id", "mt", "nv", "nm", "ut", "wy", "ak", "ca",
-                                "hi", "or", "wa"))
-regions <- regions[order(regions$state), ]
-state_desc$region <- regions$region
 
 ## Plot all states
-ggplot(state_desc) +
-    geom_segment(aes(x = year_min, xend = year_max, y = seq(1,length(state)), 
-                     yend = seq(1,length(state)), color = count), size = 2) + 
-    theme_bw() + xlab("Year") + ylab("State") +
-    scale_color_continuous(name = "# of Bils") + 
-    guides(size = FALSE)
+ggplot(state_desc, aes(x=year_introduced, y=state)) + 
+    geom_point(aes(size=count), color="#E69F00") + 
+    geom_point(aes(size=count), shape=1, color="#999999") +
+    theme_bw() + ylab("State") + xlab("Year")
 ggsave('../../manuscript/figures/year_count_by_state.png')
-
-

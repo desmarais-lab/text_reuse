@@ -15,7 +15,8 @@ bing_key.txt
 bak
 logs/
 id_batches/
-pbs_scripts/
+pbs_scripts*/
 *.swp
 processed_bills.txt
 mj_queue_prog.txt
+bill_ids*

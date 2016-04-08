@@ -215,10 +215,9 @@ if __name__ == "__main__":
    
     # Parameteres
     USER_ID = 'fjl128'
-    NUM_JOBS = 20
-    BILL_IDS = 'bill_ids_batch_1.txt'
-    ALLOCATION = 'open'
-
+    NUM_JOBS = 85
+    BILL_IDS = 'bill_ids_batch_2.txt'
+    ALLOCATION = 'bbd5087-himem_collab'
 
     # Prepare inputs
 

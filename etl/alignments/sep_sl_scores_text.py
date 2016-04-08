@@ -5,8 +5,8 @@ from __future__ import unicode_literals
 import io
 import time
 
-infile = io.open('../data/lid/bill_to_bill_alignments.csv', 'r', encoding = 'utf-8')
-outfile = io.open('../data/lid/bill_to_bill_scores_only.csv', 'w+', encoding = 'utf-8')
+infile = io.open('../../data/lid/bill_to_bill_alignments.csv', 'r', encoding = 'utf-8')
+outfile = io.open('../../data/lid/bill_to_bill_scores_only.csv', 'w+', encoding = 'utf-8')
 
 outfile.write('left_doc_id,right_doc_id,alignment_score\n')
 for i,line in enumerate(infile):

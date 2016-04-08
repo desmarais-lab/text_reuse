@@ -22,7 +22,7 @@ import io
 class NoneDocException(Exception):
     pass
 
-@deadline(20000)
+@deadline(10000)
 def get_alignments(query_doc, bill_id):
     result_docs=lidy.find_state_bill_alignments(query_doc,
             document_type="state_bill", split_sections=True, 

@@ -11,8 +11,8 @@ import numpy as np
 import time
 import re
 
-BILL_FILE = '../data/extracted_bills_with_sponsers.json'
-OUTFILE = '../data/bill_metadata.csv'
+BILL_FILE = '../../data/extracted_bills_with_sponsers.json'
+OUTFILE = '../../data/bill_metadata.csv'
 N_SPON = 3
 
 legislators = pd.read_csv('../data/legislators.csv')

@@ -1,7 +1,7 @@
 library(dplyr)
 library(ggplot2)
 
-df <- read.csv('../data/bill_metadata.csv', stringsAsFactors = FALSE,
+df <- read.csv('../../data/bill_metadata.csv', stringsAsFactors = FALSE,
                       header = TRUE, quote = '"')
 
 # THis one is constant

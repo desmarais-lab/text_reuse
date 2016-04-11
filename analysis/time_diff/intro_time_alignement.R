@@ -6,7 +6,6 @@ meta <- read.csv('../../data/bill_metadata.csv', stringsAsFactors = FALSE,
                  header = TRUE, quote = '"')
 
 ## Clean it up
-
 ### Make 'None' NA
 meta[meta == 'None'] <- NA
 ### Fix column classes
@@ -72,12 +71,18 @@ ggplot(cumu_time_diff) +
 ggsave('../../4344753rddtnd/figures/cumu_date_diff.png')
 
 
+samp <- aggr[sample(c(1:nrow(aggr)), 500000), ]
+
 # Relationship between time diff and sum score
-ggplot(aggr) + 
-    geom_point(aes(x = time_diff, y = sum_score), size = 0.6, alpha = 0.3) + 
+ggplot(samp) +                  
+    geom_point(aes(x = time_diff, y = sum_score), size = 0.01, alpha = 0.1) + 
     scale_y_log10() + 
     ylab("Log alignment score (sum)") + 
     xlab("Introduction date difference (days)") +
+    geom_quantile(aes(y = sum_score, x = time_diff), 
+                  quantiles = c(0.05, 0.5, 0.95),
+                  formula = y ~ x,
+                  color = "#E69F00") +
     theme_bw()
 ggsave('../../4344753rddtnd/figures/log_date_diff_score.png')
 

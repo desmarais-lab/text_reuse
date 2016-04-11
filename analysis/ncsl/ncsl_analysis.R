@@ -2,6 +2,10 @@ library(dplyr)
 library(ggplot2)
 library(xtable)
 
+
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
+               "#D55E00", "#CC79A7")
+
 # Load and preprocess data
 alignments <- tbl_df(read.csv('../../data/lid/bill_to_bill_scores_only.csv',
                               stringsAsFactors = FALSE, header = TRUE))
@@ -49,11 +53,74 @@ xtable(eda_tab, caption = "Crosstable of being in the same table against having
        label = "tab:ncsl_crosstab")
 sink()
 
+#ggplot(df) + 
+#    geom_point(aes(x = same_table, y = alignment_score_zeros), 
+#               position = "jitter", alpha = 0.6, size = 0.4) +
+#    scale_y_log10()
 
-# Exclue one big outlier
-df <- df[-which.max(df$alignment_score), ]
+
+# Precision recall curve
+
+## Put zero for NA alignment score
+bill_pairs$alignment_score_nona <- ifelse(is.na(bill_pairs$alignment_score), 0,
+                                          bill_pairs$alignment_score)
+
+
+thresholds <- sort(unique(bill_pairs$alignment_score_nona))
+thresholds <- thresholds[-length(thresholds)]
+
+
+# Precision recall curve
+pr <- function(threshold, score = bill_pairs$alignment_score_nona, 
+                   true = bill_pairs$same_table) {
+    predicted <- ifelse(score > threshold, 1, 0)
+    tab <- table(true, predicted)
+    recall <- tab[2,2] / rowSums(tab)[2]
+    precision <- tab[2,2] / colSums(tab)[2]
+    return(c(precision, recall))
+}
+
+prec_rec <- t(sapply(thresholds, pr))
+#prec_rec <- rbind(c(0.09058045, 1), prec_rec) # When threshold 0
+df <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
+                 threshold = rep(c(thresholds), 2),
+                 type = rep(c("precision", "recall"), each = nrow(prec_rec)))
 
 ggplot(df) + 
-    geom_point(aes(x = same_table, y = alignment_score_zeros), 
-               position = "jitter", alpha = 0.6, size = 0.4) +
-    scale_y_log10()
+    geom_line(aes(y = value, x = threshold, color = type)) + 
+    scale_color_manual(values = cbPalette[-1]) +
+    theme_bw() + 
+    scale_x_log10() + 
+    xlab("Score threshold") + ylab("Value") +
+    facet_wrap(~ type, scales = "free")
+ggsave('../../4344753rddtnd/figures/ncsl_prec_rec.png')
+
+
+# F1 score
+f1 <- prec_rec[, 1] * prec_rec[ , 2] / (prec_rec[, 1] + prec_rec[ ,2])
+df1 <- data.frame("f1_score" = f1, "threshold" = thresholds)
+
+ggplot(df1) + 
+    geom_line(aes(x = thresholds, y = f1_score))
+
+# Distributions of alignment scores in same table and not same table
+score_st <- filter(bill_pairs, same_table==1 & !is.na(alignment_score)) %>% select(alignment_score)
+score_st <- score_st$alignment_score
+
+score_nst <- filter(bill_pairs, same_table==0 & !is.na(alignment_score)) %>% select(alignment_score)
+score_nst <- score_nst$alignment_score
+
+df2 <- data.frame(score = c(score_st, score_nst), 
+                  group = c(rep("same_table", length(score_st)), 
+                            rep("not_same_table", length(score_nst))))
+ggplot(df2) + 
+    geom_histogram(aes(x=score, y=..ncount../sum(..ncount..)), 
+                   fill = cbPalette[1], color = "white", bins=30) +
+    scale_x_log10() + theme_bw() + facet_wrap(~group, ncol=1) + 
+    ylab("Proportion") + xlab("Alignment Score")
+ggsave('../../4344753rddtnd/figures/align_distri_ncsl_tables.png')
+
+ggplot() + 
+    geom_histogram(aes(score_st), alpha = 0.5) + 
+    geom_histogram(aes(score_nst), alpha = 0.5) + 
+    scale_x_log10()

@@ -52,3 +52,7 @@ colnames(res_tab) <- c("Matched Bill", "Alignment Score")
 xtable(res_tab, caption = "Bills that align with NC HB366 (2015). The first three
        columns identify the bill, the fourth column contains the alignment score
        for the bill dyad. The score is the sum of the section alignments.")
+
+
+# Get the actual alignments 
+alignments <- s]

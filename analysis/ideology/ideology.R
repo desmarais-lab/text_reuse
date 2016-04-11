@@ -82,6 +82,8 @@ gc()
 # Write bill dyads to disk
 write.csv(aggr, file = "../../data/lid/aggregate_btb_alignments.csv", 
           row.names = FALSE, fileEncoding = "utf-8")
+aggr <- read.csv("../../data/lid/aggregate_btb_alignments.csv",
+                 stringsAsFactors = FALSE)
 
 # ==============================================================================
 # Descriptives
@@ -98,13 +100,17 @@ ggplot(aggr) + geom_histogram(aes(ideology_dist), color = "white")
 
 
 # Ideological distance vs sum_score
-samp <- tbl_df(aggr[sample(c(1:nrow(aggr)), 10000), ])
-ggplot(aggr, aes(x = ideology_dist, y = sum_score)) + 
-    geom_point(alpha = 0.3, size = 0.5) + 
+samp <- tbl_df(aggr[sample(c(1:nrow(aggr)), 500000), ])
+ggplot(samp, aes(x = ideology_dist, y = sum_score)) + 
+    geom_point(alpha = 0.1, size = 0.01) + 
     #geom_smooth(method = "loess", size = 1.5) +
     scale_y_log10() + 
     xlab("Ideological Distance") +
     ylab("log Alignment Score (Sum)") + 
+    geom_quantile(aes(y = sum_score, x = ideology_dist), 
+                  quantiles = c(0.05, 0.5, 0.95),
+                  formula = y ~ x,
+                  color = "#E69F00") +
     theme_bw() 
 ggsave('../../4344753rddtnd/figures/ideology_alignment.png')
 
@@ -186,10 +192,10 @@ load('qap_results.RData')
 # # ==============================================================================
 # 
 # # Table for regression results
-# res <- data.frame(Intercept = sum_score$coef[1],
-#                   Estimate = sum_score$coef[2],
-#                   Std.Dev = sqrt(var(perm_dist_sum)))
-# rownames(res) <- NULL
+ res <- data.frame(Intercept = sum_score$coef[1],
+                   Estimate = sum_score$coef[2],
+                   Std.Dev = sqrt(var(perm_dist_sum)))
+ rownames(res) <- NULL
 # 
 # # # Store results to disk
 # save(list = c("sum_score", "perm_dist_sum"), file = "qap_results.RData")
@@ -214,9 +220,9 @@ ests <- data.frame(aggregation = c("Sum", "Mean", "Max", "# Alignments"),
 
 ggplot(pdat) + 
     geom_histogram(aes(permutations), color = "white", binwidth = 0.0005,
-                 fill = "grey16") + 
+                 fill = cbPalette[1]) + 
     geom_vline(aes(xintercept = res$Estimate), color = cbPalette[2]) +
-    geom_text(data = ests, aes(x = (beta - 0.001), y = 200, angle = 90, 
+    geom_text(data = ests, aes(x = (beta - 0.001), y = 100, angle = 90, 
                                label = "Estimate", color = cbPalette[2]
                                ), show_guide = FALSE) +
     xlab("Coefficient") + ylab("Count") + 

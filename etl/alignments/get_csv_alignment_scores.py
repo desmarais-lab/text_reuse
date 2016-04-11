@@ -3,26 +3,34 @@
 
 
 # This script will also correct for an early bug where alignments of the bill
-# with itself have been calculated. This occured only for the firs few thousand
+# with itself have been calculated. This occured only for the first few thousand
 # bills
 
 from __future__ import unicode_literals
 import io
 import json
 from pprint import pprint
+import sys
+from time import time
 
 
-INFILE = '../data/alignments_new/alignments_1000_sample.json'
-OUTFILE = '../data/alignments_new/alignments_1000_sample.csv'
+INFILE = '../../data/alignments_new/alignments_1000.json'
+# File to store the alignment scores (section dyad level)
+AS_OUTFILE = '../../data/alignments_new/alignments_1000.csv'
+# File to store the lucene scores in (bill dyad level)
+LS_OUTFILE = '../../data/alignments_new/lucene_scores_1000.csv'
 
-with io.open(INFILE) as infile, io.open(OUTFILE, 'w+', encoding='utf-8') as outfile:
+with io.open(INFILE, 'r', encoding='utf-8') as infile,\
+        io.open(AS_OUTFILE, 'w+', encoding='utf-8') as as_file,\
+        io.open(LS_OUTFILE, 'w+', encoding='utf-8') as ls_file:
 
-
-    # Write outfile header
-    header = 'left_doc_id,right_doc_id,alignment_score\n'
-    outfile.write(header)
-    
+    # Write outfile headers
+    header = 'left_doc_id,right_doc_id,{}\n'
+    as_file.write(header.format('alignment_score'))
+    ls_file.write(header.format('lucene_score'))
+ 
     # Loop over left bills
+    s = time()
     for i, line in enumerate(infile):
         
         if len(line) < 500:
@@ -36,29 +44,25 @@ with io.open(INFILE) as infile, io.open(OUTFILE, 'w+', encoding='utf-8') as outf
         for res in results:
             
             right_id = res['document_id']
-
             # Weed out alignments of the bill with itself
             if right_id == left_id:
                 continue
-            
+            ls = res['lucene_score']        
+            ls_line = '{},{},{}\n'.format(left_id,right_id,ls)
+            ls_file.write(ls_line)
+ 
             alignments = res['alignments']
             # Loop over section pairs (allignments between these bills)
             for alignment in alignments:
 
                 # Extract all relevant info from alignment doc
                 score = alignment['score']
-                #left_span = '{}_{}'.format(alignment['left_start'],
-                #                           alignment['left_end'])
-                #right_span = '{}_{}'.format(alignment['right_start'],
-                #                            alignment['right_end'])
 
                 # Make the csv line
                 out_line = '{},{},{}\n'.format(left_id,right_id,score)
-                outfile.write(out_line)
-
-
-
-                
-
-
+                as_file.write(out_line)
+            
+        if i % 100 == 0:
+            print "{}: This batch: {}s".format(i, time() - s)
+            s = time()
 

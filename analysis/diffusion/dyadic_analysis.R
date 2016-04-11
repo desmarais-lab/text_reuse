@@ -130,5 +130,5 @@ median(align_amat,na.rm=T)
 mean(align_amat,na.rm=T)
 sd(align_amat,na.rm=T)
 
-
+save(list=c("align_amat_score","diff_amat"),file="diffusion_and_reuse_nets.RData")
 

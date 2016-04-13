@@ -35,8 +35,12 @@ with io.open(INFILE, 'r', encoding='utf-8') as infile,\
         
         if len(line) < 500:
             continue
-
-        doc = json.loads(line)
+        
+        try:
+            doc = json.loads(line)
+        except ValueError:
+            print "json error in line {}".format(i)
+            continue
         results = doc['alignment_results']
         left_id = doc['query_document_id']
         
@@ -62,7 +66,6 @@ with io.open(INFILE, 'r', encoding='utf-8') as infile,\
                 out_line = '{},{},{}\n'.format(left_id,right_id,score)
                 as_file.write(out_line)
             
-        if i % 100 == 0:
+        if i % 10000 == 0:
             print "{}: This batch: {}s".format(i, time() - s)
             s = time()
-

@@ -19,5 +19,4 @@
 # Run your program
 # don't forget to load the software modules you are using if necessary
 cd $PBS_O_WORKDIR
-module load R/3.2.1
-Rscript example.R
+python get_csv_alignment_scores.py

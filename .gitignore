@@ -17,7 +17,11 @@ logs/
 id_batches/
 pbs_scripts*/
 *.swp
+*.pbs
 processed_bills.txt
 mj_queue_prog.txt
 bill_ids*
 poster/
+*.sh.o*
+*.sh.e*
+*.pbs.o*

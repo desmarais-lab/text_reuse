@@ -20,6 +20,7 @@ for(i in grep("date_", names(df))){
 for(col in c("state", "chamber", "bill_type")){
     df[, col] <- as.factor(df[, col])
 }
+
 df$sponsor_idology <- as.numeric(df$sponsor_idology)
 df$num_sponsors <- as.integer(df$num_sponsors)
 

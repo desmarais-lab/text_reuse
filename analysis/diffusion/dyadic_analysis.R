@@ -132,3 +132,10 @@ sd(align_amat,na.rm=T)
 
 save(list=c("align_amat_score","diff_amat"),file="diffusion_and_reuse_nets.RData")
 
+# Get data in format for gephi visualization
+load('../../data/diffusion/diffusion_and_reuse_nets.RData')
+library(network)
+g1 <- graph.adjacency(diff_amat)
+graph.data.frame(g1)
+g2 <- graph.adjacency(align_amat_score, weighted = TRUE, edges = TRUE)
+

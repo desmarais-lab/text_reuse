@@ -57,10 +57,14 @@ with io.open(INFILE, 'r', encoding='utf-8') as infile,\
  
             alignments = res['alignments']
             # Loop over section pairs (allignments between these bills)
-            for alignment in alignments:
+            for j,alignment in enumerate(alignments):
 
                 # Extract all relevant info from alignment doc
-                score = alignment['score']
+                try:
+                    score = alignment['score']
+                except KeyError:
+                    print "Key error in line {}. No score key for alignment {}".format(i,j)
+                    continue
 
                 # Make the csv line
                 out_line = '{},{},{}\n'.format(left_id,right_id,score)

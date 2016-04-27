@@ -11,11 +11,11 @@ import numpy as np
 import time
 import re
 
-BILL_FILE = '../../data/extracted_bills_with_sponsers.json'
-OUTFILE = '../../data/bill_metadata.csv'
+BILL_FILE = '../../data/lid/extracted_bills_with_sponsers.json'
+OUTFILE = '../../data/lid/bill_metadata.csv'
 N_SPON = 3
 
-legislators = pd.read_csv('../data/legislators.csv')
+legislators = pd.read_csv('../../data/lid/legislators.csv')
 header = ['unique_id', 'date_introduced', 'date_signed', 'date_last_action', 
           'date_passed_upper', 'date_passed_lower', 'state', 'chamber', 
           'bill_type', 'short_title', 'session', 'bill_title', 'bill_length',
@@ -55,7 +55,7 @@ with io.open(BILL_FILE, 'r', encoding='utf-8') as infile,\
         if bill_text is None:
             bill_text = doc['bill_document_first']
         if bill_text is None:
-            bill_length = NA
+            bill_length = None
         else:
             bill_length = len(bill_text.split())
 

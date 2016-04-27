@@ -99,7 +99,7 @@ for i,line in enumerate(infile):
         print i
 
 with io.open(S2SFILE, 'w', encoding='utf-8') as s2sfile:
-    s2sfile.write('left_state,right_state,sum_score,n_alignments\n')
+    s2sfile.write('left_state,right_state,sum_score,sum_log_score,n_alignments\n')
 
     for d in state_dyads:
         doc = state_dyads[d]

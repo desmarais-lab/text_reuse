@@ -51,10 +51,14 @@ with io.open(BILL_FILE, 'r', encoding='utf-8') as infile,\
         if doc['bill_title'] is not None:
             doc['bill_title'] = re_nchar.sub('', doc['bill_title'])
         
-        try:
-            bill_length = len(doc['bill_document_last'])
-        except TypeError:
-            bill_length = None
+        bill_text = doc['bill_document_last']
+        if bill_text is None:
+            bill_text = doc['bill_document_first']
+        if bill_text is None:
+            bill_length = NA
+        else:
+            bill_length = len(bill_text.split())
+
         row = [doc['unique_id'], doc['date_introduced'], doc['date_signed'],
                doc['action_dates']['last'], doc['action_dates']['passed_upper'],
                doc['action_dates']['passed_lower'], doc['state'], doc['chamber'],

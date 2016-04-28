@@ -11,9 +11,6 @@ state_coverage <- read.csv("~/Dropbox/professional/Research/Active/Diffusion_Net
 ustates <- sort(unique(c(alignments$left_state,alignments$right_state)))
 ustates <- ustates[which(!is.element(ustates,c("pr","dc")))]
 
-# removing CO
-# state_diffusion_edges2008 <- subset(state_diffusion_edges2008,state_diffusion_edges2008$state_01 != "CO" & state_diffusion_edges2008$state_02 != "CO")
-
 # removing pr and dc
 alignments <- subset(alignments,alignments$left_state != "dc" & alignments$right_state != "dc")
 alignments <- subset(alignments,alignments$left_state != "pr" & alignments$right_state != "pr") 
@@ -41,7 +38,7 @@ align_amat <- align_amat + t(align_amat)
 yrs_covered <- numeric(length(ustates))
 coverage <- table(subset(state_coverage$state,!is.element(state_coverage$state,c("pr","dc"))))
 yrs_covered[match(names(coverage),ustates)] <- coverage
-coverage_mat <- cbind(yrs_covered)%*%t(yrs_covered)
+coverage_mat <- log(cbind(yrs_covered)%*%t(yrs_covered))
 
 # load sna, for qap
 library(sna)

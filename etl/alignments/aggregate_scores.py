@@ -10,7 +10,9 @@ import math
 INFILE = '../../data/alignments_new/alignments_1000.csv'
 # Bill-to bill output
 B2B_LOG_FILE = '../../data/lid/alignments_1000_b2b_log.csv'
-B2B_FILE = '../../data/lid/alignments_1000_b2b.csv'
+# Bill to bill output excluding within state alignments
+B2B_AS_FILE = '../../data/lid/alignments_1000_b2b_across.csv'
+
 # State to state output
 S2SFILE = '../../data/lid/alignments_1000_s2s.csv'
 # Abbreviations file
@@ -27,16 +29,15 @@ for s in abbr:
 dyads = set(dyads)
 
 # open files
-
 infile = io.open(INFILE, 'r')
 b2b_log_file = io.open(B2B_LOG_FILE, 'w', encoding='utf-8')
-b2b_file = io.open(B2B_FILE, 'w', encoding='utf-8')
+b2b_as_file = io.open(B2B_AS_FILE, 'w', encoding='utf-8')
 
 l0 = None
 r0 = None
 
 # Write b2b header
-b2b_file.write('left_doc_id,right_doc_id,alignment_score\n')
+b2b_as_file.write('left_doc_id,right_doc_id,alignment_score\n')
 b2b_log_file.write('left_doc_id,right_doc_id,alignment_score\n')
 
 # State dict
@@ -77,17 +78,18 @@ for i,line in enumerate(infile):
     if r != r0: 
         # Write last dyad's score to file
         try:
-            outline = '{},{},{}\n'.format(l0, r0, score)
-            b2b_file.write(outline)
             outline = '{},{},{}\n'.format(l0, r0, log_score)
             b2b_log_file.write(outline)
+
+            # Only write if not same state dyad
+            if not states[0] == states[1]:
+                b2b_as_file.write(outline)
 
         # First line no score from last entry
         except NameError:
             pass
 
         log_score = math.log(float(fields[2]))
-        score = float(fields[2])
         l0 = l
         r0 = r
     # Same bill dyad

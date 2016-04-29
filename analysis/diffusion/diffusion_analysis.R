@@ -11,9 +11,6 @@ state_coverage <- read.csv("~/Dropbox/professional/Research/Active/Diffusion_Net
 ustates <- sort(unique(c(alignments$left_state,alignments$right_state)))
 ustates <- ustates[which(!is.element(ustates,c("pr","dc")))]
 
-# removing CO
-# state_diffusion_edges2008 <- subset(state_diffusion_edges2008,state_diffusion_edges2008$state_01 != "CO" & state_diffusion_edges2008$state_02 != "CO")
-
 # removing pr and dc
 alignments <- subset(alignments,alignments$left_state != "dc" & alignments$right_state != "dc")
 alignments <- subset(alignments,alignments$left_state != "pr" & alignments$right_state != "pr") 
@@ -25,7 +22,8 @@ rownames(diff_amat) <- colnames(diff_amat) <- ustates
 # add in ties
 diff_amat[cbind(tolower(state_diffusion_edges2008$state_01),tolower(state_diffusion_edges2008$state_02))] <- state_diffusion_edges2008$src_35_300
 # make sure it is undirected
-diff_amat <- diff_amat + t(diff_amat)
+diff_amat <- diff_amat + t(diff_amat) 
+diff_amat <- 1*(diff_amat>0)
 
 # alignment amat
 align_amat <- matrix(0,length(ustates),length(ustates))
@@ -36,22 +34,30 @@ align_amat[cbind(tolower(alignments$left_state),tolower(alignments$right_state))
 # make sure it is undirected
 align_amat <- align_amat + t(align_amat)
 
+# years covered
+yrs_covered <- numeric(length(ustates))
+coverage <- table(subset(state_coverage$state,!is.element(state_coverage$state,c("pr","dc"))))
+yrs_covered[match(names(coverage),ustates)] <- coverage
+coverage_mat <- log(cbind(yrs_covered)%*%t(yrs_covered))
+
 # load sna, for qap
 library(sna)
 # zero out diagonals (i.e., not modeling loops)
 diag(diff_amat) <- 0
 diag(align_amat) <- 0
+diag(coverage_mat) <- 0
 # Run ols with qap uncertainty
 set.seed(5)
-bivariate_qap <- netlm(align_amat,diff_amat,mode="graph",reps=5000)
+bivariate_qap <- netlm(align_amat,list(diff_amat,coverage_mat),mode="graph",reps=5000)
 results <- cbind(bivariate_qap$coefficients,bivariate_qap$pgreqabs)
-rownames(results) <- c("Intercept","Diffusion Tie")
+rownames(results) <- c("Intercept","Diffusion Tie","Coverage")
 colnames(results) <- c("Coefficient","p-value")
 
+
 set.seed(5)
-bivariate_qap_log <- netlm(log(align_amat),diff_amat,mode="graph",reps=5000)
+bivariate_qap_log <- netlm(log(align_amat),list(diff_amat,coverage_mat),mode="graph",reps=5000)
 results_log <- cbind(bivariate_qap_log$coefficients,bivariate_qap_log$pgreqabs)
-rownames(results_log) <- c("Intercept","Diffusion Tie")
+rownames(results_log) <- c("Intercept","Diffusion Tie","Coverage")
 colnames(results_log) <- c("Coefficient","p-value")
 
 ## Prepare results for table

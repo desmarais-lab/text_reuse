@@ -1,7 +1,7 @@
 # Generate a csv with metadata on all bills. 
 # Calculates average ideology of all bill sponsors (from malp data)
 
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
 import json
 import io
@@ -27,14 +27,27 @@ known_legis = set(legislators['id'])
 # Regex to remove chars that mess up the csv
 re_nchar = re.compile(r'[,"\']')
 
-
+from pprint import pprint
 with io.open(BILL_FILE, 'r', encoding='utf-8') as infile,\
         io.open(OUTFILE, 'w+', encoding='utf-8') as outfile:
+   
     
+    for i, line in enumerate(infile):
+
+        doc = json.loads(line)
+        if doc is None:
+            continue
+        if doc['state'] == 'co':
+            pprint(doc)
+            pprint(last_doc)
+            sys.exit()
+        last_doc = doc
+
+
     counter = 0
     outfile.write(header + '\n')
     for i, line in enumerate(infile):
-        
+
         doc = json.loads(line)
 
         # Print progress
@@ -58,6 +71,7 @@ with io.open(BILL_FILE, 'r', encoding='utf-8') as infile,\
             bill_length = None
         else:
             bill_length = len(bill_text.split())
+
 
         row = [doc['unique_id'], doc['date_introduced'], doc['date_signed'],
                doc['action_dates']['last'], doc['action_dates']['passed_upper'],

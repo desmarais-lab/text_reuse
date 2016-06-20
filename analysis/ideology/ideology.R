@@ -1,71 +1,73 @@
-library(dplyr)
 library(ggplot2)
 library(xtable)
+library(quantreg)
+library(dplyr)
 
-#Plotting colors
+#Plotting parameters
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
                "#D55E00", "#CC79A7")
+p_width <- 11.5
 # ==============================================================================
 # Data preprocessing
 # ==============================================================================
 
-# Metadata
-meta <- read.csv('../../data/lid/bill_metadata.csv', stringsAsFactors = FALSE,
-                 header = TRUE, quote = '"')
-
-## Clean it up
-meta$session <- NULL
-### Make 'None' NA
-meta[meta == 'None'] <- NA
-### Fix column classes
-for(i in grep("date_", names(meta))){
-    var <- sapply(as.character(meta[, i]), substr, 1, 10)
-    meta[, i] <- as.Date(x = var)
-}
-for(col in c("state", "chamber", "bill_type")){
-    meta[, col] <- as.factor(meta[, col])
-}
-meta$sponsor_idology <- as.numeric(meta$sponsor_idology)
-meta$num_sponsors <- as.integer(meta$num_sponsors)
-meta$bill_length <- as.integer(meta$bill_length)
-
-## Make dplyr object
-meta <- tbl_df(meta)
-
-# Alignments
-# 1000
-alignments <- tbl_df(read.csv('../../data/lid/alignments_1000_b2b_ns.csv', 
-                              header = TRUE, stringsAsFactors = FALSE
-                              #, nrows = 100000
-                              )
-                     )
-
-## Match alignments with ideology scores and document length
-### Join info on left bill
-temp <- mutate(meta, left_doc_id = unique_id, left_ideology = sponsor_idology,
-               left_length = bill_length) %>%
-    dplyr::select(left_doc_id, left_ideology, left_length)
-df <- left_join(alignments, temp, by = "left_doc_id")
-
-### Join info on right bill
-temp <- mutate(meta, right_doc_id = unique_id, right_ideology = sponsor_idology,
-               right_length = bill_length) %>%
-    dplyr::select(right_doc_id, right_ideology, right_length)
-df <- left_join(df, temp, by = "right_doc_id")
-
-# Calculate ideological distance and combined doc length
-df <- mutate(df, ideology_dist = (left_ideology - right_ideology)^2)
-
-aggr <- df
-
-aggr$left_length <- NULL
-aggr$right_length <- NULL
-aggr$left_ideology <- NULL
-aggr$right_ideology <- NULL
-aggr$dyad_id <- NULL
-aggr$combined_length <- NULL
-rm(df, alignments, temp)
-gc()
+# # Metadata
+# meta <- read.csv('../../data/lid/bill_metadata.csv', stringsAsFactors = FALSE,
+#                  header = TRUE, quote = '"')
+# 
+# ## Clean it up
+# meta$session <- NULL
+# ### Make 'None' NA
+# meta[meta == 'None'] <- NA
+# ### Fix column classes
+# for(i in grep("date_", names(meta))){
+#     var <- sapply(as.character(meta[, i]), substr, 1, 10)
+#     meta[, i] <- as.Date(x = var)
+# }
+# for(col in c("state", "chamber", "bill_type")){
+#     meta[, col] <- as.factor(meta[, col])
+# }
+# meta$sponsor_idology <- as.numeric(meta$sponsor_idology)
+# meta$num_sponsors <- as.integer(meta$num_sponsors)
+# meta$bill_length <- as.integer(meta$bill_length)
+# 
+# ## Make dplyr object
+# meta <- tbl_df(meta)
+# 
+# # Alignments
+# # 1000
+# alignments <- tbl_df(read.csv('../../data/lid/alignments_1000_b2b_ns.csv', 
+#                               header = TRUE, stringsAsFactors = FALSE
+# #                              , nrows = 1000
+#                               )
+#                      )
+# 
+# ## Match alignments with ideology scores and document length
+# ### Join info on left bill
+# temp <- mutate(meta, left_doc_id = unique_id, left_ideology = sponsor_idology,
+#                left_length = bill_length) %>%
+#     dplyr::select(left_doc_id, left_ideology, left_length)
+# df <- left_join(alignments, temp, by = "left_doc_id")
+# 
+# ### Join info on right bill
+# temp <- mutate(meta, right_doc_id = unique_id, right_ideology = sponsor_idology,
+#                right_length = bill_length) %>%
+#     dplyr::select(right_doc_id, right_ideology, right_length)
+# df <- left_join(df, temp, by = "right_doc_id")
+# 
+# # Calculate ideological distance and combined doc length
+# df <- mutate(df, ideology_dist = (left_ideology - right_ideology)^2)
+# 
+# aggr <- df
+# 
+# aggr$left_length <- NULL
+# aggr$right_length <- NULL
+# aggr$left_ideology <- NULL
+# aggr$right_ideology <- NULL
+# aggr$dyad_id <- NULL
+# aggr$combined_length <- NULL
+# rm(df, alignments, temp)
+# gc()
 
 
 # ==============================================================================
@@ -86,305 +88,98 @@ length(which(!is.na(aggr$ideology_dist))) / nrow(aggr)
 # Ideology plot
 # ==============================================================================
 
-# Write bill dyads to disk (that have ideological distance)
-aggr <- na.omit(aggr)
-write.csv(aggr, file = "../../data/lid/alignments_1000_b2b_ideology.csv", 
-           row.names = FALSE, fileEncoding = "utf-8")
+# # Write bill dyads to disk (that have ideological distance)
+# aggr <- na.omit(aggr)
+# write.csv(aggr, file = "../../data/lid/alignments_1000_b2b_ideology.csv", 
+#            row.names = FALSE, fileEncoding = "utf-8")
+# 
+# aggr <- tbl_df(read.csv("../../data/lid/alignments_1000_b2b_ideology.csv",
+#                  stringsAsFactors = FALSE))
+# 
+# #aggr <- aggr[sample(c(1:nrow(aggr)), 100000, replace=FALSE), ]
+#                 
+# # Conditional boxplots
+# 
+# # Get cumulative frequency for ideology_dist
+# freq_tab <- group_by(aggr, ideology_dist) %>% 
+#     summarize(freq = n()) %>%
+#     arrange(ideology_dist) %>%
+#     mutate(cumu = cumsum(freq))
+# 
+# # Get the binsize
+# n <- nrow(aggr)
+# nbin <- 30
+# s <- n / nbin
+# 
+# # Assign distance values to bins
+# freq_tab <- freq_tab %>% mutate(bin = round(cumu / s, 0) + 1) 
+# 
+# # Get and inspect the cutpoints
+# cutpoints <- group_by(freq_tab, bin) %>% summarize(cutpoint = max(ideology_dist))
+# ggplot(cutpoints) + geom_point(aes(x = bin, y = cutpoint))
+# 
+# # Prepare aggr for plotting the boxplots
+# freq_tab <- dplyr::select(freq_tab, ideology_dist, bin)
+# aggr <- left_join(aggr, freq_tab, by = "ideology_dist")
+# 
+# # Make bins a factor
+# aggr <- mutate(aggr, bin = as.factor(bin))
+# 
+# # Calc 95th percentile in each bin
+# #q90 <- group_by(aggr, bin) %>% summarize(q95 = quantile(alignment_score, 0.95)) 
+# #q95 <- group_by(aggr, bin) %>% summarize(q95 = quantile(alignment_score, 0.95)) 
+# #q97 <- group_by(aggr, bin) %>% summarize(q95 = quantile(alignment_score, 0.95)) 
+# #q99 <- group_by(aggr, bin) %>% summarize(q95 = quantile(alignment_score, 0.95)) 
+# q999 <- group_by(aggr, bin) %>% summarize(q95 = quantile(alignment_score, 0.95)) 
+# 
+# aggr <- left_join(aggr, q95, by = "bin")
+# 
+# # Plot it
+# #ylim1 <- boxplot.stats(aggr$alignment_score)$stats[c(1,5)]
+# ylim1 <- c(0, 60)
+# 
+# p <- ggplot(aggr) + 
+#     geom_boxplot(aes(x = bin, y = alignment_score), outlier.size = 0.1,
+#                  outlier.colour = "grey") + 
+#     geom_point(aes(x = bin, y = q95), col = cbPalette[2]) + 
+#     theme_bw() + coord_cartesian(ylim = ylim1) + 
+#     scale_x_discrete(labels = round(cutpoints$cutpoint, 3)) + 
+#     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+#     theme(axis.text=element_text(size=12),
+#           axis.title=element_text(size=14),
+#           legend.text=element_text(size=12))
+# ggsave(plot = p,
+#        filename = '../../4344753rddtnd/figures/ideology_alignment_1000_boxplot.png',
+#        width = p_width, height = 0.65 * p_width)
+#save(aggr, file = "ideology_analysis.RData")
 
-aggr <- tbl_df(read.csv("../../data/lid/alignments_1000_b2b_ideology.csv",
-                 stringsAsFactors = FALSE))
+load("ideology_analysis.RData")
+## Descriptive scatterplot on sample of points
+n <- 20
+qs <- seq(0.95,0.999, length.out = n)
+qs <- c(qs, seq(qs[n-1], qs[n], length.out = 4)[-c(1,4)])
+set.seed(08361233431)
+paggr <- aggr[sample(c(1:nrow(aggr)), 100000, replace = FALSE), ]
+p <- ggplot(paggr) + 
+    geom_point(aes(x = ideology_dist, y = alignment_score), alpha = 0.2, size = 0.5) + 
+    stat_quantile(aes(y = alignment_score, x = ideology_dist), quantiles = qs) +
+    theme(axis.text=element_text(size=12),
+          axis.title=element_text(size=14),
+          legend.text=element_text(size=12)) +
+    theme_bw() +
+    xlab("Ideological Distance") + 
+    ylab("Alignment Score")
+ggsave(plot = p, '../../4344753rddtnd/figures/ideology_alignment_1000.png', 
+       width = p_width, height = 0.65 * p_width)
 
-#aggr <- aggr[sample(c(1:nrow(aggr)), 100000, replace=FALSE), ]
-                
-# Conditional boxplots
-
-# Get cumulative frequency for ideology_dist
-freq_tab <- group_by(aggr, ideology_dist) %>% 
-    summarize(freq = n()) %>%
-    arrange(ideology_dist) %>%
-    mutate(cumu = cumsum(freq))
-
-# Get the binsize
-n <- nrow(aggr)
-nbin <- 30
-s <- n / nbin
-
-# Assign distance values to bins
-freq_tab <- freq_tab %>% mutate(bin = round(cumu / s, 0) + 1) 
-
-# Get and inspect the cutpoints
-cutpoints <- group_by(freq_tab, bin) %>% summarize(cutpoint = max(ideology_dist))
-ggplot(cutpoints) + geom_point(aes(x = bin, y = cutpoint))
-
-
-# Prepare aggr for plotting the boxplots
-freq_tab <- dplyr::select(freq_tab, ideology_dist, bin)
-aggr <- left_join(aggr, freq_tab, by = "ideology_dist")
-
-# Make bins a factor
-aggr <- mutate(aggr, bin = as.factor(bin))
-
-# Calc 95th percentile in each bin
-q95 <- group_by(aggr, bin) %>% summarize(q95 = quantile(alignment_score, 0.95)) 
-aggr <- left_join(aggr, q95, by = "bin")
-
-# Plot it
-#ylim1 <- boxplot.stats(aggr$alignment_score)$stats[c(1,5)]
-ylim1 <- c(0, 60)
-
-p <- ggplot(aggr) + 
-    geom_boxplot(aes(x = bin, y = alignment_score), outlier.size = 0.1,
-                 outlier.colour = "grey") + 
-    geom_point(aes(x = bin, y = q95), col = cbPalette[2]) + 
-    theme_bw() + coord_cartesian(ylim = ylim1) + 
-    scale_x_discrete(labels = round(cutpoints$cutpoint, 3)) + 
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p
-ggsave(plot = p,
-       filename = '../../4344753rddtnd/figures/ideology_alignment_1000_boxplot.png')
-
-
-# Quantile manually
-d <- 1
-n_steps <- 38
-quants <- matrix(NA, nr = n_steps, nc = 4)
-while(d <= n_steps) {
-    d1 <- d + 1
-    x <- aggr$alignment_score[which(aggr$ideology_dist >=d 
-                                   & aggr$ideology_dist < d1)]
-    quants[d, ] <- c(quantile(x, c(0.05, 0.5, 0.95)), length(x))
-    d <- d1
-    print(d)
+quant_reg <- function(q) {
+    mod <- rq(alignment_score ~ ideology_dist, data = paggr, tau = q) 
+    cat("done\n")
+    return(mod) 
 }
-
-colnames(quants) <- c("0.05", "0.5", "0.95", "n_obs")
-quants <- as.data.frame(quants)
-quants$dist <- paste0(c(1:n_steps), '_', c(2:(n_steps+1)))
-quants <- tbl_df(quants) %>%
-    gather(quantile, alignment_score, -dist, -n_obs)
-quants$ideo <- seq(1:n_steps)
-
-ggplot(quants) + 
-    geom_line(aes(x = ideo, y = alignment_score, color = quantile, 
-                  size = n_obs)) +
-    scale_size_continuous(range = c(0.1, 20), name = "Million Observations",
-                          breaks = seq(min(quants$n_obs), max(quants$n_obs), 
-                                       length.out = 5)) +
-    scale_color_manual(values = cbPalette[-1], name = "Quantile") + 
-    theme_bw()
-ggsave('../../4344753rddtnd/figures/ideology_quantiles.png')
-
-#    Distribution of number of sponsors
-nsp <- table(meta$num_sponsors)
-pdat <- data.frame(cumu <- cumsum(as.integer(nsp)), 
-                   nsp <- as.integer(names(nsp)))
-
-ggplot(pdat) +
-    geom_point(aes(x = nsp, y = cumu)) + theme_bw() + ylim(0, 7e5) +
-    xlab("Number of Sponsors") + ylab("Cumulative Number of Bills")
-
-
-many_sponsors <- filter(meta, num_sponsors > 50) %>% 
-    arrange(-num_sponsors)
-table(many_sponsors$state)
-
-# # # ==============================================================================
-# # # Analyses
-# # # ==============================================================================
-
-## One model per bill
-aggr$dist_cat <- NULL
-
-new_lm <- function(y,x) {
-    return(coef(lm(y~x))[2])
-}
-
-res <- group_by(aggr, left_doc_id) %>% 
-    summarize(b = new_lm(ideology_dist, alignment_score),
-              n_align = n())
-
-res <- filter(res, n_align > 50 & n_align < 1000)
-
-ggplot(res) + 
-    geom_histogram(aes(x=b), color = "white") + 
-    theme_bw()
-ggsave('../../4344753rddtnd/figures/ideology_regressions.png')
-
-## QAP
-
-# Prepare objects for the qap procedure
-aggr <- as.data.frame(aggr)
-
-## Get ideology scores
-ideology <- dplyr::select(meta, unique_id, sponsor_idology)
-ideology <- as.data.frame(ideology)
-
-## Generate fast lookup objects
-
-### Generate a mappin: bill_id -> integer_id
-n_dyads <- nrow(aggr)
-unique_bills <- unique(c(aggr$left_doc_id, 
-                         aggr$right_doc_id)) 
-n_bills <- length(unique_bills)
-ids <- as.list(c(1:n_bills))
-names(ids) <- unique_bills
-id_map <- list2env(ids, hash = TRUE, size = n_bills)
-
-### store ideology values in same order as integer ids
-### for lookup by position 
-temp <- as.list(ideology[, 2])
-names(temp) <- ideology[, 1]
-ideo_map <- list2env(x = temp, hash = TRUE, size = nrow(ideology))
-rm(temp)
-ideo_lookup <- function(bill) get(x = bill, envir = ideo_map)
-ideologies <- sapply(unique_bills, ideo_lookup) 
-
-### Generate edgelist with integer ids for alignment network
-edges <- matrix(rep(NA, 3 * n_dyads), ncol = 3, nrow = n_dyads)
-get_from_envir <- function(i, col, df) {
-    get(x = df[i, col], envir = id_map)
-}
-edges[, 1] <- sapply(c(1:n_dyads), get_from_envir, col = 1, df = aggr)
-edges[, 2] <- sapply(c(1:n_dyads), get_from_envir, col = 2, df = aggr)
-
-save.image("qap_data.RData")
-
-
-# Run the model
-
-# This loads the results:
-load('qap_results.RData')
-# If not available uncomment code below
-
-# ## Number of qap permutations
-# n_qap_perm <- 1000
-# ## Number of cores for permutations
-# n_cores <- 40
-# 
-# ## Linear model for sum aggregation (with qap standard errors)
-# sum_score <- lm(log(sum_score) ~ ideology_dist, data = aggr)
-# edges[, 3] <- aggr$sum_score
-# perm_dist_sum <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores)
-# 
-# # ==============================================================================
-# # Output results
-# # ==============================================================================
-# 
-# # Table for regression results
- res <- data.frame(Intercept = sum_score$coef[1],
-                   Estimate = sum_score$coef[2],
-                   Std.Dev = sqrt(var(perm_dist_sum)))
- rownames(res) <- NULL
-# 
-# # # Store results to disk
-# save(list = c("sum_score", "perm_dist_sum"), file = "qap_results.RData")
-
-res$p <- length(which(abs(perm_dist_sum) > abs(res[1, 2]))) / length(perm_dist_sum)
-
-# Make latex results table
-sink(file = '../../4344753rddtnd/tables/ideology_regs.tex')
-xtable(res, digits = 3, caption = "Log-Linear model for alignment and euclidian 
-       distance in ideology. Two tailed p-values are generated from quadratic 
-       assignment procedure with 1000 iterations. Std.Dev is the standard 
-       deviation of the null distribution.",
-       label = "tab:ideology_regs")
-sink()
-
-# PLot distributions
-n_qap_perm <- length(perm_dist_sum)
-pdat <- data.frame(permutations = perm_dist_sum)
-
-ests <- data.frame(aggregation = c("Sum", "Mean", "Max", "# Alignments"), 
-                   beta = res$Estimate)
-
-ggplot(pdat) + 
-    geom_histogram(aes(permutations), color = "white", binwidth = 0.0005,
-                 fill = cbPalette[1]) + 
-    geom_vline(aes(xintercept = res$Estimate), color = cbPalette[2]) +
-    geom_text(data = ests, aes(x = (beta - 0.001), y = 100, angle = 90, 
-                               label = "Estimate", color = cbPalette[2]
-                               ), show_guide = FALSE) +
-    xlab("Coefficient") + ylab("Count") + 
-    theme_bw()
-ggsave('../../4344753rddtnd/figures/qap_dist.png')
-
-
-# Substantive interpretation of effectsize
-
-## Load Malp data to get median legislators of D and R
-malp <- tbl_df(read.table('../../data/malp/malp_individual.tab', header = TRUE,
-                          stringsAsFactors = FALSE, sep = "\t"))
-median_legs <- group_by(malp, party) %>% 
-    summarize(median_ideology = median(np_score),
-              mean_ideology = mean(np_score),
-              max_ideology = max(np_score),
-              min_ideology = min(np_score),
-              first_quart = quantile(np_score, 0.05),
-              third_quart = quantile(np_score, 0.95))
-
-# Histogram of ideologies
-ggplot(malp) + 
-    geom_density(aes(np_score, fill = party, color = party), alpha = 0.5) +
-    scale_color_manual(values = cbPalette, 
-                      labels = c("Democrat", "Independent", "Republican")) +
-    scale_fill_manual(values = cbPalette, 
-                      labels = c("Democrat", "Independent", "Republican")) +
-    geom_segment(data = median_legs, aes(x = median_ideology, xend = median_ideology,
-                                         y = 1.25, yend = 0, color = party)) +
-    xlab("Ideology") + ylab("Density") +
-    theme_bw()
-ggsave('../../4344753rddtnd/figures/ideo_distri.png')
-
-med_to_med <- (median_legs$median_ideology[median_legs$party == "R"] - 
-                   median_legs$median_ideology[median_legs$party == "D"])^2
-ext_to_ext <- (median_legs$min_ideology[median_legs$party == "D"] - 
-                   median_legs$max_ideology[median_legs$party == "R"])^2
-q_to_q <- (median_legs$first_quart[median_legs$party == "D"] - 
-                   median_legs$third_quart[median_legs$party == "R"])^2
-delta_y <- function(dist) {
-    exp(res$Intercept + res$Estimate * dist) - exp(res$Intercept)    
-}
-
-line_df <- data.frame(x = c(med_to_med, q_to_q, ext_to_ext),
-                      val = c(delta_y(med_to_med), delta_y(q_to_q), 
-                              delta_y(ext_to_ext)),
-                      label = c("Median Dem to Median Rep", "0.05 to 0.95 Quantile",
-                                "Min Dem to Max Rep"))
-
-dists <- seq(0, 100, length.out = 200)
-effects <- data.frame(distance = dists, delta_y = sapply(dists, delta_y))
-
-ggplot(effects) + 
-    geom_line(aes(x = distance, y = delta_y)) +
-    xlab("Increase in squared distance from 0") + ylab(expression(Delta[mean_score])) + 
-    geom_segment(data = line_df, 
-                 aes(x = x, y = 0, yend = val, xend = x, color = label)) +
-    scale_color_manual(values = cbPalette) +
-    theme_bw()
-ggsave('../../4344753rddtnd/figures/log_lin_effects.png')
-
-## Effects plot with uncertainty
-# 
-# Doesn't work because we don't have a good estimate of the variance covariance
-# matrix(?)
-# 
-# ## Draw betas
-# beta <- mvrnorm(n = 1000, mu = coef(mean_score), Sigma = vcov(mean_score))
-# 
-# ## Make design matrix
-# X <- cbind(rep(1, 200), seq(min(malp$np_score), max(malp$np_score), 
-#                             length.out = 200))
-# y_hat <- X %*% t(beta)
-# 
-# pdat <- data.frame(mean = apply(y_hat, 1, mean), 
-#                    lo = apply(y_hat, 1, quantile, 0.025),
-#                    hi = apply(y_hat, 1, quantile, 0.975))
-# 
-# ## Plot it
-# ggplot(pdat) +
-#     geom_segment(aes(x = X[, 2], xend = X[, 2], y = lo, yend = hi)) + 
-#     geom_point(aes(x = X[, 2], y = mean))
-#     
-
-
+mods <- lapply(qs, quant_reg)
+coefs <- sapply(mods, function(x) return(coef(x)[2]))
+df <- data.frame(quantile = qs, coefficient = coefs)
+df <- df[order(df$quantile, decreasing = FALSE), ]
+xtable(df, digits = 3)
 

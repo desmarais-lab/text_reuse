@@ -2,12 +2,11 @@ library(dplyr)
 library(ggplot2)
 library(xtable)
 
-
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
                "#D55E00", "#CC79A7")
 
 # Load and preprocess data
-alignments <- tbl_df(read.csv('../../data/lid/bill_to_bill_scores_only.csv',
+alignments <- tbl_df(read.csv('../../data/lid/alignments_1000_b2b_ns.csv',
                               stringsAsFactors = FALSE, header = TRUE))
 ncsl_bills <- tbl_df(read.csv('../../data/ncsl/ncsl_data_from_sample_matched.csv',
                               stringsAsFactors = FALSE, header = TRUE)) %>% 
@@ -18,11 +17,15 @@ ncsl_bills <- tbl_df(read.csv('../../data/ncsl/ncsl_data_from_sample_matched.csv
 # Data Frame of all pairs we have table information of (with the matched db ids)
 bill_pairs <- tbl_df(as.data.frame(t(combn(ncsl_bills$matched_from_db, 2))))
 colnames(bill_pairs) <- c("left_doc_id", "right_doc_id") 
+# Also use the reversed combinations
+reverse <- data.frame("left_doc_id" = bill_pairs$right_doc_id,
+                      "right_doc_id" = bill_pairs$left_doc_id)
+bill_pairs <- tbl_df(rbind(bill_pairs, reverse))
 
 # Remove pairs from same state
-incl <- substr(as.character(bill_pairs$left_doc_id), 1, 2) != 
-    substr(as.character(bill_pairs$right_doc_id), 1, 2)
-bill_pairs <- bill_pairs[incl, ]
+# incl <- substr(as.character(bill_pairs$left_doc_id), 1, 2) != 
+#     substr(as.character(bill_pairs$right_doc_id), 1, 2)
+# bill_pairs <- bill_pairs[incl, ]
 
 
 # Get 'same-table-indicator'
@@ -37,12 +40,14 @@ df <- left_join(df, temp, by = "right_doc_id") %>%
 
 # Join with alignment data
 ## Calculate bill level alignments
-bill_alignments <- group_by(alignments, left_doc_id, right_doc_id) %>% 
-    summarize(alignment_score_sum = sum(alignment_score))
+# bill_alignments <- group_by(alignments, left_doc_id, right_doc_id) %>% 
+#     summarize(alignment_score_sum = sum(alignment_score))
+
 
 ## Join
 bill_pairs <- left_join(df, alignments, 
                         by = c("left_doc_id", "right_doc_id"))
+
 df <- mutate(bill_pairs, alignment_score_NA = ifelse(is.na(alignment_score), 
                                                         1, 0))
 eda_tab <- xtabs( ~ same_table + alignment_score_NA, data = df)
@@ -67,16 +72,22 @@ bill_pairs$alignment_score_nona <- ifelse(is.na(bill_pairs$alignment_score), 0,
 
 
 thresholds <- sort(unique(bill_pairs$alignment_score_nona))
-thresholds <- thresholds[-length(thresholds)]
+#thresholds <- thresholds[-length(thresholds)]
+thresholds <- seq(min(thresholds), max(thresholds), length.out = 200)
 
+#thresholds <- seq(0, 600, length.out = 100)
 
 # Precision recall curve
-pr <- function(threshold, score = bill_pairs$alignment_score_nona, 
-                   true = bill_pairs$same_table) {
-    predicted <- ifelse(score > threshold, 1, 0)
-    tab <- table(true, predicted)
-    recall <- tab[2,2] / rowSums(tab)[2]
-    precision <- tab[2,2] / colSums(tab)[2]
+score = bill_pairs$alignment_score_nona
+true = bill_pairs$same_table
+
+pr <- function(threshold) {
+    predicted <- ifelse(score >= threshold, 1, 0)
+    p <- length(which(predicted == 1))
+    tp <- length(which(predicted == 1 & true == 1))
+    precision <- tp / p 
+    fn <- length(which(predicted == 0 & true == 1))  
+    recall <- tp / (tp + fn) 
     return(c(precision, recall))
 }
 
@@ -90,9 +101,8 @@ ggplot(df) +
     geom_line(aes(y = value, x = threshold, color = type)) + 
     scale_color_manual(values = cbPalette[-1]) +
     theme_bw() + 
-    scale_x_log10() + 
-    xlab("Score threshold") + ylab("Value") +
-    facet_wrap(~ type, scales = "free")
+    xlab("Score threshold") + ylab("Value") + labs(color = "")
+    #facet_wrap(~ type, scales = "free")
 ggsave('../../4344753rddtnd/figures/ncsl_prec_rec.png')
 
 
@@ -116,11 +126,6 @@ df2 <- data.frame(score = c(score_st, score_nst),
 ggplot(df2) + 
     geom_histogram(aes(x=score, y=..ncount../sum(..ncount..)), 
                    fill = cbPalette[1], color = "white", bins=30) +
-    scale_x_log10() + theme_bw() + facet_wrap(~group, ncol=1) + 
+    theme_bw() + facet_wrap(~group, ncol=1) + 
     ylab("Proportion") + xlab("Alignment Score")
 ggsave('../../4344753rddtnd/figures/align_distri_ncsl_tables.png')
-
-ggplot() + 
-    geom_histogram(aes(score_st), alpha = 0.5) + 
-    geom_histogram(aes(score_nst), alpha = 0.5) + 
-    scale_x_log10()

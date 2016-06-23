@@ -1,3 +1,4 @@
+require(quantreg)
 # Quadratic Assignment Procedure for Sparse Networks
 
 # Arguments:
@@ -8,10 +9,14 @@
 # nperm: number of quap iterations
 # cores: number of cores for parallelization of nperm loop
 
-qap <- function(edges, ideologies, nperm = 100, cores = 1) {
+qap <- function(edges, ideologies, nperm = 100, cores = 1, mode = "linear",
+                tau = NULL) {
     
     require(doParallel) 
-   
+    
+    
+    if(mode == "quantile" & is.null(tau)) stop("No quantile for rq specified.")
+     
     # All integer node ids
     all <- unique(c(edges[, 1], edges[, 2])) 
     
@@ -26,6 +31,13 @@ qap <- function(edges, ideologies, nperm = 100, cores = 1) {
       
         # Fit the model
         coef <- lm(log(edges[, 3]) ~ dists)$coef[2]
+        if(mode == "linear") {
+            coef <- lm(log(edges[, 3]) ~ dists)$coef[2]
+        } else if(mode == "quantile") {
+            coef <- rq(log(edges[, 3]) ~ dists)$coef[2]
+        } else {
+            stop("Invalid mode argument")
+        }
         return(coef)
     }
     
@@ -36,7 +48,9 @@ qap <- function(edges, ideologies, nperm = 100, cores = 1) {
     
     # nperm loop (parallel) 
     cat("Running qap...\n")
-    coefs <- foreach(i = c(1:nperm), .combine = c) %dopar% qap_iter() 
+    coefs <- foreach(i = c(1:nperm), .combine = c, .packages = 'quantreg') %dopar% {
+        qap_iter() 
+    }
    
     stopCluster(cl) 
     return(coefs) 

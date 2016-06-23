@@ -1,5 +1,11 @@
 library(dplyr)
 
+args <- commandArgs(trailingOnly = TRUE)
+dat <- args[1]
+
+#Variables that contains the user credentials to access Twitter API 
+access_token = "2188480484-8Ea4NAWug0tNdTBcoIrQYvdXyWaVlzKASaFci3U"
+
 # Load the alignment data
 cat('Loading alignment data...\n')
 load("ideology_analysis.RData")
@@ -79,24 +85,27 @@ if(file.exists('qap_data.RData')) {
     save.image("qap_data.RData")
 }
 
-
-# If not available uncomment code below
+if(dat == "yes") {
+} else {
+    # If not available uncomment code below
+        
+    ## Number of qap permutations
+    n_qap_perm <- 500
+    ## Number of cores for permutations
+    n_cores <- 40
+     
+    ## Model (with qap standard errors)
+    print(paste0('Singel model startet at: ', Sys.time()))
+    mod <- rq(alignment_score ~ ideology_dist, data = aggr, tau = 0.95)
+    print(paste0('Singel model finished at: ', Sys.time()))
     
-## Number of qap permutations
-n_qap_perm <- 10
-## Number of cores for permutations
-n_cores <- 4
- 
-## Model (with qap standard errors)
-print(paste0('Singel model startet at: ', Sys.time()))
-mod <- rq(alignment_score ~ ideology_dist, data = aggr, tau = 0.95)
-print(paste0('Singel model finished at: ', Sys.time()))
+    edges[, 3] <- aggr$alignment_score
+    
+    print(paste0('QAP startet at: ', Sys.time()))
+    perm_dist_sum <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores,
+                         mode = "quantile", tau = "0.95")
+    print(paste0('QAP finished at: ', Sys.time()))
+    
+    save(list = c("mod", "perm_dist_sum"), file = "qap_results.RData")
+}
 
-edges[, 3] <- aggr$alignment_score
-
-print(paste0('QAP startet at: ', Sys.time()))
-perm_dist_sum <- qap(edges, ideologies, nperm = n_qap_perm, cores = n_cores,
-                     mode = "quantile", tau = "0.95")
-print(paste0('QAP finished at: ', Sys.time()))
-
-save(list = c("mod", "perm_dist_sum"), file = "qap_results.RData")

@@ -1,7 +1,7 @@
 library(ggplot2)
-library(xtable)
-library(quantreg)
 library(dplyr)
+library(quantreg)
+library(xtable)
 
 #Plotting parameters
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
@@ -16,6 +16,7 @@ plot_theme <- theme(axis.text=element_text(size=12),
 # ==============================================================================
 
 # Load the data (see `ideology_preprocessing.R` for details)
+cat('Loading data...\n')
 load("../../data/alignments/ideology.RData")
 
 ## Descriptive scatterplot on sample of points
@@ -28,16 +29,19 @@ p <- ggplot(df, aes(x = ideology_dist, y = alignment_score)) +
     ylab("Alignment Score") + 
     scale_fill_gradient(low = "grey80", high = cbPalette[2]) +
     plot_theme
+cat('Saving plot...\n')
 ggsave(plot = p, '../../4344753rddtnd/figures/ideology_quantile_plot.png', 
        width = p_width, height = 0.65 * p_width)
 
 quant_reg <- function(q) {
-    mod <- rq(alignment_score ~ ideology_dist, data = paggr, tau = q) 
+    mod <- rq(alignment_score ~ ideology_dist, data = df, tau = q) 
     cat("done\n")
     return(mod) 
 }
-mods <- lapply(qs, quant_reg)
+mods <- lapply(quantiles, quant_reg)
 coefs <- sapply(mods, function(x) return(coef(x)[2]))
-df <- data.frame(quantile = qs, coefficient = coefs)
-df <- df[order(df$quantile, decreasing = FALSE), ]
-xtable(df, digits = 3)
+out <- data.frame(quantile = quantiles, coefficient = coefs)
+out <- out[order(out$quantile, decreasing = FALSE), ]
+sink('quantreg_coefs.tex')
+xtable(out, digits = 3)
+sink()

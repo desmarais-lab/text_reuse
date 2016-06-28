@@ -1,10 +1,19 @@
 # Regression on series of quantiles of the alignment score conditional on
 # ideological distance of the bills
 
-library(microbenchmark)
+list.of.packages <- c("dplyr", "quantreg")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) {
+    print(new.packages)
+    print(R.version())
+    print(.libPaths())
+}
+
+
+#library(microbenchmark)
 library(dplyr)
 library(quantreg)
-library(ggplot2)
+#library(ggplot2)
 
 args <- commandArgs(trailingOnly = TRUE)
 
@@ -12,9 +21,11 @@ data_dir <- '../../data/ideology_analysis/'
 res_dir <- paste0(data_dir, 'bootstrap_results/')
 quantiles <- c(seq(0.5, 0.9, by = 0.1), seq(0.91, 0.99, by = 0.01), 
                seq(0.991, 0.995, by =0.001))
- 
+#quantiles <- c(0.95)
 
 if(length(args) > 0) {
+
+
     
     # Generate bootstrap data 
     # Load the data (see ideology_preprocess.R)
@@ -100,7 +111,7 @@ if(length(args) > 0) {
 }
 
 
-if(args > 0) {
+if(length(args) > 0) {
     stop()
 }
 

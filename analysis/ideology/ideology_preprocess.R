@@ -72,7 +72,7 @@ cat(paste0(m, " valid dyads from ", length(unique(df$left_doc_id)),
 
 
 # Save R data obj 
-fname <- ifelse(SMALL, "../../data/alignments/ideology_small.RData",
-       "../../data/alignments/ideology.R")
+fname <- ifelse(SMALL, "../../data/ideology_analysis/ideology_small.RData",
+       "../../data/ideology_analysis/ideology.R")
 cat(paste0("Saving to ", fname, "\n"))
 save(df, file = fname)

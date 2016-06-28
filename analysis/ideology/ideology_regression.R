@@ -4,12 +4,15 @@
 library(microbenchmark)
 library(dplyr)
 library(quantreg)
+library(ggplot2)
 
 args <- commandArgs(trailingOnly = TRUE)
 
 data_dir <- '../../data/ideology_analysis/'
 res_dir <- paste0(data_dir, 'bootstrap_results/')
-
+quantiles <- c(seq(0.5, 0.9, by = 0.1), seq(0.91, 0.99, by = 0.01), 
+               seq(0.991, 0.995, by =0.001))
+ 
 
 if(length(args) > 0) {
     
@@ -18,9 +21,7 @@ if(length(args) > 0) {
     cat("Loading data...\n")
     load(paste0(data_dir, 'ideology.RData'))
     
-    quantiles <- c(seq(0.5, 0.9, by = 0.2), seq(0.91, 0.99, by = 0.02), 
-                   seq(0.991, 0.999, by =0.002))
-    
+   
     #bak <- df
     #df <- bak[c(1:10000), ]
     
@@ -96,8 +97,27 @@ if(length(args) > 0) {
     save(out, file = paste0(data_dir, "regression_results.RData"))
     print(dim(final_out))
 
-    
-
 }
 
 
+if(args > 0) {
+    stop()
+}
+
+
+# Analyze results interactively
+load(paste0(data_dir, "regression_results.RData"))
+
+# Make coefficient plot
+pdat <- tbl_df(data.frame(coefs = out$base_model,
+                          quantile = quantiles,
+                          upper = apply(out$bootstrap_results, 1, quantile, 0.975),
+                          lower = apply(out$bootstrap_results, 1, quantile, 0.025)
+                          )
+               ) %>%
+    mutate(quantile = as.factor(quantile))
+
+ggplot(pdat) +
+    geom_point(aes(x = quantile, y = coefs)) +
+    geom_segment(aes(x = quantile, xend = quantile, y = lower, yend = upper)) +
+    ylim(-7, 7)

@@ -44,7 +44,7 @@ p <- ggplot(df, aes(x = ideology_dist, y = alignment_score)) +
     ylab("Alignment Score") + 
     scale_fill_gradient(low = cbPalette[1], high = cbPalette[2], trans = "log",
                         labels = function (x) round(x, 0)) +
-    guides(fill=guide_legend(title="Log Count")) +
+    guides(fill=guide_legend(title="Count")) +
     plot_theme
 
 cat('Saving plot...\n')

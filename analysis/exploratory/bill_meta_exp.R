@@ -1,20 +1,27 @@
 library(dplyr)
 library(ggplot2)
 
-df <- tbl_df(read.csv(file = '../../data/bill_metadata.csv', header = TRUE,
+source('../plot_theme.R')
+
+df <- tbl_df(read.csv(file = '../../data/lid/bill_metadata.csv', header = TRUE,
                       stringsAsFactors = FALSE))
+ 
+# Get bill prefixes and introduction years
+# f <- function(x) return(x[length(x)])
+# df <- mutate(df, id = sapply(strsplit(unique_id, "_"), f),
+#              prefix = gsub("[[:digit:]-]", "", id),
+#              date_introduced = as.Date(df$date_introduced),
+#              year_introduced = format(date_introduced, "%Y"),
+#              bill_length = as.integer(bill_length)
+#              )
+#     
+# prefixes <- group_by(df, state, prefix) %>% summarize(count = n())
+# 
+# coverage <- group_by(df, state, year_introduced) %>% summarize(count = n())
+# write.csv(coverage, '../../data/lid/nbills_by_state.csv', row.names = FALSE)
+coverage <- tbl_df(read.csv('../../data/lid/nbills_by_state.csv', 
+                            stringsAsFactors = FALSE))
 
-df$bill_length <- ifelse(df$bill_length=="None", NA, as.integer(df$bill_length))
-
-nrow(df)
-df <- df[!is.na(df$bill_length), ]
-
-# Get bill prefixes
-f <- function(x) return(x[length(x)])
-df <- mutate(df, id = sapply(strsplit(unique_id, "_"), f),
-             prefix = gsub("[[:digit:]-]", "", id))
-    
-prefixes <- group_by(df, state, prefix) %>% summarize(count = n())
 
 # State distribution bill counts
 state_desc <- mutate(df, date_introduced = as.Date(df$date_introduced)) %>%
@@ -24,20 +31,23 @@ state_desc <- mutate(df, date_introduced = as.Date(df$date_introduced)) %>%
 #
 ## Plot all states
 ggplot(state_desc, aes(x=year_introduced, y=state)) + 
-    geom_point(aes(size=count), color="#E69F00") + 
-    geom_point(aes(size=count), shape=1, color="#999999") +g
-    theme_bw() + ylab("State") + xlab("Year")
-ggsave('../../4344753rddtnd/figures/year_count_by_state.png')
+    geom_point(aes(size=count), color=cbPalette[2]) + 
+    #geom_point(aes(size=count), shape=1, color=cbPalette[3]) +
+    ylab("State") + xlab("Year") + 
+    guides(size=guide_legend(title="Count")) +
+    plot_theme
+ggsave('../../4344753rddtnd/figures/year_count_by_state.png', width = p_width,
+       height = 0.7*p_width)
 
 
 ## Amount of text by state
-amount <- mutate(df, date_introduced = as.Date(df$date_introduced)) %>%
-    mutate(year_introduced = format(date_introduced, "%Y")) %>%
-    group_by(state) %>% 
-    summarize(count = n(),
-              text_amount = sum(bill_length, na.rm = TRUE))
-
-ggplot(amount) + geom_bar(aes(x=state, y=text_amount/1e6), stat="identity") +
-    theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-    ylab("Amount of text (million words)") + xlab("State") + coord_flip()
-ggsave('../../4344753rddtnd/figures/text_amount.png')
+# amount <- mutate(df, date_introduced = as.Date(df$date_introduced)) %>%
+#     mutate(year_introduced = format(date_introduced, "%Y")) %>%
+#     group_by(state) %>% 
+#     summarize(count = n(),
+#     text_amount = sum(bill_length, na.rm = TRUE))
+# #
+# ggplot(amount) + geom_bar(aes(x=state, y=text_amount/1e6), stat="identity") +
+#     theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+#     ylab("Amount of text (million words)") + xlab("State") + coord_flip()
+# ggsave('../../4344753rddtnd/figures/text_amount.png')

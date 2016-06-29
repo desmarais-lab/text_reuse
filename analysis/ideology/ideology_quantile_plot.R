@@ -13,8 +13,7 @@ source('../plot_theme.R')
 
 # Load the data (see `ideology_preprocessing.R` for details)
 cat('Loading data...\n')
-load("../../data/alignments/ideology.RData")
-
+load("../../data/ideology_analysis/ideology.RData")
 
 #bak <- df
 #df <- bak[sample(c(1:nrow(bak)), 1e6), ]

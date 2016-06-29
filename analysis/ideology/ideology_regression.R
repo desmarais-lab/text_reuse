@@ -10,10 +10,10 @@ if(length(new.packages)) {
 }
 
 
-#library(microbenchmark)
+library(microbenchmark)
 library(dplyr)
 library(quantreg)
-#library(ggplot2)
+library(ggplot2)
 
 args <- commandArgs(trailingOnly = TRUE)
 
@@ -110,11 +110,8 @@ if(length(args) > 0) {
 
 }
 
-
-if(length(args) > 0) {
-    stop()
-}
-
+# Stop here if run from commandline
+stop("")
 
 # Analyze results interactively
 load(paste0(data_dir, "regression_results.RData"))

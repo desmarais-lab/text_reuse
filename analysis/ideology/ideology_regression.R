@@ -129,6 +129,7 @@ source('../plot_theme.R')
 ggplot(pdat) +
     geom_point(aes(x = quantile, y = coefs)) +
     geom_segment(aes(x = quantile, xend = quantile, y = lower, yend = upper)) +
-    coord_flip() + plot_theme + ylab("Quantile Regression Coefficient") +
-    xlab("Quantile")
-ggsave('../../4344753rddtnd/figures/quantile_regression.png')
+    coord_flip() + ylab("Quantile Regression Coefficient") +
+    xlab("Quantile") + plot_theme
+ggsave('../../4344753rddtnd/figures/quantile_regression.png', width = p_width,
+       height = 0.8 * p_width)

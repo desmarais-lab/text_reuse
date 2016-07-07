@@ -32,7 +32,7 @@ p <- ggplot(df, aes(x = ideology_dist, y = alignment_score)) +
     guides(fill=guide_legend(title="Count")) +
     plot_theme
 cat('Saving plot...\n')
-ggsave(plot = p, '../../4344753rddtnd/figures/ideology_plot.png', 
+ggsave(plot = p, '../../manuscript/figures/ideology_plot.png', 
        width = p_width, height = 0.65 * p_width)
 
 p <- ggplot(df, aes(x = ideology_dist, y = alignment_score)) + 
@@ -47,5 +47,5 @@ p <- ggplot(df, aes(x = ideology_dist, y = alignment_score)) +
     plot_theme
 
 cat('Saving plot...\n')
-ggsave(plot = p, '../../4344753rddtnd/figures/ideology_quantile_plot.png', 
+ggsave(plot = p, '../../manuscript/figures/ideology_quantile_plot.png', 
        width = p_width, height = 0.65 * p_width)

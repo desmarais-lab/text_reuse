@@ -103,7 +103,7 @@ ggplot(df) +
     plot_theme
     
     #facet_wrap(~ type, scales = "free")
-ggsave('../../4344753rddtnd/figures/ncsl_prec_rec.png')
+ggsave('../../manuscript/figures/ncsl_prec_rec.png')
 
 
 # F1 score
@@ -128,4 +128,4 @@ ggplot(df2) +
                    fill = cbPalette[1], color = "white", bins=30) +
     theme_bw() + facet_wrap(~group, ncol=1) + 
     ylab("Proportion") + xlab("Alignment Score")
-ggsave('../../4344753rddtnd/figures/align_distri_ncsl_tables.png')
+ggsave('../../manuscript/figures/align_distri_ncsl_tables.png')

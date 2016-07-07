@@ -137,5 +137,5 @@ ggplot(pdat) +
     geom_hline(aes(yintercept = 0), linetype = 2, color = "grey") + 
     coord_flip() + ylab("Quantile Regression Coefficient") +
     xlab("Quantile") + plot_theme
-ggsave('../../4344753rddtnd/figures/quantile_regression.png', width = p_width,
+ggsave('../../manuscript/figures/quantile_regression.png', width = p_width,
        height = 0.8 * p_width)

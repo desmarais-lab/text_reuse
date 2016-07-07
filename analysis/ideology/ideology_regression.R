@@ -123,13 +123,19 @@ pdat <- tbl_df(data.frame(coefs = out$base_model,
                           lower = apply(out$bootstrap_results, 1, quantile, 0.025)
                           )
                ) %>%
-    mutate(quantile_fctr = as.factor(quantile))
+    mutate(quantile_fctr = as.factor(quantile),
+           significant = as.factor(ifelse(upper < 0, 1, 0)))
+
 
 source('../plot_theme.R')
 ggplot(pdat) +
-    geom_point(aes(x = quantile_fctr, y = coefs)) +
-    geom_segment(aes(x = quantile_fctr, xend = quantile_fctr, y = lower, yend = upper)) +
+    geom_point(aes(x = quantile_fctr, y = coefs, color = significant)) +
+    geom_segment(aes(x = quantile_fctr, xend = quantile_fctr, y = lower, 
+                     yend = upper, color = significant)) +
+    scale_color_manual(values = c(cbPalette[1], "black")) +
+    guides(color = FALSE) +
+    geom_hline(aes(yintercept = 0), linetype = 2, color = "grey") + 
     coord_flip() + ylab("Quantile Regression Coefficient") +
     xlab("Quantile") + plot_theme
-ggsave('../../4344753rddtnd/figures/quantile_regression.png', width = p_width,
+ggsave('../../manuscript/figures/quantile_regression.png', width = p_width,
        height = 0.8 * p_width)

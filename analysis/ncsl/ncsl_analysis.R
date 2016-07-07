@@ -2,8 +2,7 @@ library(dplyr)
 library(ggplot2)
 library(xtable)
 
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
-               "#D55E00", "#CC79A7")
+source('../plot_theme.R')
 
 # Load and preprocess data
 alignments <- tbl_df(read.csv('../../data/lid/alignments_1000_b2b_ns.csv',
@@ -100,8 +99,9 @@ df <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
 ggplot(df) + 
     geom_line(aes(y = value, x = threshold, color = type)) + 
     scale_color_manual(values = cbPalette[-1]) +
-    theme_bw() + 
-    xlab("Score threshold") + ylab("Value") + labs(color = "")
+    xlab("Score threshold") + ylab("Value") + labs(color = "") +
+    plot_theme
+    
     #facet_wrap(~ type, scales = "free")
 ggsave('../../4344753rddtnd/figures/ncsl_prec_rec.png')
 

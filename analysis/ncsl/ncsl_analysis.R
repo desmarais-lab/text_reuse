@@ -2,11 +2,17 @@ library(dplyr)
 library(ggplot2)
 library(xtable)
 
-source('../plot_theme.R')
-
 # Load and preprocess data
+# ==============================================================================
+
+# Load ncsl_analysis.RData to skip processing (takes a long time)
+
 alignments <- tbl_df(read.csv('../../data/lid/alignments_1000_b2b_ns.csv',
                               stringsAsFactors = FALSE, header = TRUE))
+
+
+
+
 ncsl_bills <- tbl_df(read.csv('../../data/ncsl/ncsl_data_from_sample_matched.csv',
                               stringsAsFactors = FALSE, header = TRUE)) %>% 
     filter(!is.na(matched_from_db)) %>%
@@ -21,12 +27,6 @@ reverse <- data.frame("left_doc_id" = bill_pairs$right_doc_id,
                       "right_doc_id" = bill_pairs$left_doc_id)
 bill_pairs <- tbl_df(rbind(bill_pairs, reverse))
 
-# Remove pairs from same state
-# incl <- substr(as.character(bill_pairs$left_doc_id), 1, 2) != 
-#     substr(as.character(bill_pairs$right_doc_id), 1, 2)
-# bill_pairs <- bill_pairs[incl, ]
-
-
 # Get 'same-table-indicator'
 ## Join with topic tables
 temp <- mutate(ncsl_bills, left_doc_id = matched_from_db, left_table = topic) %>%
@@ -37,48 +37,61 @@ temp <- mutate(ncsl_bills, right_doc_id = matched_from_db, right_table = topic) 
 df <- left_join(df, temp, by = "right_doc_id") %>% 
     mutate(same_table = ifelse(left_table == right_table, 1, 0))
 
-# Join with alignment data
-## Calculate bill level alignments
-# bill_alignments <- group_by(alignments, left_doc_id, right_doc_id) %>% 
-#     summarize(alignment_score_sum = sum(alignment_score))
-
-
 ## Join
 bill_pairs <- left_join(df, alignments, 
                         by = c("left_doc_id", "right_doc_id"))
-
 df <- mutate(bill_pairs, alignment_score_NA = ifelse(is.na(alignment_score), 
                                                         1, 0))
-eda_tab <- xtabs( ~ same_table + alignment_score_NA, data = df)
-
-sink(file = '../../manuscript/tables/ncsl_crosstab.tex')
-xtable(eda_tab, caption = "Crosstable of being in the same table against having 
-       an alignment score for all bill dyads in the ncsl dataset.", 
-       label = "tab:ncsl_crosstab")
-sink()
-
-#ggplot(df) + 
-#    geom_point(aes(x = same_table, y = alignment_score_zeros), 
-#               position = "jitter", alpha = 0.6, size = 0.4) +
-#    scale_y_log10()
-
-
-# Precision recall curve
+rm(bill_pairs)
 
 ## Put zero for NA alignment score
-bill_pairs$alignment_score_nona <- ifelse(is.na(bill_pairs$alignment_score), 0,
-                                          bill_pairs$alignment_score)
+df$alignment_score_nona <- ifelse(is.na(df$alignment_score), 0.0001,
+                                          df$alignment_score)
+
+# Numbers for the ncsl section in the paper
+# ==============================================================================
+
+# Frequency of scores higher 50 / 100
+sum(alignments$alignment_score > 50) / nrow(alignments)
+sum(alignments$alignment_score > 100) / nrow(alignments)
+
+# Complete Frequency distribution
+r <- range(alignments$alignment_score)
+thresholds <- exp(seq(log(r[1]), log(r[2]), length.out = 100))
+
+hm <- function(threshold) sum(alignments$alignment_score < threshold) / nrow(alignments)
+cumdist <- sapply(thresholds, hm)
+pdat <- tbl_df(data.frame("Proportion" = cumdist, "Score" = thresholds))
+
+# Load commont theme elements for plots
+source('../plot_theme.R')
+
+ggplot(pdat) + 
+    geom_line(aes(x = Score, y = Proportion), size = 1.2) + 
+    scale_x_log10(breaks = c(1, 10, 100, 1000, 10000)) + 
+    xlab("X") +
+    ylab("P(Score < X)") +
+    plot_theme
+ggsave('../../manuscript/figures/alignment_score_distribution.png', width = p_width, 
+       height = 0.65 * p_width)
 
 
-thresholds <- sort(unique(bill_pairs$alignment_score_nona))
-#thresholds <- thresholds[-length(thresholds)]
-thresholds <- seq(min(thresholds), max(thresholds), length.out = 200)
+# Proportion in same table
+sum(df$same_table) / nrow(alignments)
 
-#thresholds <- seq(0, 600, length.out = 100)
+# Store the data
+save(x = df, file = '../../data/ncsl_analysis/ncsl_analysis.RData')
+load('../../data/ncsl_analysis/ncsl_analysis.RData')
+
 
 # Precision recall curve
-score = bill_pairs$alignment_score_nona
-true = bill_pairs$same_table
+# ==============================================================================
+
+r <- range(df$alignment_score_nona, na.rm = TRUE)
+thresholds <- exp(seq(log(r[1]), log(r[2]), length.out = 100))
+
+score = df$alignment_score_nona
+true = df$same_table
 
 pr <- function(threshold) {
     predicted <- ifelse(score >= threshold, 1, 0)
@@ -91,19 +104,31 @@ pr <- function(threshold) {
 }
 
 prec_rec <- t(sapply(thresholds, pr))
-#prec_rec <- rbind(c(0.09058045, 1), prec_rec) # When threshold 0
-df <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
+
+df_1 <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
                  threshold = rep(c(thresholds), 2),
                  type = rep(c("precision", "recall"), each = nrow(prec_rec)))
 
-ggplot(df) + 
-    geom_line(aes(y = value, x = threshold, color = type)) + 
-    scale_color_manual(values = cbPalette[-1]) +
-    xlab("Score threshold") + ylab("Value") + labs(color = "") +
+
+ggplot(df_1) + 
+    geom_density(aes(x = alignment_score_nona, y = ..scaled..), data = df, fill = "black",
+                 alpha = 0.05, color = "white") +
+    geom_line(aes(y = value, x = threshold, color = type, linetype = type),
+              size = 1.2) + 
+    scale_x_log10() +
+    scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1, 1.25)) +
+    geom_hline(aes(yintercept = 1), linetype = 2, alpha = 0.2) +
+    scale_color_manual(values = cbPalette, 
+                       labels = c("Precision", "Recall"),
+                       name = "") +
+    scale_linetype_manual(values = c(1, 3), 
+                       labels = c("Precision", "Recall"),
+                       name = "") +
+    xlab("Log Score Threshold") + ylab("Precision / Recall") +
     plot_theme
-    
-    #facet_wrap(~ type, scales = "free")
-ggsave('../../manuscript/figures/ncsl_prec_rec.png')
+
+ggsave('../../manuscript/figures/ncsl_prec_rec.png', width = p_width, 
+       height = 0.65 * p_width)
 
 
 # F1 score
@@ -129,3 +154,5 @@ ggplot(df2) +
     theme_bw() + facet_wrap(~group, ncol=1) + 
     ylab("Proportion") + xlab("Alignment Score")
 ggsave('../../manuscript/figures/align_distri_ncsl_tables.png')
+
+

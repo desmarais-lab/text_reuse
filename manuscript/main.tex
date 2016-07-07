@@ -132,7 +132,9 @@ Where $\mathbb{I}(.)$ is the indicator function. Then the entry for each cell $M
 	M_{i,j} = \max(M_{i-1,j-1} + S(a_i, b_j), M_{i-1,j} + \gamma, M_{i,j-1} + \gamma, 0)
 \end{equation}
 
-The algorithm is visualized for the example above in Figure \ref{fig:score_matrix}. \footnote{An interactive version can be found at [FILL IN URL].}. Each row corresponds to a word in the sentence from the Alaska bill and each column to the sentence from the North Carolina bill. On the right side of the matrix the optimal alignment is displayed.
+The algorithm is visualized for the example above in Figure
+\ref{fig:score_matrix}\footnote{An interactive version can be found at
+    \url{http://fridolin-linder.com/2016/03/30/local-alignment.html}.}. Each row corresponds to a word in the sentence from the Alaska bill and each column to the sentence from the North Carolina bill. On the right side of the matrix the optimal alignment is displayed.
 
 \begin{figure}[ht!]
 	\centering
@@ -141,11 +143,27 @@ The algorithm is visualized for the example above in Figure \ref{fig:score_matri
     \label{fig:score_matrix}
 \end{figure}
 
-The four values of which the maximum is chosen in Equation \ref{eqn:fill} describe four steps in this dynamic programming array. The first value corresponds to a diagonal step which means in the resulting alignment sequence elements $a_i$ and $b_j$ are matched and the score of the alignment is either increased by $\delta$ if they match or decreased by $\epsilon$ if they don't match. The second and third value describe a gap step either in horizontal or vertical direction. That is, if we move from cell $(i,j)$ to cell $(i+1,j)$, in the resulting alignment sequence element $a_{i+1}$ is matched with a gap. On the other hand, if we move to cell $(i, j+1)$ sequence element $b_{j+1}$ is matched with a gap in the resulting alignment. If the first three values are all $<= 0$, the score in the cell is 0 meaning that no step is taken and every potential alignment stops at this point. This can be observed on the example from above in Figure \ref{fig:score_matrix}. The blue path describes the optimal alignment. The first two elements in both sequences don't match, therefore the score remains zero. Therefore the resulting alignment starts at the fourth element of each sequence with four diagonal steps, each adding points $(\delta = 5)$ to the final score which reaches 20 at the alignment ending in ``adding''-``adding''. After that, a step to the right is taken, meaning that the additional ``a'' in the column sequence is matched with a gap in the row sequence (indicated by ``-'' and orange coloring in the result on the right hand side). The cumulative score of the alignment is reduced by $\gamma = -1$ to 19. After that only diagonal steps are taken. Note that there are two mismatches each of which reduces the score by $\epsilon = -2$. 
+The four values of which the maximum is chosen in Equation \ref{eqn:fill}
+describe four steps in this dynamic programming array. The first value
+corresponds to a diagonal step which means in the resulting alignment sequence
+elements $a_i$ and $b_j$ are matched and the score of the alignment is either
+increased by $\delta$ if they match or decreased by $\epsilon$ if they don't
+match. The second and third value describe a gap step either in horizontal or
+vertical direction. That is, if we move from cell $(i,j)$ to cell $(i+1,j)$, in
+the resulting alignment sequence element $a_{i+1}$ is matched with a gap. On the
+other hand, if we move to cell $(i, j+1)$ sequence element $b_{j+1}$ is matched
+with a gap in the resulting alignment. If the first three values are all $<= 0$,
+the score in the cell is 0 meaning that no step is taken and every potential
+alignment stops at this point. This can be observed in Figure \ref{fig:score_matrix}. The blue path describes the optimal alignment. The first two elements in both sequences don't match, therefore the score remains zero. Therefore the resulting alignment starts at the fourth element of each sequence with four diagonal steps, each adding points $(\delta = 5)$ to the final score which reaches 20 at the alignment ending in ``adding''-``adding''. After that, a step to the right is taken, meaning that the additional ``a'' in the column sequence is matched with a gap in the row sequence (indicated by ``-'' and orange coloring in the result on the right hand side). The cumulative score of the alignment is reduced by $\gamma = -1$ to 19. After that only diagonal steps are taken. Note that there are two mismatches each of which reduces the score by $\epsilon = -2$. 
 
-The optimal alignment is identified by finding the highest score in the matrix, at which the alignment ends, and back-tracing the path of the alignment. The steps in the path are chosen using Equation \ref{eqn:fill}, and are indicated in Figure \ref{fig:score_matrix} by lines pointing to the left, the upper left, up or no line. The back-tracing continues until a  zero is encountered.
+The optimal alignment is identified by finding the highest score in the matrix,
+at which the alignment ends, and back-tracing the path of the alignment. The
+steps in the path are chosen using Equation \ref{eqn:fill}, and are indicated in
+Figure \ref{fig:score_matrix} by arrows pointing to the left, the upper left, up
+or no arrow. The back-tracing continues until a  zero is encountered.
 
-This algorithm is computationally intensive ($\mathcal{O}(nk)$ in time and space), but returns the globally optimal local alignment given the scoring parameters. We provide a proof of this in the appendix. The property follows from the recursive relation used to fill the dynamic programming matrix. An alignment that is constructed by adding one element to an already optimal alignment is optimal itself. Starting by aligning the first two elements of the sequence optimally (which is trivial), a globally optimal can be found by iteratively adding to this alignment.
+This algorithm is computationally intensive ($\mathcal{O}(nk)$ in computation
+time and memory demand), but returns the globally optimal local alignment given the scoring parameters. We provide a proof of this in the appendix. The property follows from the recursive relation used to fill the dynamic programming matrix. An alignment that is constructed by adding one element to an already optimal alignment is optimal itself. Starting by aligning the first two elements of the sequence optimally (which is trivial), a globally optimal can be found by iteratively adding to this alignment.
 
 In our analyses we use a slightly modified version of the local alignment algorithm, in which the first gap in a series of multiple gaps receives a higher penalty then the following ones \citep[][use the same modification]{wilkerson2015tracing}. This penalizes many small gaps and makes the algorithm produce longer gaps. The idea behind this modification is that someone who changes text in a bill might insert several words into an existing piece of text. The fact that something was inserted should weigh heavier than the length of the insertion which is achieved by down-weighting gap extensions. 
 
@@ -157,7 +175,14 @@ In our analyses we use a slightly modified version of the local alignment algori
 Through the application of the SW algorithm to US state legislation, we will provide a quantitative measure of policy similarity between bill sections. We follow \citet{wilkerson2015tracing} in focusing on sections, as bills can contain many separate policy proposals. The similarity measures between sections that we identify can be aggregated up to the bill, legislator or state levels. The measures we provide can be used to test hypotheses regarding, among other topics, public policy diffusion, legislative politics, political parties, and interest groups.  
 
 \subsection{Data}
-We apply the SW algorithm to a database of US state bills, collected by Burgess et al. (2015) and the Sunlight foundation. This data base contains approximately 500,000 bills from 2008 to 2015. Not all bills from all states are available for the whole time period. Figure \ref{fig:bill_desc} displays the year ranges and number of bills in the bill data base. This collection of bills is based on all bills that are available through the \url{openstates.org} API. \url{openstates.org} is a website maintained by the Sunlight Foundation, in order to increase transparency in state politics. The Sunlight Foundation uses web scrapers to access all bills that are available on the websites of legislatures in all US states. This includes enacted legislation as well as bills that are still in the legislative process, or where not enacted. %The database contains the bill text as well as additional information on the legislative process for the bill. We have the first and the last version of the bill text, the sponsor of the bill and all legislative action that was taken on the bill. %The available meta-data for the bills includes a time-stamp for introduction and approval of the bill, the name and party affiliation of the sponsor(s), the state and the bill id.
+We apply the SW algorithm to a database of US state bills, collected by
+\citet{burgess2016legislative} and the Sunlight
+Foundation\footnote{\url{http://sunlightfoundation.com/}}. This data base
+contains approximately 500,000 bills from 2008 to 2015. Not all bills from all
+states are available for the whole time period. Figure \ref{fig:bill_desc}
+displays the year ranges and number of bills in the bill data base. This
+collection of bills is based on all bills that are available through the
+Sunlight Foundation's \url{openstates.org} API. \url{openstates.org} is a website maintained by the Sunlight Foundation, in order to increase transparency in state politics. The Sunlight Foundation uses web scrapers to access all bills that are available on the websites of legislatures in all US states. This includes enacted legislation as well as bills that are still in the legislative process, or where not enacted. %The database contains the bill text as well as additional information on the legislative process for the bill. We have the first and the last version of the bill text, the sponsor of the bill and all legislative action that was taken on the bill. %The available meta-data for the bills includes a time-stamp for introduction and approval of the bill, the name and party affiliation of the sponsor(s), the state and the bill id.
 
 \begin{figure}[ht!]
     \centering
@@ -166,13 +191,35 @@ We apply the SW algorithm to a database of US state bills, collected by Burgess 
     \label{fig:bill_desc}
 \end{figure}
 
-Our approach of applying the SW algorithm is similar to \citet{wilkerson2015tracing} but differs in several key respects. The analysis consists of three major steps: 1) Pre processing and selection of documents to compare, 2) alignment computation, 3) post hoc refinement (boiler plate removal). 
+Our approach of applying the SW algorithm is similar to
+\citet{wilkerson2015tracing} but differs in several key respects. The analysis
+consists of three major steps: 1) Pre-processing and selection of documents to compare, 2) alignment computation, 3) post hoc refinement (boiler plate removal). 
 
 \subsection{Pre Processing and Selection}
 
 All bills are split up into sections in order to be able to detect all alignments between two bills. Because the SW algorithm only returns the one best alignment between two sequences, relevant information might be lost when considering every bill as one large sequence of words. 
 The SW algorithm is computationally demanding and an exhaustive comparison of all possible bill-section-pairs is not feasible (with $500,000$ bills, assuming each bill consists on average of four sections this would amount to about $2 * 10^{12}$ comparisons). \citet{wilkerson2015tracing} encountered the same problem and excluded bills that don't have at least five matching 10-grams. Since this implies considerable exact character matches, we see this as a too restrictive for our application. Because the text we are using originates in 50 different legislatures, exact character matches might obfuscate valuable text reuse just because of small formatting changes, changes of state names, etc. 
-Instead we choose to rely on a procedure that is based on finding bills with similar language. We store all available bills in an Elastic Search database. Elastic search is an open source web search engine which is designed to find document that match a search query \citep{gormley2015elasticsearch}. We utilize the `more like this' query, which is designed to find documents that are similar to a given document. It works in the following way: From the focus document, the $k$ $n$-grams with the highest tf-idf scores are selected and transformed into a search vector that is representative of the query document. Then, for each document in the collection, a variation of the cosine similarity is calculated and the $m$ bills with the highest scores are selected for further analysis. For this analysis we set $k$ to 25, $n$ to 5 and $m$ to 100\footnote{This pre-selection potentially introduces selection bias into our later analyses. In order to assess if the 100 closest bills are a sufficiently large number we repeat our analyses for a smaller sub-sample, choosing the 1000 most similar bills. [THESE RESULTS ARE NOT IN YET]}
+Instead we choose to rely on a procedure that is based on finding bills with
+similar language. We store all available bills in an Elastic Search database.
+Elastic search is an open source web search engine which is designed to find
+document that match a search query \citep{gormley2015elasticsearch}. We utilize
+the `more like this' query, which is designed to find documents that are similar
+to a given document. It works in the following way: From the focus document, the
+$k$ $n$-grams with the highest tf-idf scores are selected and transformed into a
+search vector that is representative of the query document. Then, for each
+document in the collection, a variation of the cosine similarity is calculated
+and the $m$ bills with the highest scores are selected for further analysis. For
+this analysis we set $k$ to 25, $n$ to 5 and $m$ to 1000\footnote{For
+details on the exact algorithm we refer the reader to the elastic search
+documentation (\url{http://sunlightfoundation.com/} as well as the lucene engine
+documentation
+(\url{https://lucene.apache.org/core/4_9_0/core/org/apache/lucene/search/similarities/TFIDFSimilarity.html}).
+In order to account for the possibility of selection bias being introduced to
+our analyses through the cap of 1000 similar bills, we analyzed the results with
+different numbers of pre-selected bills. We find that this parameter, when set
+to a sufficiently high value, does not lead to such bias because the set of
+potentially relevant bills is always much smaller than 1000.}
+
 
 \subsection{Bill Alignment Computation}
 
@@ -202,7 +249,23 @@ Left Text & Right Text & Score\\
 
 \clearpage
 
-From this procedure we obtain ca. 8 million individual alignments (that is, shared text between two sections of two bills) or 1.7 million bill dyads. We use the alignment score as the quantitative measure of policy similarity. However, as we discuss below, due to the presence of extreme outliers, we work with this measure on the log scale. In order to aggregate the alignments to the bill level, we sum the alignment scores for each section pair of the corresponding bill dyad. Table \ref{tab:alignment_examples} displays three examples of section alignments. The `Left Text' and `Right Text' columns display the optimal alignment for the two sections the alignment score is displayed in the `Score' column. This example shows the reuse of legislative text in three states (New Jersey, North Carolina and Georgia).
+From this procedure we obtain ca. $10^9$ individual alignments (that is, shared
+text between two sections of two bills) which corresponds to about $2 * 10^6$ bill dyads
+($1.3 * 10^6$ bill dyads excluding within state alignments). Figure
+\ref{fig:alignment_score_distribution} displays the cumulative frequency
+distribution of the alignments. The vast majority of alignments are very small
+(less than 10). We use the alignment score as the quantitative measure of policy similarity. However, as we discuss below, due to the presence of extreme outliers, we work with this measure on the log scale. In order to aggregate the alignments to the bill level, we sum the alignment scores for each section pair of the corresponding bill dyad. Table \ref{tab:alignment_examples} displays three examples of section alignments. The `Left Text' and `Right Text' columns display the optimal alignment for the two sections the alignment score is displayed in the `Score' column. This example shows the reuse of legislative text in three states (New Jersey, North Carolina and Georgia).
+
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/alignment_score_distribution.png}
+    \caption{Cumulative frequency distribution of the dyad level alignment
+    scores. The x-axis represents the dyad level alignment score on the
+    $log_{10}$ scale.}
+    \label{fig:alignment_score_distribution}
+\end{figure}
+
 
 
 \subsection{Boiler Plate Removal}
@@ -237,23 +300,36 @@ In our first validation exercise, we consider whether high alignment scores prov
 \end{singlespacing}
 
 Condition a) is necessary, since some of the urls returned by the web query refer to blog entries or to protected websites that require NCSL membership. The rationale behind condition b) is to maximize the number of bills we can match to our database (see Figure \ref{fig:bill_desc}). We additionally constrain the number of bills per table to be below 100, in order to assure, that the topic of the table is not too broad. We chose 100 since this number would correspond roughly to two bills per state (often there is a house and a senate bill in each state for a particular policy).
-The web query from step 1 returned 266 urls. From the 50 sampled urls 22 fulfilled the three criteria. From these 22 tables we constructed a dataset of 950 bills, of which we could match 707 to our bill database.
+The web query from step 1 returned 266 urls. From the 50 sampled urls 22
+fulfilled the three criteria. From these 22 tables we constructed a dataset of
+950 bills, of which we could match 704 to our bill database. For all bill pairs
+that we do not have alignment scores for (i.e. the bills did not get matched by
+the pre-selection algorithm) we assume a score of 0\footnote{If a bill is not selected in the pre-selection step, this means
+that there are basically no matching sequences in this dyad.}. 
 
-Figure \ref{fig:ncsl_prec_rec} displays the performance of the alignment score in predicting if two bills are in the same NCSL table. We present precision---the proportion of bill pairs with a given alignment score that exceed the threshold on the $x$-axis that are in the same NCSL table, and recall---the proportion of same-NCSL-table pairs that exceed a given alignment score threshold. We see generally high precision---over 80\% with moderate to high alignment scores [X \% of bill-dyad alignment scores fall into this category]. When alignment scores are very high (over 100) we see extremely high precision [X \% of bill-dyad alignment scores fall into this category]. Recall is generally low, but that is expected for our case, as (1) the introduction of similar policies in bills in tow different states is a rare event, and relatedly, (2) the appearance of two bills in the same NCSL table is a rare event [X \% in the current analysis]; and classifier recall is notoriously low in rare event data \citep{weiss2000learning}---even commonly approaching zero, as in our case \citep{weiss2004mining}. Our results suggest that the presence of a large alignment score between bills is an effective indicator of policy similarity.
-
-{\bf Frido, would you take care of these points?}
-\begin{itemize}
-\item Put the x-axis of Figure 3 on the log scale
-\item Increase the font size for the axis and tick labels (note, text in all figures should always be approximately equal to the font size used in the MS).
-\item Fill in numbers from above paragraph.
-\item One bigger question. I wonder how this analysis would change if the log alignemnt scores were taken at the section level before summing. Logging eliminates outliers in cross-bill comparisons, but doesn't help in establishing bill-specific sections. Section-pair-specific outliers could be throwing this off.
-\end{itemize}
+Figure \ref{fig:ncsl_prec_rec} displays the performance of the alignment score
+in predicting if two bills are in the same NCSL table. We present
+precision---the proportion of bill pairs with a given alignment score that
+exceed the threshold on the $x$-axis that are in the same NCSL table, and
+recall---the proportion of same-NCSL-table pairs that exceed a given alignment
+score threshold. We see generally high precision---over 80\% with moderate
+(higher than 50) to high alignment scores (about 3\% of bill-dyad alignment
+scores fall into this category). When alignment scores are very high (over 100)
+we see extremely high precision (1\% of bill-dyad alignment scores fall into
+this category). Recall is generally low, but that is expected for our case, as
+(1) the introduction of similar policies in bills in tow different states is a
+rare event, and relatedly, (2) the appearance of two bills in the same NCSL
+table is a rare event ($3*10^{-4}$\% in the current analysis); and classifier recall is notoriously low in rare event data \citep{weiss2000learning}---even commonly approaching zero, as in our case \citep{weiss2004mining}. Our results suggest that the presence of a large alignment score between bills is an effective indicator of policy similarity.
 
 
 \begin{figure}[ht!]
     \centering
     \includegraphics[width=0.8\textwidth]{figures/ncsl_prec_rec.png}
-    \caption{Description of the bill database. The horizontal bars display the time range for which bills are available for each state. The color of the bar indicates how many bills are available for this state.}
+    \caption{Precision-Recall curve for classifying two bills being in the same
+    ncsl table by thresholding the bill-dyad alignment score. The x axis
+displays the threshold, the y axis represents precision and recall. The shaded
+area in the background displays the frequency distribution of the alignment
+scores. Note that the figure does not include alignments with score exactly 0.}
     \label{fig:ncsl_prec_rec}
 \end{figure}
 
@@ -308,7 +384,10 @@ In order to investigate this pattern more closely, we additionally provide lines
 \begin{figure}[ht!]
     \centering
     \includegraphics[width=0.8\textwidth]{figures/quantile_regression.png}
-    \caption{Coefficients of quantile regression for alignment score on ideological distance. Dots indicate the point estimate. Horizontal bar represent 95\% confidence intervals obtained via the clustered bootstrap, [using X iterations]. Note that the x-axis is not in a natural scale}
+    \caption{Coefficients of quantile regression for alignment score on
+    ideological distance. Dots indicate the point estimate. Horizontal bar
+represent 95\% confidence intervals obtained via the clustered bootstrap, [using
+500 iterations]. Note that the x-axis is not in a natural scale}
     \label{fig:quantile_regression}
 \end{figure}
 

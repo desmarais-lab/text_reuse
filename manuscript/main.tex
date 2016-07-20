@@ -251,7 +251,7 @@ Left Text & Right Text & Score\\
 
 From this procedure we obtain ca. $10^9$ individual alignments (that is, shared
 text between two sections of two bills) which corresponds to about $2 * 10^6$ bill dyads
-($1.3 * 10^6$ bill dyads excluding within state alignments). Figure
+($1.3 * 10^6$ bill dyads excluding within-state alignments). Figure
 \ref{fig:alignment_score_distribution} displays the cumulative frequency
 distribution of the alignments. The vast majority of alignments are very small
 (less than 10). We use the alignment score as the quantitative measure of policy similarity. However, as we discuss below, due to the presence of extreme outliers, we work with this measure on the log scale. In order to aggregate the alignments to the bill level, we sum the alignment scores for each section pair of the corresponding bill dyad. Table \ref{tab:alignment_examples} displays three examples of section alignments. The `Left Text' and `Right Text' columns display the optimal alignment for the two sections the alignment score is displayed in the `Score' column. This example shows the reuse of legislative text in three states (New Jersey, North Carolina and Georgia).
@@ -271,7 +271,14 @@ distribution of the alignments. The vast majority of alignments are very small
 \subsection{Boiler Plate Removal}
 
 Boiler plate can be procedural language like headers, section titles, common phrases or topic specific phrases such as definitions of legal terms, tax brackets, etc. \citet{wilkerson2015tracing} rely on human coders to identify alignment text that is boiler plate, and then use a machine learning algorithm to extrapolate to all alignments based on the bag-of-words features.
-We also rely on an automatic classifier, but we propose a novel approach for generating training data without relying on human coders. We use the fact that boiler plate language is highly repetitive within states. Furthermore, language that is passed several times within the same state is likely to be not substantively relevant. Using these facts allows us to accumulate a large amount of labeled data which we use to train a machine learning classifier to automatically weed out boiler plate from our alignments. In addition to the text itself, we use the position in the text as a feature in the classification task [PUT SOME NUMBERS HERE ONCE THE RESULTS ARE IN].
+We also rely on an automatic classifier, but we propose a novel approach for
+generating training data without relying on human coders. We use the fact that
+boiler plate language is highly repetitive within-states. Furthermore, language
+that is passed several times within the same state is likely to be not
+substantively relevant. Using these facts allows us to accumulate a large amount
+of labeled data which we use to train a machine learning classifier to
+automatically weed out boiler plate from our alignments. In addition to the text
+itself, we use the position in the text as a feature in the classification task.
 
 
 
@@ -364,7 +371,7 @@ In the previous two validity tests, we focused mainly on the policy domain aspec
 
 In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. We generate an alignment score for a bill dyad by first taking the logarithm and then summing over all section dyads of the bill dyad. The ideal point of the bill is derived from the ideal point of the primary bill sponsor. For bills with several primary sponsors we use the average of those sponsors' ideal points to obtain a single measure. Figure \ref{fig:ideology_quantile_plot} displays the distribution of ideological distance and log-alignment score for the roughly 50 million dyads in the dataset. Each dot is a hexagonal tile, the color of the tile represents the number of dyads in that area. Two major observations can be made in this plot. First, the vast majority of alignment scores are close to zero. Second, the triangular shape of the distribution indicates the high precision - low recall character of the alignment score discussed above: few bills exhibit meaningful policy overlap with other bills, but in the region of lower ideological distance we observe a greater occurrence of positive outliers, which arise from significant policy overlap. 
 
-In order to investigate this pattern more closely, we additionally provide lines for quantile regressions in the Figure \ref{fig:ideology_quantile_plot}. Figure \ref{fig:quantile_regression} displays more details about these regression. Figure \ref{fig:ideology_plot} displays the distribution without the quantile regression lines. Confidence intervals are calculated by resampling bills, which represents an implementation of the clustered nonparametric bootstrap proposed by \citet{harden2011bootstrap}. We see that there is no relationship between the ideological similarity of bill sponsors and the median alignment scores between bills. However, as the quantile we model increases---especially above the 90th percentile, we see that the relationship grows strong and negative in magnitude, and is statistically significant. These results both validate the use of text reuse as a measure of policy similarity, and reinforce the high precision and low recall nature of text reuse asa measure of policy similarity.
+In order to investigate this pattern more closely, we additionally provide lines for quantile regressions in the Figure \ref{fig:ideology_quantile_plot}. Figure \ref{fig:quantile_regression} displays more details about these regression. Figure \ref{fig:ideology_plot} displays the distribution without the quantile regression lines. Confidence intervals are calculated by resampling bills, which represents an implementation of the clustered nonparametric bootstrap proposed by \citet{harden2011bootstrap}. We see that there is no relationship between the ideological similarity of bill sponsors and the median alignment scores between bills. However, as the quantile we model increases---especially above the 90th percentile, we see that the relationship grows strong and negative in magnitude, and is statistically significant. These results both validate the use of text reuse as a measure of policy similarity, and reinforce the high precision and low recall nature of text reuse as a measure of policy similarity.
 
 
 \begin{figure}[ht!]

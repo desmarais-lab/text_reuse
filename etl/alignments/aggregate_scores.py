@@ -9,9 +9,9 @@ import math
 # Input: Section to secdtion alignent scores in csv format
 INFILE = '../../data/alignments_new/alignments_1000.csv'
 # Bill-to bill output
-B2B_LOG_FILE = '../../data/lid/alignments_1000_b2b_log.csv'
+B2B_LOG_FILE = '../../data/lid/alignments_1000_b2b.csv'
 # Bill to bill output excluding within state alignments
-B2B_AS_FILE = '../../data/lid/alignments_1000_b2b_across.csv'
+B2B_AS_FILE = '../../data/lid/alignments_1000_b2b_ns.csv'
 
 # State to state output
 S2SFILE = '../../data/lid/alignments_1000_s2s.csv'
@@ -42,6 +42,7 @@ b2b_log_file.write('left_doc_id,right_doc_id,alignment_score\n')
 
 # State dict
 state_dyads = {}
+last_states = [None, None]
 
 for i,line in enumerate(infile):
     # Skip header
@@ -57,6 +58,7 @@ for i,line in enumerate(infile):
     states = [l[0:2], r[0:2]]
     states.sort() 
     state_dyad = "_".join(states)
+
     if state_dyad not in dyads:
         print state_dyad
         continue
@@ -82,7 +84,7 @@ for i,line in enumerate(infile):
             b2b_log_file.write(outline)
 
             # Only write if not same state dyad
-            if not states[0] == states[1]:
+            if not last_states[0] == last_states[1]:
                 b2b_as_file.write(outline)
 
         # First line no score from last entry
@@ -95,10 +97,11 @@ for i,line in enumerate(infile):
     # Same bill dyad
     else:
         log_score += math.log(float(fields[2]))
-        score += float(fields[2])
 
     if i % 1000000 == 0:
         print i
+
+    last_states = states
 
 with io.open(S2SFILE, 'w', encoding='utf-8') as s2sfile:
     s2sfile.write('left_state,right_state,sum_score,sum_log_score,n_alignments\n')
@@ -112,5 +115,5 @@ with io.open(S2SFILE, 'w', encoding='utf-8') as s2sfile:
         s2sfile.write(outline) 
 
 infile.close()
-b2b_file.close()
+b2b_as_file.close()
 b2b_log_file.close()

@@ -31,19 +31,6 @@ from pprint import pprint
 with io.open(BILL_FILE, 'r', encoding='utf-8') as infile,\
         io.open(OUTFILE, 'w+', encoding='utf-8') as outfile:
    
-    
-    for i, line in enumerate(infile):
-
-        doc = json.loads(line)
-        if doc is None:
-            continue
-        if doc['state'] == 'co':
-            pprint(doc)
-            pprint(last_doc)
-            sys.exit()
-        last_doc = doc
-
-
     counter = 0
     outfile.write(header + '\n')
     for i, line in enumerate(infile):

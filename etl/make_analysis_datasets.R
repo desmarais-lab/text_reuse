@@ -156,6 +156,14 @@ ncsl_bills <- tbl_df(read.csv('../data/ncsl/ncsl_data_from_sample_matched.csv',
     filter(!is.na(matched_from_db)) %>%
     select(-description, -table) 
 
+# Write out all the ids we could match to database for pairwise alignment computation
+sink('../data/ncsl/matched_ncsl_bill_ids.txt')
+for(id_ in ncsl_bills$matched_from_db){
+    cat(paste0(id_, '\n'))
+}
+
+sink()
+
 # Summary table of tables (for poster)
 #group_by(ncsl_bills, topic) %>% summarize(count = n())
 

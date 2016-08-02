@@ -25,9 +25,9 @@ alignments <- left_join(alignments, lucene_scores, by = c("left_doc_id",
 rm(lucene_scores)
 gc()
 
-# ==============================================================================
-# Descriptive statistics for alignments
-# ==============================================================================
+cat("========================================================================\n")
+cat("Descriptive statistics for alignments\n")
+cat("========================================================================\n")
 
 # Descriptive stats for alignment dataset
 sink('alignments_descriptives.txt')
@@ -74,9 +74,10 @@ ggsave(plot = p, '../manuscript/figures/alignment_lucene.png',
 
 alignments$lucene_score <- NULL
 
-# ==============================================================================
-# Data preprocessing for ideology analysis
-# ==============================================================================
+cat("========================================================================\n")
+cat("Data preprocessing for ideology analysis\n")
+cat("========================================================================\n")
+
 
 # Load metadata
 cat("Loading metadata...\n")
@@ -120,9 +121,8 @@ df <- left_join(df, temp, by = "right_doc_id")
 # Calculate ideological distance and combined doc length
 df <- mutate(df, ideology_dist = (left_ideology - right_ideology)^2)
 
-
-# Descriptives for ideology data
-# ******************************************************************************
+cat("Descriptives for ideology data\n")
+cat("************************************************************************\n")
 
 # Stats for text
 sink('../analysis/ideology/data_desc_stats.txt')
@@ -145,9 +145,10 @@ cat(paste0("Saving to ", fname, "\n"))
 save(df, file = fname)
 
 
-# ==============================================================================
-# Data preprocessing for ncsl analysis
-# ==============================================================================
+cat("========================================================================\n")
+cat("Data preprocessing for ncsl analysis\n")
+cat("========================================================================\n")
+
 
 # Load the ncsl dataset
 ncsl_bills <- tbl_df(read.csv('../data/ncsl/ncsl_data_from_sample_matched.csv',
@@ -156,7 +157,7 @@ ncsl_bills <- tbl_df(read.csv('../data/ncsl/ncsl_data_from_sample_matched.csv',
     select(-description, -table) 
 
 # Summary table of tables (for poster)
-group_by(ncsl_bills, topic) %>% summarize(count = n())
+#group_by(ncsl_bills, topic) %>% summarize(count = n())
 
 # Data Frame of all pairs we have table information of (with the matched db ids)
 bill_pairs <- tbl_df(as.data.frame(t(combn(ncsl_bills$matched_from_db, 2))))
@@ -187,7 +188,7 @@ rm(bill_pairs)
 df$alignment_score_nona <- ifelse(is.na(df$alignment_score), 0,
                                           df$alignment_score)
 
-# Descriptive stats for paper
+cat("Descriptive stats for ncsl\n")
 # ==============================================================================
 
 # Frequency of scores higher 50 / 100
@@ -204,5 +205,9 @@ cat(paste0('Proportion in same table: '),
 
 sink()
 
-# Store the data
+# Write out the list of ncsl bill ids (lid format)
+out_ids <- unique(df$left_doc_id)
+writeLines(out_ids, con = '../data/ncsl_analysis/ncsl_analysis.RData')
+
+cat("Store the data\n")
 save(x = df, file = '../data/ncsl_analysis/ncsl_analysis.RData')

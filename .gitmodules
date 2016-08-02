@@ -1,0 +1,3 @@
+[submodule "policy_diffusion"]
+	path = policy_diffusion
+	url = git@github.com:flinder/policy_diffusion.git

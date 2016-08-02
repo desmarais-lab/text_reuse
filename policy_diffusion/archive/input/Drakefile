@@ -1,0 +1,27 @@
+PROFILE:=default_profile
+%include $[PROFILE]
+
+psql()
+	psql -v ON_ERROR_STOP=1 -f $[INPUT] && touch $[OUTPUT]
+
+
+
+
+; GRAB STATE LEGISLATIVE METADATA FROM SUNLIGHT
+/mnt/data/sunlight/data/input/state_metadata.csv <- [-timestamp]
+;	input/./state_metadata.py | sed -E "s/u?'//g" > $OUTPUT
+
+; CREATE TABLE / COPY FOR STATE METADATA
+;psql/input/touch_state_metadata <- input/state_metadata.sql, data/input/state_metadata.csv [method:psql]
+
+
+
+; CREATE TABLE FOR BILL METADATA
+; (sql file creates the table; the python script pushes the data)
+;psql/input/touch_bill_metadata <- input/bill_metadata.sql [method:psql]
+
+; GRAB BILL METADATA FROM SUNLIGHT
+;data/input/touch_bill_metadata <- input/download_bulk_sunlight_files.sh
+;	 bash $INPUT && touch $OUTPUT
+
+

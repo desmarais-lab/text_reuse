@@ -4,6 +4,7 @@ import sys
 sys.path.append('/storage/home/fjl128/bruce_shared/text_reuse/policy_diffusion/lid/')
 from lid import LID
 from text_alignment import AffineLocalAligner,LocalAligner
+from utils.text_cleaning import clean_document 
 import database
 import json
 import base64
@@ -17,97 +18,70 @@ from utils.general_utils import deadline,TimedOutExc
 from database import ElasticConnection
 import time
 import io
+import itertools
+from pprint import pprint
+import numpy as np
 
 
-class NoneDocException(Exception):
-    pass
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger('elasticsearch').setLevel(logging.ERROR)
+logging.getLogger('urllib3').setLevel(logging.ERROR)
+logging.getLogger('json').setLevel(logging.ERROR)
 
-@deadline(10000)
-def get_alignments(query_doc, bill_id):
-    result_docs=lidy.find_state_bill_alignments(query_doc,
-            document_type="state_bill", split_sections=True, 
-            state_id=bill_id[0:2], query_document_id=bill_id)
-    return result_docs
-
-
-def write_output(doc):
-    with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
-	outfile.write(unicode(json.dumps(doc)))
-        outfile.write('\n')
+outfile_name = '../data/alignments_new/ncsl_pair_alignments.csv'
+         
+# Initialize aligner
+aligner = AffineLocalAligner(match_score=4, mismatch_score=-1, gap_start=-3, 
+                             gap_extend = -1.5)
 
 
-if __name__ == "__main__":
+# Initialize LID
+ES_IP = "54.244.236.175"
+lidy = LID(query_results_limit=1000, elastic_host=ES_IP, 
+           lucene_score_threshold=0, aligner=aligner)
 
-    t = time.time() 
 
-    input_file_name = sys.argv[1]
+# Load list of bills
+with io.open('../data/ncsl/matched_ncsl_bill_ids.txt') as infile:
+    bill_ids = [s.strip('\n') for s in infile.readlines()]
 
-    ES_IP = "54.244.236.175" 
 
-    #configure logging
-    log_path = os.path.join(os.environ['TEXT_REUSE'], 
-         	'generate_alignments/logs/single_bill_jobs.log')
+combos = itertools.combinations(bill_ids, 2)
 
-    outfile_name = os.path.join(os.environ['TEXT_REUSE'],
-            'data/alignments_new/alignments_1000.json')
-    #outfile_name = 'lid_test.json' 
-            
-    
+# Uncomment when not picking up bu starting from scratch
+#with io.open(outfile_name, 'w', encoding='utf-8') as outfile:
+#    l = 'left_bill,right_bill,score\n'
+#    outfile.write(l)
 
-    logging.basicConfig(filename=log_path,level=logging.DEBUG)
-    logging.getLogger('elasticsearch').setLevel(logging.ERROR)
-    logging.getLogger('urllib3').setLevel(logging.ERROR)
-    logging.getLogger('json').setLevel(logging.ERROR)
- 
-    # Initialize aligner
-    aligner = AffineLocalAligner(match_score=4, mismatch_score=-1, gap_start=-3, 
-                                 gap_extend = -1.5)
+l_temp = '{},{},{}\n'
 
-    # Initialize Elastic Search connectino
-    ec = ElasticConnection(host = ES_IP)
-    
-    # Initialize LID
-    lidy = LID(query_results_limit=1000, elastic_host=ES_IP, 
-               lucene_score_threshold=0, aligner=aligner)
+last = ('ma_187th_H4070','wa_2013-2014_SB5419')
+start = False
 
-    # Loop through the input files and get alignments
-    try:
-        bill_id = sys.argv[1]
-        # Retrieve left bill
-        query_doc =  ec.get_bill_by_id(bill_id)['bill_document_last']         
+# Loop through all combinations of bills
+for i,c in enumerate(combos):
 
-        if query_doc is None:
-            query_doc =  ec.get_bill_by_id(bill_id)['bill_document_first']         
+    if not start: 
+        if c == last:
+            start = True
+        continue
 
-        # Retrieve all candidate right bills and align
-        result_doc = get_alignments(query_doc,bill_id)
-        
-        # Don't save the query document in the results
-        del result_doc['query_document']
+    print i
 
-        # Dump out the resutls
-        write_output(result_doc)
+    alignments = lidy.align_bill_pair(c[0], c[1])
 
-    except (KeyboardInterrupt, SystemExit):
-        raise
+    if alignments is None:
+        l = l_temp.format(c[0], c[1], np.nan)
+        with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
+            outfile.write(l)
+        continue
 
-    except NoneDocException: 
-        m = "none doc error query_id {0}: {1}".format(bill_id, "None doc error")
-        logging.error(m)
-        write_output({"query_document_id": bill_id,"error":"none doc error"})
+    for alignment in alignments:
+        score = alignment['score']
+        l = l_temp.format(c[0], c[1], score)
+        with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
+            outfile.write(l)
 
-    except TimedOutExc: 
-        m = "timeout error query_id {0}: {1}".format(bill_id, "timeout error")
-        logging.error(m)
-        write_output({"query_document_id": bill_id,"error":"timeout error"})
 
-    except:
-        trace_message = re.sub("\n+", "\t", traceback.format_exc())
-        trace_message = re.sub("\s+", " ", trace_message)
-        trace_message = "<<{0}>>".format(trace_message)
-        m = "random error query_id {0}: {1}".format(bill_id, trace_message)
-        logging.error(m)
-        write_output({"query_document_id": bill_id,"error":"trace_message"})
-    
 
-    print "Finished successfully in {}".format(time.time() - t)
+

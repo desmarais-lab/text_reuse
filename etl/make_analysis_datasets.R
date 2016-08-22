@@ -150,11 +150,24 @@ cat("Data preprocessing for ncsl analysis\n")
 cat("========================================================================\n")
 
 
-# Load the ncsl dataset
+# Load the ncsl alignment raw data and log scores, aggregate by bill pair
+# and remove same state bill pairs
+retx <- function(x, i) x[i] 
+ncsl_raw <- tbl_df(read.csv('../data/alignments/ncsl_pair_alignments.csv',
+                            stringsAsFactors = FALSE, header = TRUE))
+ncsl_alignments <- filter(ncsl_raw, !is.na(score)) %>%
+    mutate(score = log(score)) %>%
+    group_by(left_bill, right_bill) %>%
+    summarize(score = sum(score)) %>%
+    mutate(left_state = sapply(strsplit(left_bill, "_"), retx, 1),
+           right_state = sapply(strsplit(right_bill, "_"), retx, 1)) %>%
+    filter(left_state != right_state) %>%
+    select(-left_state, -right_state)
+
+# Load the ncsl table dataset
 ncsl_bills <- tbl_df(read.csv('../data/ncsl/ncsl_data_from_sample_matched.csv',
                               stringsAsFactors = FALSE, header = TRUE)) %>% 
-    filter(!is.na(matched_from_db)) %>%
-    select(-description, -table) 
+    filter(!is.na(matched_from_db))
 
 # Write out all the ids we could match to database for pairwise alignment computation
 sink('../data/ncsl/matched_ncsl_bill_ids.txt')
@@ -175,6 +188,9 @@ reverse <- data.frame("left_doc_id" = bill_pairs$right_doc_id,
                       "right_doc_id" = bill_pairs$left_doc_id)
 bill_pairs <- tbl_df(rbind(bill_pairs, reverse))
 
+
+
+
 # Get 'same-table-indicator'
 ## Join with topic tables
 temp <- mutate(ncsl_bills, left_doc_id = matched_from_db, left_table = topic) %>%
@@ -186,15 +202,18 @@ df <- left_join(df, temp, by = "right_doc_id") %>%
     mutate(same_table = ifelse(left_table == right_table, 1, 0))
 
 ## Join
-bill_pairs <- left_join(df, alignments, 
+ncsl_alignments <- mutate(ncsl_alignments, left_doc_id = left_bill,
+                          right_doc_id = right_bill) %>%
+    select(-left_bill, -right_bill)
+bill_pairs <- left_join(df, ncsl_alignments, 
                         by = c("left_doc_id", "right_doc_id"))
-df <- mutate(bill_pairs, alignment_score_NA = ifelse(is.na(alignment_score), 
-                                                        1, 0))
-rm(bill_pairs)
+# Sanity check: match with alignmetns from general alignment algo
+#bill_pairs <- left_join(df, alignments, 
+#                        by = c("left_doc_id", "right_doc_id"))
 
-## Put zero for NA alignment score
-df$alignment_score_nona <- ifelse(is.na(df$alignment_score), 0,
-                                          df$alignment_score)
+df <- filter(bill_pairs, !is.na(score)) %>%
+    select(-left_table, -right_table)
+rm(bill_pairs)
 
 cat("Descriptive stats for ncsl\n")
 # ==============================================================================
@@ -202,20 +221,20 @@ cat("Descriptive stats for ncsl\n")
 # Frequency of scores higher 50 / 100
 sink('../analysis/ncsl/ncsl_data_descriptives.txt')
 cat(paste0('Frequency of scores higher than 50: '), 
-    sum(alignments$alignment_score > 50) / nrow(alignments),
+    sum(ncsl_alignments$score > 50) / nrow(ncsl_alignments),
     '\n')
-cat(paste0('Frequency of scores higher than 50: '), 
-    sum(alignments$alignment_score > 100) / nrow(alignments),
+cat(paste0('Frequency of scores higher than 100: '), 
+    sum(ncsl_alignments$score > 100) / nrow(ncsl_alignments),
     '\n')
 cat(paste0('Proportion in same table: '), 
-    sum(df$same_table) / nrow(alignments),
+    sum(df$same_table) / nrow(df),
     '\n')
 
 sink()
 
 # Write out the list of ncsl bill ids (lid format)
-out_ids <- unique(df$left_doc_id)
-writeLines(out_ids, con = '../data/ncsl_analysis/ncsl_analysis.RData')
+#out_ids <- unique(df$left_doc_id)
+#writeLines(out_ids, con = '../data/ncsl_analysis/ncsl_analysis.')
 
 cat("Store the data\n")
 save(x = df, file = '../data/ncsl_analysis/ncsl_analysis.RData')

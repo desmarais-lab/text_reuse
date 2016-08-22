@@ -1,9 +1,14 @@
 library(dplyr)
 
-ncsl_bills <- read.csv('../../data/ncsl/ncsl_data_from_sample.csv', 
-                       header = TRUE, stringsAsFactors = FALSE)
-db_bills <- read.csv('../../data/bill_metadata.csv', header = TRUE,
-                     stringsAsFactors = FALSE)
+ncsl_bills <- tbl_df(read.csv('../data/ncsl/ncsl_data_from_sample.csv', 
+                       header = TRUE, stringsAsFactors = FALSE))
+# Check for duplicates
+ncsl_bills <- mutate(ncsl_bills, unique_id = paste0(id, '_', state, '_', year)) %>%
+    select(-table, -description)
+ncsl_bills <- ncsl_bills[!duplicated(ncsl_bills$unique_id),]
+
+db_bills <- tbl_df(read.csv('../data/lid/bill_metadata.csv', header = TRUE,
+                     stringsAsFactors = FALSE))
 
 # Preprocess db bills
 
@@ -98,5 +103,5 @@ print(paste('Found', one_match, 'matches'))
 print(paste(no_match, 'not matched'))
 print(paste(multi_match, 'multiple matches'))
 
-write.csv(ncsl_bills, file = '../../data/ncsl/ncsl_data_from_sample_matched.csv', 
+write.csv(ncsl_bills, file = '../data/ncsl/ncsl_data_from_sample_matched.csv', 
           row.names = FALSE)

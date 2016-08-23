@@ -38,8 +38,6 @@ def align_pair(c):
         return None
     
     for alignment in alignments:
-        pprint(alignment)
-        sys.exit()
         score = alignment['score']
         l = l_temp.format(c[0], c[1], score)
         with io.open(outfile_name, 'a', encoding='utf-8') as outfile:

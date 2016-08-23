@@ -37,22 +37,31 @@ def align_pair(c):
             outfile.write(l)
         return None
     
+    print len(alignments)
     for alignment in alignments:
         score = alignment['score']
         l = l_temp.format(c[0], c[1], score)
         with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
             outfile.write(l)
-        return None
+    return None
 
 
 if __name__ == '__main__':
 
+    # Parameters
+    ## Set to false and specify last pair if picking up old calculation
+    scratch = True
+
+    # Number of processes
+    n_proc = 40
+     
+    outfile_name = '../data/alignments_new/ncsl_pair_alignments.csv'
+
+    # Set up logging
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger('elasticsearch').setLevel(logging.ERROR)
     logging.getLogger('urllib3').setLevel(logging.ERROR)
     logging.getLogger('json').setLevel(logging.ERROR)
-
-    outfile_name = '../data/alignments_new/ncsl_pair_alignments.csv'
              
     # Initialize aligner
     aligner = AffineLocalAligner(match_score=4, mismatch_score=-1, gap_start=-3, 
@@ -63,32 +72,30 @@ if __name__ == '__main__':
     lidy = LID(query_results_limit=1000, elastic_host=ES_IP, 
                lucene_score_threshold=0, aligner=aligner)
 
-
     # Load list of bills
     with io.open('../data/ncsl/matched_ncsl_bill_ids.txt') as infile:
         bill_ids = [s.strip('\n') for s in infile.readlines()]
-
-
+    # Get all combinations
     c = itertools.combinations(bill_ids, 2)
-    combos = [x for x in c]
     
-    # Uncomment when not picking up bu starting from scratch
-    with io.open(outfile_name, 'w', encoding='utf-8') as outfile:
-        l = 'left_bill,right_bill,score\n'
-        outfile.write(l)
+    if scratch:
+        with io.open(outfile_name, 'w', encoding='utf-8') as outfile:
+            l = 'left_bill,right_bill,score\n'
+            outfile.write(l)
+        combos = [x for x in c]
+    else:
+        last = ('sc_2015-2016_H3682','wa_2015-2016_HB1092')
+        print last
+
+        combos = []
+        for i,x in enumerate(c):
+           
+            if x != last:
+                continue
+            else:
+                combos.append(x)
 
     l_temp = '{},{},{}\n'
 
-    #last = ('ma_187th_H4070','wa_2013-2014_SB5419')
-    #start = True
-
-    pool = multiprocessing.Pool(processes=4)
-    #pool.map(align_pair, combos)
-    #pool.close()
-    #pool.join()
-
-    def t(x):
-        return x + 1
-
-    l = [1,2,3,4]
-    results = pool.map_async(t, l).get(9999999)
+    pool = multiprocessing.Pool(processes=n_proc)
+    results = pool.map_async(align_pair, combos).get(9999999)

@@ -8,7 +8,7 @@ load('../../data/ncsl_analysis/ncsl_analysis.RData')
 # Precision recall curve
 # ==============================================================================
 
-r <- range(df$alignment_score, na.rm = TRUE)
+r <- range(df$score, na.rm = TRUE)
 thresholds <- exp(seq(log(r[1]), log(r[2]), length.out = 100))
 
 score = df$alignment_score_nona

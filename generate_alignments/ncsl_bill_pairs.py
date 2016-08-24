@@ -30,19 +30,14 @@ def align_pair(c):
     c: tuple, (left_bill, right_bill)
     '''
     alignments = lidy.align_bill_pair(c[0], c[1])
+    out = {'left_bill': c[0], 
+           'right_bill': c[1], 
+           'alignments':alignments}
+    #with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
+    #    outfile.write(unicode(json.dumps(out)) + '\n')
 
-    if alignments is None:
-        l = l_temp.format(c[0], c[1], np.nan)
-        with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
-            outfile.write(l)
-        return None
-    
-    print len(alignments)
-    for alignment in alignments:
-        score = alignment['score']
-        l = l_temp.format(c[0], c[1], score)
-        with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
-            outfile.write(l)
+    print(json.dumps(out) + '\n')
+ 
     return None
 
 
@@ -55,7 +50,8 @@ if __name__ == '__main__':
     # Number of processes
     n_proc = 40
      
-    outfile_name = '../data/alignments_new/ncsl_pair_alignments.csv'
+    #outfile_name = '../data/alignments_new/ncsl_pair_alignments.json'
+    #outfile_name = 'ncsl_pair_alignments.json'
 
     # Set up logging
     logging.basicConfig(level=logging.DEBUG)
@@ -75,21 +71,20 @@ if __name__ == '__main__':
     # Load list of bills
     with io.open('../data/ncsl/matched_ncsl_bill_ids.txt') as infile:
         bill_ids = [s.strip('\n') for s in infile.readlines()]
+
     # Get all combinations
     c = itertools.combinations(bill_ids, 2)
     
     if scratch:
-        with io.open(outfile_name, 'w', encoding='utf-8') as outfile:
-            l = 'left_bill,right_bill,score\n'
-            outfile.write(l)
+        #with io.open(outfile_name, 'w', encoding='utf-8') as outfile:
+        #    outfile.write('')
+
         combos = [x for x in c]
     else:
         last = ('sc_2015-2016_H3682','wa_2015-2016_HB1092')
-        print last
 
         combos = []
-        for i,x in enumerate(c):
-           
+        for i,x in enumerate(c):           
             if x != last:
                 continue
             else:

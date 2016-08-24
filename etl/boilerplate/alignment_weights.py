@@ -67,10 +67,10 @@ def generate_csv_line(line):
 if __name__ == "__main__":
 
     # Set Parameters
-    INFILE = '../../generate_alignments/ncsl_pair_alignments.json'
+    INFILE = '../../data/alignments_new/ncsl_pair_alignments.json'
     #OUTFILE = '../../data/ncsl/ncsl_alignment_scores.csv'
     OUTFILE = 'ncsl_alignment_scores.csv'
-    n_thread = 6
+    n_thread = 12
 
     
     # Generate a hashmap of counts of unique alignmetns

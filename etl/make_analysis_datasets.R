@@ -153,31 +153,20 @@ cat("========================================================================\n"
 # Load the ncsl alignment raw data and log scores, aggregate by bill pair
 # and remove same state bill pairs
 retx <- function(x, i) x[i] 
-ncsl_raw <- tbl_df(read.csv('../data/alignments_new/ncsl_pair_alignments.csv',
-                            stringsAsFactors = FALSE, header = TRUE))
-
-ncsl_test <- filter(ncsl_raw, !is.na(score)) %>%
-    group_by(left_bill, right_bill) %>%
-    summarize(score = sum(score), count = n()) %>%
-    mutate(left_state = sapply(strsplit(left_bill, "_"), retx, 1),
-           right_state = sapply(strsplit(right_bill, "_"), retx, 1)) %>%
-    filter(left_state != right_state) %>%
-    select(-left_state, -right_state)
-   
+ncsl_raw <- tbl_df(read.csv('../data/ncsl/ncsl_alignment_scores.csv',
+                            stringsAsFactors = FALSE, header = TRUE))%>%
+  mutate(old_score = score, score = adj_score) %>%
+  select(-adj_score)
 
 ncsl_alignments <- filter(ncsl_raw, !is.na(score)) %>%
-    filter(score != 0) %>%
-    mutate(score = log(score)) %>%
-    group_by(left_bill, right_bill) %>%
+    #filter(score != 0) %>%
+    #mutate(score = log(score)) %>%
+    group_by(left_doc_id, right_doc_id) %>%
     summarize(score = sum(score), count = n()) %>%
-    mutate(left_state = sapply(strsplit(left_bill, "_"), retx, 1),
-           right_state = sapply(strsplit(right_bill, "_"), retx, 1)) %>%
+    mutate(left_state = sapply(strsplit(left_doc_id, "_"), retx, 1),
+           right_state = sapply(strsplit(right_doc_id, "_"), retx, 1)) %>%
     filter(left_state != right_state) %>%
     select(-left_state, -right_state)
-
-ggplot(ncsl_test) + 
-    geom_point(aes(x = count, y = score))
-
 
 # Load the ncsl table dataset
 ncsl_bills <- tbl_df(read.csv('../data/ncsl/ncsl_data_from_sample_matched.csv',
@@ -217,9 +206,6 @@ df <- left_join(df, temp, by = "right_doc_id") %>%
     mutate(same_table = ifelse(left_table == right_table, 1, 0))
 
 ## Join
-ncsl_alignments <- mutate(ncsl_alignments, left_doc_id = left_bill,
-                          right_doc_id = right_bill) %>%
-    select(-left_bill, -right_bill)
 bill_pairs <- left_join(df, ncsl_alignments, 
                         by = c("left_doc_id", "right_doc_id"))
 # Sanity check: match with alignmetns from general alignment algo
@@ -230,7 +216,6 @@ df <- filter(bill_pairs, !is.na(score)) %>%
     select(-left_table, -right_table)
 rm(bill_pairs)
 
-ggplot(df) + geom_boxplot(aes(x = as.factor(same_table), y = score))
 
 cat("Descriptive stats for ncsl\n")
 # ==============================================================================

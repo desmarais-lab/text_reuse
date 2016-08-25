@@ -268,17 +268,17 @@ distribution of the alignments. The vast majority of alignments are very small
 
 
 
-\subsection{Boiler Plate Removal}
+\subsection{Approaches to Adjusting for Boiler Plate Text}
 
-Boiler plate can be procedural language like headers, section titles, common phrases or topic specific phrases such as definitions of legal terms, tax brackets, etc. \citet{wilkerson2015tracing} rely on human coders to identify alignment text that is boiler plate, and then use a machine learning algorithm to extrapolate to all alignments based on the bag-of-words features.
-We also rely on an automatic classifier, but we propose a novel approach for
-generating training data without relying on human coders. We use the fact that
-boiler plate language is highly repetitive within-states. Furthermore, language
-that is passed several times within the same state is likely to be not
-substantively relevant. Using these facts allows us to accumulate a large amount
-of labeled data which we use to train a machine learning classifier to
-automatically weed out boiler plate from our alignments. In addition to the text
-itself, we use the position in the text as a feature in the classification task.
+Legislation is full of textual content that is not very useful in identifying the novel policy proposal(s) offered by the bill. Such text includes procedural language, headers, section titles, and common phrases such as definitions of legal terms, tax brackets, etc. Text that is irrelevant to specific policy proposals represents a major---perhaps the primary---limitation on the capacity for text reuse to identify the emulation of policies across bills. \citet{wilkerson2015tracing} use human coders to identify alignment text that is unrelated to policy content. They call this text ``boiler plate.'' Given a large set of hand-labeled alignments, they use a machine learning algorithm to classify text as either boiler plate or not based on the textual content of the alignment, and exclude alignments labeled as boiler plate. This represents one possible approach, but has two limitations. The first is that the use of human coders to label data to train the classifier is costly. The second is that the classification and exclusion approach treats legislative text as conforming to a procedural-or-not dichotomy, where language in a bill may be situated on a continuum in terms of the degree to which it is specific to the policy proposal(s) offered in the bill. We discuss two alternative approaches to adjusting for boiler plate text in alignments.
+
+The first approach also relies on an automatic classifier, but we propose a novel approach for
+generating training data without relying on human coders. We posit that boiler plate language is highly repetitive within states. Furthermore, language
+that is passed several times (i.e., in separate bills) within the same state is likely to be
+substantively irrelevant. Using these facts allows us to accumulate a large amount of labeled data---all alignments between bills that have both passed in the same state---which we use to train a machine learning classifier to exclude boiler plate alignments. In addition to the text
+itself, we use the position in the text as a feature in the classifier. This approach is very similar to that taken by \citet{wilkerson2015tracing}, except we would not use human coders to label boiler plate alignments.
+
+In the second approach we describe, which we have implemented in one analysis below, we do not exclude boiler plate according to a classification dichotomy. Rather, we down-weight common alignments in calculating similarity between bills. Alignments are identified at the section level, meaning that we identify up to $n_1 \times n_2$ alignments between two bills, with $n_1$ and $n_2$ being the number of sections in the two bills. The similarity score between two bills is calculated as the natural log of the sum of the numeric score associated with each section-pair alignment. To adjust for common alignments, we divide the raw alignment score from the SW algorithm by the frequency with which that exact same alignment occurs across the entire database of section-pair alignment. In this approach we follow the common intuition in natural language processing that the informativeness of text is inversely related to the frequency with which that text occurs \citep{robertson2004understanding} (see, e.g., the regular application of term frequency–inverse document frequency (tf-idf) to pre- or post-process text-based datasets and results). This measure is different and potentially preferable in two ways. First, it does not require the use of human coders. Second, it places text on a continuum of uniqueness rather than dichotomizes it as boiler plate or not.
 
 
 

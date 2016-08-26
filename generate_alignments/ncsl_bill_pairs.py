@@ -23,21 +23,25 @@ from pprint import pprint
 import numpy as np
 import sys
 import multiprocessing
+from functools import partial
 
+# TODO: dedicated I/O process for result output. There have been some conflicts
+# (very few though)
 
 def align_pair(c):
     '''
     c: tuple, (left_bill, right_bill)
     '''
+    s = time.time()
     alignments = lidy.align_bill_pair(c[0], c[1])
     out = {'left_bill': c[0], 
            'right_bill': c[1], 
            'alignments':alignments}
-    #with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
-    #    outfile.write(unicode(json.dumps(out)) + '\n')
+    
+    with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
+        outfile.write(unicode(json.dumps(out)) + '\n')
+    print(time.time() - s) 
 
-    print(json.dumps(out) + '\n')
- 
     return None
 
 
@@ -51,7 +55,7 @@ if __name__ == '__main__':
     n_proc = 40
      
     #outfile_name = '../data/alignments_new/ncsl_pair_alignments.json'
-    #outfile_name = 'ncsl_pair_alignments.json'
+    outfile_name = 'ncsl_pair_alignments.json'
 
     # Set up logging
     logging.basicConfig(level=logging.DEBUG)
@@ -76,8 +80,8 @@ if __name__ == '__main__':
     c = itertools.combinations(bill_ids, 2)
     
     if scratch:
-        #with io.open(outfile_name, 'w', encoding='utf-8') as outfile:
-        #    outfile.write('')
+        with io.open(outfile_name, 'w', encoding='utf-8') as outfile:
+            outfile.write('')
 
         combos = [x for x in c]
     else:
@@ -89,8 +93,6 @@ if __name__ == '__main__':
                 continue
             else:
                 combos.append(x)
-
-    l_temp = '{},{},{}\n'
-
-    pool = multiprocessing.Pool(processes=n_proc)
+    
+    pool = multiprocessing.Pool(processes=n_proc) 
     results = pool.map_async(align_pair, combos).get(9999999)

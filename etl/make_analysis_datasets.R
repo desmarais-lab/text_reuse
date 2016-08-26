@@ -219,22 +219,7 @@ df <- filter(bill_pairs, !is.na(score)) %>%
 rm(bill_pairs)
 
 
-cat("Descriptive stats for ncsl\n")
-# ==============================================================================
 
-# Frequency of scores higher 50 / 100
-sink('../analysis/ncsl/ncsl_data_descriptives.txt')
-cat(paste0('Frequency of scores higher than 50: '), 
-    sum(ncsl_alignments$score > 50) / nrow(ncsl_alignments),
-    '\n')
-cat(paste0('Frequency of scores higher than 100: '), 
-    sum(ncsl_alignments$score > 100) / nrow(ncsl_alignments),
-    '\n')
-cat(paste0('Proportion in same table: '), 
-    sum(df$same_table) / nrow(df),
-    '\n')
-
-sink()
 
 # Write out the list of ncsl bill ids (lid format)
 #out_ids <- unique(df$left_doc_id)

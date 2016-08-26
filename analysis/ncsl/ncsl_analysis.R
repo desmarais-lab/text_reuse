@@ -55,6 +55,23 @@ align_text <- align_text[order(align_text$count, decreasing = TRUE), ]
 
 head(as.data.frame(align_text))
 
+
+# Distribution stats
+
+# Frequency of scores higher 5 / 10
+sink('ncsl_data_descriptives.txt')
+cat(paste0('Frequency of scores higher than 5: '), 
+    sum(df$score > 6) / nrow(df),
+    '\n')
+cat(paste0('Frequency of scores higher than 7: '), 
+    sum(df$score > 8) / nrow(df),
+    '\n')
+cat(paste0('Proportion in same table: '), 
+    sum(df$same_table) / nrow(df),
+    '\n')
+
+sink()
+
 # Precision recall curve
 # ==============================================================================
 

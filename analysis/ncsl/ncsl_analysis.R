@@ -4,15 +4,59 @@ library(xtable)
 
 # Load the data (data preprocessing in `/etl/make_analysis_datasets.R`)
 load('../../data/ncsl_analysis/ncsl_analysis.RData')
+source('../plot_theme.R')
+
+# Descriptives
+# ==============================================================================
+
+# Exclude technical correction bill
+df <- filter(df, score != max(score))
+
+# Summary stats
+# Adjusted score
+group_by(df, same_table) %>% 
+    summarize(mean = mean(score),
+              median = median(score),
+              q25 = quantile(score, 0.25),
+              q75 = quantile(score, 0.75),
+              stdev = sqrt(var(score)))
+# Old score
+group_by(df, same_table) %>% 
+    summarize(mean = mean(old_score),
+              median = median(old_score),
+              q25 = quantile(old_score, 0.25),
+              q75 = quantile(old_score, 0.75),
+              stdev = sqrt(var(old_score)))
+
+# Difference in means
+t.test(df$score[df$same_table == 0], df$score[df$same_table == 1])
+t.test(df$old_score[df$same_table == 0], df$old_score[df$same_table == 1])
+
+# Box Plots
+ggplot(df) +
+    geom_boxplot(aes(x = as.factor(same_table), y = score)) + 
+    plot_theme
+
+ggplot(df) +
+    geom_boxplot(aes(x = as.factor(same_table), y = old_score)) + 
+    plot_theme
+
+
+ggplot(df) +
+    geom_histogram(aes(x = score), color = "white") +
+    facet_wrap(~ same_table, ncol = 1) +
+    plot_theme
+
+# Alignment examples
+align_text <- tbl_df(read.table('../../data/ncsl/unique_alignments.tsv',
+                                sep = '\t', stringsAsFactors = FALSE,
+                                header = TRUE))
+align_text <- align_text[order(align_text$count, decreasing = TRUE), ]
+
+head(as.data.frame(align_text))
 
 # Precision recall curve
 # ==============================================================================
-
-r <- range(df$score, na.rm = TRUE)
-thresholds <- exp(seq(log(r[1]), log(r[2]), length.out = 100))
-
-score = df$alignment_score_nona
-true = df$same_table
 
 pr <- function(threshold) {
     predicted <- ifelse(score >= threshold, 1, 0)
@@ -24,6 +68,13 @@ pr <- function(threshold) {
     return(c(precision, recall))
 }
 
+# Adjusted score
+r <- range(df$score, na.rm = TRUE)
+thresholds <- seq(r[1], r[2], length.out = 100)
+
+score = df$score
+true = df$same_table
+
 prec_rec <- t(sapply(thresholds, pr))
 
 df_1 <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
@@ -32,7 +83,7 @@ df_1 <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
 
 
 ggplot(df_1) + 
-    geom_density(aes(x = alignment_score_nona, y = ..scaled..), data = df, fill = "black",
+    geom_density(aes(x = score, y = ..scaled..), data = df, fill = "black",
                  alpha = 0.05, color = "white") +
     geom_line(aes(y = value, x = threshold, color = type, linetype = type),
               size = 1.2) + 
@@ -45,11 +96,47 @@ ggplot(df_1) +
     scale_linetype_manual(values = c(1, 3), 
                        labels = c("Precision", "Recall"),
                        name = "") +
-    xlab("Score Threshold") + ylab("Precision / Recall") +
+    xlab("Log Score Threshold") + ylab("Precision / Recall") +
     plot_theme
 
-ggsave('../../manuscript/figures/ncsl_prec_rec.png', width = p_width, 
+ggsave('../../manuscript/figures/ncsl_prec_rec_adj.png', width = p_width, 
        height = 0.65 * p_width)
+
+
+# Old score
+r <- range(df$old_score, na.rm = TRUE)
+thresholds <- seq(r[1], r[2], length.out = 100)
+
+score = df$old_score
+true = df$same_table
+
+prec_rec <- t(sapply(thresholds, pr))
+
+df_1 <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
+                 threshold = rep(c(thresholds), 2),
+                 type = rep(c("precision", "recall"), each = nrow(prec_rec)))
+
+
+ggplot(df_1) + 
+    geom_density(aes(x = old_score, y = ..scaled..), data = df, fill = "black",
+                 alpha = 0.05, color = "white") +
+    geom_line(aes(y = value, x = threshold, color = type, linetype = type),
+              size = 1.2) + 
+    #scale_x_log10(breaks = c(0, 1, 10, 100)) +
+    scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1, 1.25)) +
+    geom_hline(aes(yintercept = 1), linetype = 2, alpha = 0.2) +
+    scale_color_manual(values = cbPalette, 
+                       labels = c("Precision", "Recall"),
+                       name = "") +
+    scale_linetype_manual(values = c(1, 3), 
+                       labels = c("Precision", "Recall"),
+                       name = "") +
+    xlab("Log Score Threshold") + ylab("Precision / Recall") +
+    plot_theme
+
+ggsave('../../manuscript/figures/ncsl_prec_rec_old.png', width = p_width, 
+       height = 0.65 * p_width)
+
 
 # F1 score
 f1 <- prec_rec[, 1] * prec_rec[ , 2] / (prec_rec[, 1] + prec_rec[ ,2])
@@ -59,11 +146,11 @@ ggplot(df1) +
     geom_line(aes(x = thresholds, y = f1_score))
 
 # Distributions of alignment scores in same table and not same table
-score_st <- filter(bill_pairs, same_table==1 & !is.na(alignment_score)) %>% select(alignment_score)
-score_st <- score_st$alignment_score
+score_st <- filter(df, same_table==1 & !is.na(score)) %>% select(score)
+score_st <- score_st$score
 
-score_nst <- filter(bill_pairs, same_table==0 & !is.na(alignment_score)) %>% select(alignment_score)
-score_nst <- score_nst$alignment_score
+score_nst <- filter(df, same_table==0 & !is.na(score)) %>% select(score)
+score_nst <- score_nst$score
 
 df2 <- data.frame(score = c(score_st, score_nst), 
                   group = c(rep("same_table", length(score_st)), 

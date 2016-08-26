@@ -5,6 +5,7 @@ import json
 from pprint import pprint
 from multiprocessing import Pool
 import numpy as np
+import re
 
 
 def add_to_hm(hm, obj):
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     # Set Parameters
     INFILE = '../../data/alignments_new/ncsl_pair_alignments.json'
     OUTFILE = '../../data/ncsl/ncsl_alignment_scores.csv'
-    ALIGNFILE = 'unique_alignments.tsv'
+    ALIGNFILE = '../../data/ncsl/unique_alignments.tsv'
     #OUTFILE = 'ncsl_alignment_scores.csv'
     n_thread = 12
 
@@ -141,12 +142,15 @@ if __name__ == "__main__":
 
     
     # Write out the alignment dictionary
-    out_line = '{count},{alignment}\n'
+    out_line = '{count}\t{alignment}\n'
     with io.open(ALIGNFILE, 'w', encoding='utf-8') as outfile:
-        outfile.write('count,alignment\n')
+        outfile.write('count\talignment\n')
         for ualign in unique_alignments:
+            text = re.sub('[^a-zA-Z0-9 ]', '', ualign)
+            if text == '':
+                text = '_'
             o = out_line.format(
-                    alignment=ualign,
+                    alignment=text,
                     count=unique_alignments[ualign])
             outfile.write(o)
 

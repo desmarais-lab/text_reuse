@@ -4,6 +4,7 @@ import io
 import json
 from pprint import pprint
 from multiprocessing import Pool
+import numpy as np
 
 
 def add_to_hm(hm, obj):
@@ -21,19 +22,28 @@ def matches_only(left_text, right_text):
             out.append(left)
         else:
             continue
-    if out == '':
-        print(left_text)
-        print(right_text)
     out = ' '.join(out)
     return(out)
 
 
 def generate_csv_line(line):
+    
+    line_template ='{left_doc_id},{right_doc_id},{score},{adj_score}\n'
 
-    doc = json.loads(line) 
+    try:
+        doc = json.loads(line) 
+    except ValueError:
+        return None
+
     alignments = doc['alignments']
 
     if alignments is None:
+        out_line = line_template.format(
+                left_doc_id=doc['left_bill'],
+                right_doc_id=doc['right_bill'],
+                score=np.nan,
+                adj_score=np.nan
+                )
         return None
 
     for alignment in alignments:
@@ -48,27 +58,29 @@ def generate_csv_line(line):
         count = unique_alignments[ualign]
 
         score = alignment['score']
-        adj_score = score * 1/count
+        adj_score = round(score * 1/count, 4)
+        
+        if ualign == 'means a letter':
+            pprint(doc)
 
-        line_template ='{left_doc_id},{right_doc_id},{score},{adj_score},{alignment}\n'
         out_line = line_template.format(
                 left_doc_id=doc['left_bill'],
                 right_doc_id=doc['right_bill'],
                 score=score,
-                adj_score=adj_score,
-                alignment=ualign
+                adj_score=adj_score
                 )
 
         with io.open(OUTFILE, 'a', encoding='utf-8') as outfile:
             outfile.write(out_line)
 
-        return out_line
+    return out_line
 
 if __name__ == "__main__":
 
     # Set Parameters
     INFILE = '../../data/alignments_new/ncsl_pair_alignments.json'
     OUTFILE = '../../data/ncsl/ncsl_alignment_scores.csv'
+    ALIGNFILE = 'unique_alignments.tsv'
     #OUTFILE = 'ncsl_alignment_scores.csv'
     n_thread = 12
 
@@ -81,7 +93,14 @@ if __name__ == "__main__":
 
         for i,line in enumerate(infile):
             
-            doc = json.loads(line)
+
+            try:
+                doc = json.loads(line)
+            except ValueError:
+                print('Json decoder error in line {}. Skipping.'.format(i))
+                continue 
+
+
             alignments = doc['alignments']
 
             if alignments is None:
@@ -99,7 +118,7 @@ if __name__ == "__main__":
                 unique_alignments = add_to_hm(unique_alignments, out)
                 c += 1
 
-            if i % 1000 == 0:
+            if i % 10000 == 0:
                 print(i)
 
     print(len(unique_alignments))
@@ -120,4 +139,14 @@ if __name__ == "__main__":
 
         pool.map_async(generate_csv_line, infile).get(99999)
 
-        
+    
+    # Write out the alignment dictionary
+    out_line = '{count},{alignment}\n'
+    with io.open(ALIGNFILE, 'w', encoding='utf-8') as outfile:
+        outfile.write('count,alignment\n')
+        for ualign in unique_alignments:
+            o = out_line.format(
+                    alignment=ualign,
+                    count=unique_alignments[ualign])
+            outfile.write(o)
+

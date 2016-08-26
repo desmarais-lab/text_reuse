@@ -159,12 +159,14 @@ ncsl_raw <- tbl_df(read.csv('../data/ncsl/ncsl_alignment_scores.csv',
   select(-adj_score)
 
 ncsl_alignments <- filter(ncsl_raw, !is.na(score)) %>%
-    #filter(score != 0) %>%
-    #mutate(score = log(score)) %>%
+    filter(score != 0) %>%
+    #mutate(score = log(score), old_score = log(old_score)) %>%
     group_by(left_doc_id, right_doc_id) %>%
-    summarize(score = sum(score), count = n()) %>%
+    summarize(score = sum(score), count = n(), old_score = sum(old_score)) %>%
     mutate(left_state = sapply(strsplit(left_doc_id, "_"), retx, 1),
-           right_state = sapply(strsplit(right_doc_id, "_"), retx, 1)) %>%
+           right_state = sapply(strsplit(right_doc_id, "_"), retx, 1),
+           old_score = log(old_score),
+           score = log(score)) %>%
     filter(left_state != right_state) %>%
     select(-left_state, -right_state)
 

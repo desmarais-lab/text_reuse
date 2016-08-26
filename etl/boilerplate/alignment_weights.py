@@ -6,7 +6,7 @@ from pprint import pprint
 from multiprocessing import Pool
 import numpy as np
 import re
-
+import operator
 
 def add_to_hm(hm, obj):
     if obj in hm:
@@ -143,14 +143,20 @@ if __name__ == "__main__":
     
     # Write out the alignment dictionary
     out_line = '{count}\t{alignment}\n'
+
+    ## Make list of tuples from dict
+    sorted_ualign = sorted(unique_alignments.items(), key=operator.itemgetter(1))
+    
     with io.open(ALIGNFILE, 'w', encoding='utf-8') as outfile:
         outfile.write('count\talignment\n')
-        for ualign in unique_alignments:
+        for t in sorted_ualign:
+            ualign = t[0]
+            count = t[1]
             text = re.sub('[^a-zA-Z0-9 ]', '', ualign)
             if text == '':
                 text = '_'
             o = out_line.format(
                     alignment=text,
-                    count=unique_alignments[ualign])
+                    count=count)
             outfile.write(o)
 

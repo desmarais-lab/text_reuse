@@ -68,8 +68,8 @@ if __name__ == "__main__":
 
     # Set Parameters
     INFILE = '../../data/alignments_new/ncsl_pair_alignments.json'
-    #OUTFILE = '../../data/ncsl/ncsl_alignment_scores.csv'
-    OUTFILE = 'ncsl_alignment_scores.csv'
+    OUTFILE = '../../data/ncsl/ncsl_alignment_scores.csv'
+    #OUTFILE = 'ncsl_alignment_scores.csv'
     n_thread = 12
 
     

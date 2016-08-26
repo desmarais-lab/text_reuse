@@ -294,7 +294,7 @@ In our first validation exercise, we consider whether high alignment scores prov
 \begin{singlespacing}
 
 \begin{enumerate}
-    \item Collect all urls returned by the bing search query: ''site:ncsl.org ''legislation.aspx````\footnote{We used the bing websearch API to collect the urls.}
+    \item Collect all urls returned by the web search query: ''site:ncsl.org ''legislation.aspx````\footnote{We used the bing websearch API to collect the urls.}
     \item Sample 50 urls
     \item Select bills that fulfill these three conditions:
         \begin{enumerate}
@@ -309,35 +309,91 @@ In our first validation exercise, we consider whether high alignment scores prov
 Condition a) is necessary, since some of the urls returned by the web query refer to blog entries or to protected websites that require NCSL membership. The rationale behind condition b) is to maximize the number of bills we can match to our database (see Figure \ref{fig:bill_desc}). We additionally constrain the number of bills per table to be below 100, in order to assure, that the topic of the table is not too broad. We chose 100 since this number would correspond roughly to two bills per state (often there is a house and a senate bill in each state for a particular policy).
 The web query from step 1 returned 266 urls. From the 50 sampled urls 22
 fulfilled the three criteria. From these 22 tables we constructed a dataset of
-950 bills, of which we could match 704 to our bill database. For all bill pairs
-that we do not have alignment scores for (i.e. the bills did not get matched by
-the pre-selection algorithm) we assume a score of 0\footnote{If a bill is not selected in the pre-selection step, this means
-that there are basically no matching sequences in this dyad.}. 
+950 bills, of which we could match 704 to our bill database\footnote{We
+    additionally excluded one bill. Indiana 2012 HB1009
+    (\url{www.in.gov/legislative/bills/2012/HE/HE1009.1.html}), which is a
+    very long bill containing technical corrections to a large number of
+    other bills. Due to this fact it contains a large number of sections that
+produce a large outlier alignment when aggregated}. Since this is a
+relatively low number of bills, we then calculate the complete set of pairwise
+alignments for these bills. As described above, we split the
+bills in sections, calculate the pairwise section alignments. This results in
+approximately $10^7$ section-dyads. We then aggregate these section-dyads to the
+bill-dyad level. 
+
+For this analysis we additionally employed the boilerplate adjustment strategy
+described above\footnote{We plan to use boiler plate adjustment for all
+    analyses. We are experimenting with the boiler plate removal on this
+    analysis because the smaller size of the data. The final evaluation will be
+    conducted on a held out data set of ncsl tables that is not included in the
+current sample}. Before aggregating the alignments to the bill-dyad level, their
+score is weighted by the inverse frequency of the alignment in the set of all
+alignments for this analysis\footnote{The exact procedure is to compile the
+matching elements of the two aligned sequences to a string that can then be
+matched. This means that mismatches and gaps are ignored, since they would make
+the alignment text unique.}. This results in down-weighting of alignments that occur too often to
+be considered relevant policy language. Table
+\ref{tab:expl_align_freq} displays some example alignments with very high and
+very low frequency. From analysis of these frequencies we find that all alignments
+that occur very frequent are indeed boilerplate. However, there are also still
+many boilerplate alignments that occur infrequently. The currently employed
+approach therefore improves the signal in the alignment score, but could be
+further improved by matching and aggregating not only equal but also similar alignments (e.g. using another alignment
+step or bag-of-words similarity measures).
+
+\begin{table}[]
+\centering
+\caption{Example alignment text of comparable length occurring with high and low frequency.}
+\label{tab:expl_align_freq}
+\begin{tabular}{lll}
+\hline
+Frequency & Matched Alignment Text                           & Rank   \\
+\hline
+1         & to the treasurer of the county in which the      & 1      \\
+1         & shall be for purposes of this                    & 1      \\
+1         & of the higher education act of 1965              & 1      \\
+...       & ...                                              & ...    \\
+7089      & be it enacted by the legislature of the state of & 244747 \\
+19349     & be it enacted by the of the state of             & 244840 \\
+21100     & is amended to read as follows                    & 244847 \\
+\hline
+\end{tabular}
+\end{table}
+
 
 Figure \ref{fig:ncsl_prec_rec} displays the performance of the alignment score
 in predicting if two bills are in the same NCSL table. We present
 precision---the proportion of bill pairs with a given alignment score that
 exceed the threshold on the $x$-axis that are in the same NCSL table, and
 recall---the proportion of same-NCSL-table pairs that exceed a given alignment
-score threshold. We see generally high precision---over 80\% with moderate
-(higher than 50) to high alignment scores (about 3\% of bill-dyad alignment
-scores fall into this category). When alignment scores are very high (over 100)
-we see extremely high precision (1\% of bill-dyad alignment scores fall into
-this category). Recall is generally low, but that is expected for our case, as
+score threshold. We display the results for the alignment scores adjusted for
+boilerplate (left panel) and the unweighted scores (right panel). We see
+moderate to high precision --- 60\% - 100\% with moderate
+(higher than 6) to high alignment scores (about 1\% or 2000 of bill-dyad alignment
+scores fall into this category) for the adjusted scores. The
+threshold-classification using the unweighted scores performs much worse. This
+is due to the fact that some bills with large numbers of section have high
+bill-dyad level alignment scores simply due to the fact that they have many
+boilerplate alignments. These results indicate that down-weighting by inverse
+frequency is a promising direction to take. 
+
+Recall is low at thresholds that produce reasonable precision (above 6), but that is expected for our case, as
 (1) the introduction of similar policies in bills in tow different states is a
 rare event, and relatedly, (2) the appearance of two bills in the same NCSL
-table is a rare event ($3*10^{-4}$\% in the current analysis); and classifier recall is notoriously low in rare event data \citep{weiss2000learning}---even commonly approaching zero, as in our case \citep{weiss2004mining}. Our results suggest that the presence of a large alignment score between bills is an effective indicator of policy similarity.
+table is a relatively rare event (8\% in the current analysis); and classifier recall is notoriously low in rare event data \citep{weiss2000learning}---even commonly approaching zero, as in our case \citep{weiss2004mining}. Our results suggest that the presence of a large alignment score between bills is an effective indicator of policy similarity.
 
-
-\begin{figure}[ht!]
-    \centering
-    \includegraphics[width=0.8\textwidth]{figures/ncsl_prec_rec.png}
-    \caption{Precision-Recall curve for classifying two bills being in the same
-    ncsl table by thresholding the bill-dyad alignment score. The x axis
+\begin{figure}
+\centering     %%% not \center
+\subfigure[Precision recall curve for boilerplate adjusted
+scores]{\label{fig:prec_rec_adj}\includegraphics[width=0.4\textwidth]{figures/ncsl_prec_rec_adj.png}}
+\subfigure[Precision recall curve for unweighted
+scores]{\label{fig:prec_rec_old}\includegraphics[width=0.4\textwidth]{figures/ncsl_prec_rec_old.png}}
+\caption{Precision-Recall curve for classifying two bills being in the same
+    ncsl table by thresholding the bill-dyad alignment score. The left panel displays the curve for the alignment scores weighted by the inverse frequency of the alignment, the left panel displays the curve for the unweighted scores. The x axis
 displays the threshold, the y axis represents precision and recall. The shaded
 area in the background displays the frequency distribution of the alignment
-scores. Note that the figure does not include alignments with score exactly 0.}
-    \label{fig:ncsl_prec_rec}
+scores.}
+\label{fig:ncsl_prec_rec}
 \end{figure}
 
 
@@ -379,12 +435,16 @@ able to uniquely match about $8,000$ legislators to their records in the ideal
 point data. This allowed us to obtain ideal points for the sponsors of $58\%$ of
 bills and $48*10^6$ ($38\%$) pairs of bills. In order to assess the validity of text reuse as a measure of substantive policy overlap, we expect the quality of the alignments to be inversely correlated to the distance between the bills sponsors' ideal points. The ideal points are located on a common scale across all states, the distance between sponsors from different states is therefore meaningful. 
 
-In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. We generate an alignment score for a bill dyad by first taking the logarithm and then summing over all section dyads of the bill dyad. The ideal point of the bill is derived from the ideal point of the primary bill sponsor. For bills with several primary sponsors we use the average of those sponsors' ideal points to obtain a single measure. Figure \ref{fig:ideology_quantile_plot} displays the distribution of ideological distance and log-alignment score for the roughly 50 million dyads in the dataset. Each dot is a hexagonal tile, the color of the tile represents the number of dyads in that area. Two major observations can be made in this plot. First, the vast majority of alignment scores are close to zero. Second, the triangular shape of the distribution indicates the high precision - low recall character of the alignment score discussed above: few bills exhibit meaningful policy overlap with other bills, but in the region of lower ideological distance we observe a greater occurrence of positive outliers, which arise from significant policy overlap. 
+In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. We generate an alignment score for a bill dyad by first taking the logarithm and then summing over all section dyads of the bill dyad. The ideal point of the bill is derived from the ideal point of the primary bill sponsor. For bills with several primary sponsors we use the average of those sponsors' ideal points to obtain a single measure. Figure \ref{fig:ideology_plot} displays the distribution of ideological distance and log-alignment score for the roughly 50 million dyads in the dataset. Each dot is a hexagonal tile, the color of the tile represents the number of dyads in that area. Two major observations can be made in this plot. First, the vast majority of alignment scores are close to zero. Second, the triangular shape of the distribution indicates the high precision - low recall character of the alignment score discussed above: few bills exhibit meaningful policy overlap with other bills, but in the region of lower ideological distance we observe a greater occurrence of positive outliers, which arise from significant policy overlap. 
 
-In order to investigate this pattern more closely, we additionally provide lines for quantile regressions in the Figure \ref{fig:ideology_quantile_plot}. Figure \ref{fig:quantile_regression} displays more details about these regression. Figure \ref{fig:ideology_plot} displays the distribution without the quantile regression lines. Confidence intervals are calculated by resampling bills, which represents an implementation of the clustered nonparametric bootstrap proposed by \citet{harden2011bootstrap}. We see that there is no relationship between the ideological similarity of bill sponsors and the median alignment scores between bills. However, as the quantile we model increases---especially above the 90th percentile, we see that the relationship grows strong and negative in magnitude, and is statistically significant. These results both validate the use of text reuse as a measure of policy similarity, and reinforce the high precision and low recall nature of text reuse as a measure of policy similarity.
+In order to investigate this pattern more closely, we additionally calculate
+quantile regressions for the relationship between the alignment score and the
+ideological distance. Figure \ref{fig:quantile_regression} displays the
+coefficients from quantile regressions on a sequence of quantiles from the
+median to the 0.995th quantile. Confidence intervals are calculated by resampling bills, which represents an implementation of the clustered nonparametric bootstrap proposed by \citet{harden2011bootstrap}. We see that there is no relationship between the ideological similarity of bill sponsors and the median alignment scores between bills. However, as the quantile we model increases---especially above the 90th percentile, we see that the relationship grows strong and negative in magnitude, and is statistically significant. These results both validate the use of text reuse as a measure of policy similarity, and reinforce the high precision and low recall nature of text reuse as a measure of policy similarity.
 
 
-\begin{figure}[ht!]
+\begin{figure}[ht!]i
     \centering
     \includegraphics[width=0.8\textwidth]{figures/ideology_plot.png}
     \caption{Hexbin plot of alignment score and ideological distance of all 50 million bill dyads.}

@@ -28,6 +28,37 @@ group_by(df, same_table) %>%
               q75 = quantile(old_score, 0.75),
               stdev = sqrt(var(old_score)))
 
+# Clustered bootstrap regression model
+
+## Model
+mod <- lm(score ~ same_table, data = df)
+
+## Uncertainty using the bootstrap
+B <- 1000
+
+clusters <- unique(df$left_doc_id)
+nc <- length(clusters)
+out <- matrix(rep(NA, B * 2), nc = 2, nr = B)
+
+for(i in 1:B) {
+    
+    # Sample clusters and build iteration-dataset
+    sc <- sample(clusters, nc, replace = TRUE)
+    dat <- filter(df, is.element(left_doc_id, sc))
+    
+    # fit models 
+    bs_mod <- lm(score ~ same_table, data = dat)
+    coefs <- coef(bs_mod)
+    out[i, ] <- coefs
+    
+    if(i %% 10 == 0){
+        print(i)
+    }
+}
+
+## Interpret
+
+
 # Difference in means
 t.test(df$score[df$same_table == 0], df$score[df$same_table == 1])
 t.test(df$old_score[df$same_table == 0], df$old_score[df$same_table == 1])

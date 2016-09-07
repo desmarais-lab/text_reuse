@@ -8,155 +8,106 @@ import numpy as np
 import re
 import operator
 
-def add_to_hm(hm, obj):
-    if obj in hm:
-        hm[obj] += 1
-    else:
-        hm[obj] = 1
-    return(hm)
-
-def matches_only(left_text, right_text):
-
-    out = []
-    for left, right in zip(left_text, right_text):
-        if left == right:
-            out.append(left)
-        else:
-            continue
-    out = ' '.join(out)
-    return(out)
 
 
-def generate_csv_line(line):
+
+
     
-    line_template ='{left_doc_id},{right_doc_id},{score},{adj_score}\n'
+class AlignmentMatchText(object):
+    '''
+    Alignment class
 
-    try:
-        doc = json.loads(line) 
-    except ValueError:
-        return None
+    Defines an iterator over an alignment json file, that returns just the
+    matched text of the alignment as a list
+    '''
+	
+    def __init__(self, infile):
+        self.infile = infile
+        self.exclude = set(['', ' '])
 
-    alignments = doc['alignments']
 
-    if alignments is None:
-        out_line = line_template.format(
-                left_doc_id=doc['left_bill'],
-                right_doc_id=doc['right_bill'],
-                score=np.nan,
-                adj_score=np.nan
-                )
-        return None
+    def __iter__(self):
 
-    for alignment in alignments:
+        with io.open(self.infile, 'r', encoding='utf-8') as infile:
+            
+            c = 0 
+            for i,line in enumerate(infile):
+                
+       		doc = self._json_from_line(line, i) 
+                try:
+                    alignments = doc['alignment_results']
 
-        # Get unique alignment
-        left_text = alignment['left']
-        right_text = alignment['right']
+                    left_doc_id = doc['query_document_id']
 
-        ualign = matches_only(left_text, right_text)
+                    for right_doc in alignments:
+                        
+                        right_doc_id = right_doc['document_id']
 
-        # Look up its score in the hashmap
-        count = unique_alignments[ualign]
+                        if left_doc_id == right_doc_id:
+                            print(left_doc_id, right_doc_id)
+                            c += 1
+                            continue
+                        else:
+                            continue
 
-        score = alignment['score']
-        adj_score = round(score * 1/count, 4)
-        
-        if ualign == 'means a letter':
-            pprint(doc)
+                        for b in right_doc['alignments']:
 
-        out_line = line_template.format(
-                left_doc_id=doc['left_bill'],
-                right_doc_id=doc['right_bill'],
-                score=score,
-                adj_score=adj_score
-                )
+                            out = self._matches_only(b['left'], b['right'])
+                            out = ' '.join(out)
+                            if out in self.exclude:
+                                out = '_'
+                            yield left_doc_id, right_doc_id, out
+                except KeyError:
+                  continue
+              
+            print(i, c)
 
-        with io.open(OUTFILE, 'a', encoding='utf-8') as outfile:
-            outfile.write(out_line)
+    def _matches_only(self, left_text, right_text):
 
-    return out_line
+	out = []
+	for left, right in zip(left_text, right_text):
+	    if left == right:
+		out.append(left)
+	    else:
+		continue
+	return(out)
+ 
+
+
+    def _json_from_line(self, line, line_number):
+	try:
+	    doc = json.loads(line)
+	    return doc
+	except Exception as e:
+	    print('An exception occured in line {}: {}'.format(line_number, e))
+	    return None
+
+
+
 
 if __name__ == "__main__":
 
-    # Set Parameters
-    INFILE = '../../data/alignments_new/ncsl_pair_alignments.json'
-    OUTFILE = '../../data/ncsl/ncsl_alignment_scores.csv'
-    ALIGNFILE = '../../data/ncsl/unique_alignments.tsv'
-    #OUTFILE = 'ncsl_alignment_scores.csv'
-    n_thread = 12
+    # Set parameters
+    FULL_ALIG_FILE = '../../data/alignments_new/alignments_1000_sample.json'
+    ALIG_SCORES_FILE = '../../data/alignments_new/alignments_1000_sample.csv'
+    ALIG_TEXT_FILE = '../../data/alignments_new/alignment_match_text.csv' 
 
     
-    # Generate a hashmap of counts of unique alignmetns
-    unique_alignments = {}
-    c = 0
-
-    with io.open(INFILE, 'r', encoding='utf-8') as infile:
-
-        for i,line in enumerate(infile):
-            
-
-            try:
-                doc = json.loads(line)
-            except ValueError:
-                print('Json decoder error in line {}. Skipping.'.format(i))
-                continue 
-
-
-            alignments = doc['alignments']
-
-            if alignments is None:
-                continue
-            
-            for alignment in alignments:
-
-                left_text = alignment['left']
-                right_text = alignment['right']
-
-                if len(left_text) != len(right_text):
-                    raise ValueError('Alignment Lengths differ')
-
-                out = matches_only(left_text, right_text)
-                unique_alignments = add_to_hm(unique_alignments, out)
-                c += 1
-
-            if i % 10000 == 0:
-                print(i)
-
-    print(len(unique_alignments))
-    print(c)
+    # Make a list of the alignments
+    alignments = AlignmentMatchText(FULL_ALIG_FILE)
     
+    with io.open(ALIG_TEXT_FILE, 'w', encoding='utf-8') as outfile:
+        
+        line_temp = '{left_doc_id},{right_doc_id},{match_text}\n'
 
-    # Generate a csv file with scores and adjusted scores
+        # Write header
+        outfile.write(line_temp.format(left_doc_id='left_doc_id',
+                                       right_doc_id='righ_doc_id',
+                                       match_text='match_text'))
 
-    # Set up thread pool
-    pool = Pool(n_thread) 
-    
-    # Set up csv output file
-    header = 'left_doc_id,right_doc_id,score,adj_score\n'
-    with io.open(OUTFILE, 'w', encoding='utf-8') as outfile:
-        outfile.write(header)
-
-    with io.open(INFILE, 'r', encoding='utf-8') as infile:
-
-        pool.map_async(generate_csv_line, infile).get(99999)
-
-    
-    # Write out the alignment dictionary
-    out_line = '{count}\t{alignment}\n'
-
-    ## Make list of tuples from dict
-    sorted_ualign = sorted(unique_alignments.items(), key=operator.itemgetter(1))
-    
-    with io.open(ALIGNFILE, 'w', encoding='utf-8') as outfile:
-        outfile.write('count\talignment\n')
-        for t in sorted_ualign:
-            ualign = t[0]
-            count = t[1]
-            text = re.sub('[^a-zA-Z0-9 ]', '', ualign)
-            if text == '':
-                text = '_'
-            o = out_line.format(
-                    alignment=text,
-                    count=count)
-            outfile.write(o)
+        for a in alignments:
+            out_line = line_temp.format(left_doc_id=a[0],
+                                        right_doc_id=a[1],
+                                        match_text=a[2])
+            outfile.write(out_line)
 

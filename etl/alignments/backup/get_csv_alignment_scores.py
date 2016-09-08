@@ -14,11 +14,11 @@ import sys
 from time import time
 
 
-INFILE = '../../data/alignments_new/alignments_1000.json'
+INFILE = '../../data/alignments_new/alignments_1000_sample.json'
 # File to store the alignment scores (section dyad level)
-AS_OUTFILE = '../../data/alignments_new/alignments_1000.csv'
+AS_OUTFILE = '../../data/alignments_new/alignments_1000_sample.csv'
 # File to store the lucene scores in (bill dyad level)
-LS_OUTFILE = '../../data/alignments_new/lucene_scores_1000.csv'
+LS_OUTFILE = '../../data/alignments_new/lucene_scores_1000_sample.csv'
 
 with io.open(INFILE, 'r', encoding='utf-8') as infile,\
         io.open(AS_OUTFILE, 'w+', encoding='utf-8') as as_file,\

@@ -79,6 +79,7 @@ class AlignmentMatchText(object):
 
                     # Reset flag for first entry (of a left bill)
                     first = True
+                print('this line: {}s'.format(time.time() - s))
 
 
     def _update_vocab(self, word_list):

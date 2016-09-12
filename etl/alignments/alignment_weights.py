@@ -9,6 +9,7 @@ import Stemmer
 import scipy.sparse as sps
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import os
 
 
 def calc_similarities(inline, comparison, n, dictionary):
@@ -44,9 +45,10 @@ def calc_similarities(inline, comparison, n, dictionary):
 if __name__ == "__main__":
 
     INFILE = sys.argv[1]
-    JOB_ID = re.sub('[^0-9]', '', INFILE)
-    #OUTFILE = '/storage/home/fjl128/scratch/text_reuse'
-    OUTFILE = 'temp/adjusted_alignments_{}.csv'.format(JOB_ID)
+    JOB_ID = re.sub('[^0-9]', '', os.path.basename(INFILE))
+
+    OUTFILE = '/storage/home/fjl128/scratch/text_reuse/adjusted_alignments_{}.csv'.format(JOB_ID)
+    #OUTFILE = 'temp/adjusted_alignments_{}.csv'.format(JOB_ID)
     CMFILE = 'compmat.p'
     DICTFILE = 'dictionary.p'
     with io.open(DICTFILE, 'rb') as infile:
@@ -54,7 +56,7 @@ if __name__ == "__main__":
     with io.open(CMFILE, 'rb') as infile:
         compmat = pickle.load(infile)
 
-    outline = '{left_doc_id},{right_doc_id},{score_1},{score_2},{time}\n'
+    outline = '{left_doc_id},{right_doc_id},{score_1},{score_2}\n'
     
     stemmer = Stemmer.Stemmer('english').stemWord
     alignments = AlignmentMatchText('xyz', stemmer=stemmer,
@@ -67,15 +69,12 @@ if __name__ == "__main__":
         outfile.write(outline.format(left_doc_id='left_doc_id',
                                      right_doc_id='right_doc_id',
                                      score_1='score_1',
-                                     score_2='score_2',
-                                     time='time'))
+                                     score_2='score_2'))
 
         for line in infile:
-            start = time.time()
             out = calc_similarities(inline=line, comparison=compmat, n=1000,
                     dictionary=dicti)
             outfile.write(outline.format(left_doc_id=out[0],
                                          right_doc_id=out[1],
                                          score_1=out[2],
-                                         score_2=out[3],
-                                         time=time.time() - start))
+                                         score_2=out[3]))

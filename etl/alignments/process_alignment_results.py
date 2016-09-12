@@ -15,6 +15,7 @@ import scipy.sparse as sps
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 import re
+import subprocess
 
  
 class AlignmentMatchText(object):
@@ -132,11 +133,10 @@ if __name__ == "__main__":
 
     # Set parameters
     ## Files
-    FULL_ALIG_FILE = '../../data/alignments_new/alignments_1000_sample.json'
-    ALIG_SCORE_FILE = '../../data/alignments_new/alignments_1000_sample.csv'
+    FULL_ALIG_FILE = '../../data/alignments_new/alignments_1000.json'
+    ALIG_SCORE_FILE = '../../data/alignments_new/alignments_1000.csv'
     ALIG_TEXT_FILE = '../../data/alignments_new/alignment_match_text.csv' 
-    LUCENE_SCORE_FILE = '../../data/alignments_new/lucene_scores_1000_sample.csv'
-    ADJ_SCORE_FILE = '../../data/alignments_new/alignments_1000_adjusted_sample.csv'
+    LUCENE_SCORE_FILE = '../../data/alignments_new/lucene_scores_1000.csv'
     
     ## Options
     remove_same_state = True
@@ -257,8 +257,8 @@ if __name__ == "__main__":
 
     # Split up the file
     n_chunks = 80
-    #chunk_dir = '/storage/home/fjl128/scratch/text_reuse'
-    chunk_dir = 'temp/'
+    chunk_dir = '/storage/home/fjl128/scratch/text_reuse'
+    #chunk_dir = 'temp/'
     fstem = 'alignments_chunk_{}.csv'
 
 

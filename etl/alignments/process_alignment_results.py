@@ -9,6 +9,12 @@ import re
 import operator
 import Stemmer
 import time
+import cPickle as pickle
+from gensim import corpora, matutils
+import scipy.sparse as sps
+from sklearn.metrics.pairwise import cosine_similarity
+import os
+import re
 
  
 class AlignmentMatchText(object):
@@ -23,9 +29,10 @@ class AlignmentMatchText(object):
         self.infile = infile
         self.exclude = set(['', ' '])
         self.size = 0
-        self.vocabulary = {}
+        self.dictionary = corpora.Dictionary()
         self.stemmer = stemmer
         self.remove_same_state = remove_same_state
+        self.schar = re.compile('[^A-Za-z]')
 
 
     def __iter__(self):
@@ -56,12 +63,13 @@ class AlignmentMatchText(object):
                         continue
 
                     for b in right_doc['alignments']:
-                        continue
                         out = self._matches_only(b['left'], b['right'])
-                        align_score = b['score']
                         
-                        # Update the vocabulary
-                        #self._update_vocab(out)
+                        align_score = b['score']
+                         
+                        # Update the dictionary
+                        out_proc = self._proc_text(out)
+                        self.dictionary.add_documents([out_proc])
 
                         out = ' '.join(out)
                         if out in self.exclude:
@@ -79,20 +87,21 @@ class AlignmentMatchText(object):
 
                     # Reset flag for first entry (of a left bill)
                     first = True
-                print('this line: {}s'.format(time.time() - s))
 
-
-    def _update_vocab(self, word_list):
+    def _proc_text(self, word_list):
+        out = []
         for word in word_list:
-            word = self.stemmer(word)
-            if word in self.vocabulary:
-                self.vocabulary[word] += 1
-            else:
-                self.vocabulary[word] = 1
+            word = self.stemmer(word.lower())
+            out.append(word)
+        return(out)
+        
 
     def _matches_only(self, left_text, right_text):
         out = []
         for left, right in zip(left_text, right_text):
+            left = self.schar.sub('', left)
+            right = self.schar.sub('', right)
+
             if left == right:
                 out.append(left)
             else:
@@ -107,6 +116,12 @@ class AlignmentMatchText(object):
             print('An exception occured in line {}: {}'.format(line_number, e))
         return None
 
+def _proc_text(word_list):
+    out = []
+    for word in word_list:
+        word = self.stemmer(word.lower())
+        out.append(word)
+    return(out)
 
 
 
@@ -134,6 +149,7 @@ if __name__ == "__main__":
     stemmer = Stemmer.Stemmer('english').stemWord
     alignments = AlignmentMatchText(FULL_ALIG_FILE, stemmer, remove_same_state)
     
+    print('Creating dictionary and output files...')
     with io.open(ALIG_TEXT_FILE, 'w', encoding='utf-8') as align_file,\
             io.open(ALIG_SCORE_FILE, 'w', encoding='utf-8') as align_score_file,\
             io.open(LUCENE_SCORE_FILE, 'w', encoding='utf-8') as lucene_score_file:
@@ -157,7 +173,6 @@ if __name__ == "__main__":
 
         for n_align,a in enumerate(alignments):
 
-            continue
             # If is first entry write lucene score to file:
             if a['first']:
                 lucene_score_file.write(out_line.format(
@@ -175,17 +190,115 @@ if __name__ == "__main__":
                                                    right_doc_id=a['right_id'],
                                                    entry=a['ascore']))
 
+    
+
+    # Get indices for random samples
+    n = 1000
+    np.random.seed(3468934)
+    sample_1 = set(np.random.choice(alignments.size,size=n,replace=False))
+    sample_2 = set(np.random.choice(alignments.size,size=n,replace=False))
+
+    # Store the dictionary
+    alignments.dictionary.save("../../data/alignments_new/dictionary.dict")
+    
+    # Pass through the data and generate bow representations of the 2 samples
+    print('Generating random samples...')
+    with io.open(ALIG_TEXT_FILE, 'r', encoding='utf-8') as infile: 
+        # bow arrays
+        samp1_bow = []
+        samp2_bow = []
+
+        # array counter
+        s1 = 0
+        s2 = 0
+                
+        for idx, line in enumerate(infile):
+
+            # Skip header
+            if idx == 0:
+                continue
+            # Select line if it is in one of the samples
+            if idx in sample_1:
+                cells = line.split(',')
+                text = cells[2].split()
+                tokens = alignments._proc_text(text)
+                samp1_bow.append(alignments.dictionary.doc2bow(tokens))
+                s1 += 1
+
+            if idx in sample_2:
+                cells = line.split(',')
+                text = cells[2].split()
+                tokens = alignments._proc_text(text)
+                samp2_bow.append(alignments.dictionary.doc2bow(tokens))
+                s2 += 1
+    
+        # Transform to sparse doc-term-matrix (first 1000 rows are samp1)
+        samps = samp1_bow + samp2_bow
+        data = []
+        rows = []
+        cols = []
+        for i, doc in enumerate(samps):
+            for x in doc:
+                data.append(x[1])
+                cols.append(x[0])
+                rows.append(i)
+        compmat = sps.csr_matrix((data, (rows, cols)), 
+                shape=(len(samps), len(alignments.dictionary)))
+        
+        # Pickle the compmat and the alignmetns obj
+        pickle.dump(compmat, open("compmat.p", "wb"))
+        pickle.dump(alignments.dictionary, open("dictionary.p", "wb"))
 
 
-    print(alignments.size)
-    print(time.time() - start)
-    sys.exit() 
+    print('Calculating weights...')
+    # Pass through the data again and calculate cosine similarities between each 
+    # alignment text and each row of the 2 vectors
 
-    # Take random samples 
-    numpy.random.seed(3468934)
-    sample_1 = np.random.randint(size=1000,low=0,high=n_align) 
-    sample_2 = np.random.randint(size=1000,low=0,high=n_align) 
-     
+
+    # Split up the file
+    n_chunks = 80
+    #chunk_dir = '/storage/home/fjl128/scratch/text_reuse'
+    chunk_dir = 'temp/'
+    fstem = 'alignments_chunk_{}.csv'
+
+
+    # open file handles
+    handles = []
+    for i in range(n_chunks):
+        fname = os.path.join(chunk_dir, fstem.format(i))
+        handles.append(io.open(fname, 'w', encoding='utf-8'))
+
+ 
     with io.open(ALIG_TEXT_FILE, 'r', encoding='utf-8') as infile:
-        pass
 
+        for idx, line in enumerate(infile):
+            
+            #skip header
+            if idx == 0:
+                continue
+
+            i = idx % n_chunks
+            handles[i].write(line)
+
+        
+        # Close file connections
+        for i in range(n_chunks):
+            handles[i].close()
+ 
+        
+        # Generate pbs jobs
+        with io.open('pbs_temp.txt', 'r') as tempfile:
+            template = tempfile.read()
+
+        # Submit jobs
+        for i in range(n_chunks):
+            fname = os.path.join(chunk_dir, fstem.format(i))
+            job = template.format(input_file=fname)
+            fjob = 'align_weight_{}.pbs'.format(i)
+            with io.open(fjob, 'w') as jobfile:
+                jobfile.write(job)
+            # Submit job
+            subprocess.check_output(['qsub', fjob])
+            print('submitted {}'.format(fjob))
+            time.sleep(2)
+            os.remove(fjob)   

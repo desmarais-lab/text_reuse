@@ -43,6 +43,8 @@ class AlignmentMatchText(object):
             for i,line in enumerate(infile):
                 s = time.time()
                 doc = self._json_from_line(line, i) 
+                if doc is None:
+                    continue
                 try:
                     alignments = doc['alignment_results']
                     left_doc_id = doc['query_document_id']
@@ -137,9 +139,18 @@ if __name__ == "__main__":
     ALIG_SCORE_FILE = '../../data/alignments_new/alignments_1000.csv'
     ALIG_TEXT_FILE = '../../data/alignments_new/alignment_match_text.csv' 
     LUCENE_SCORE_FILE = '../../data/alignments_new/lucene_scores_1000.csv'
+
     
     ## Options
     remove_same_state = True
+    WEIGHTS_ONLY = True
+    
+    n_chunks = 80
+    chunk_dir = '/storage/home/fjl128/scratch/text_reuse'
+    #chunk_dir = 'temp/'
+    fstem = 'alignments_chunk_{}.csv'
+
+
     
     # Make a list of the alignments and collect the vocabulary
     # Remove same state alignments (if set to true)
@@ -149,156 +160,153 @@ if __name__ == "__main__":
     stemmer = Stemmer.Stemmer('english').stemWord
     alignments = AlignmentMatchText(FULL_ALIG_FILE, stemmer, remove_same_state)
     
-    print('Creating dictionary and output files...')
-    with io.open(ALIG_TEXT_FILE, 'w', encoding='utf-8') as align_file,\
-            io.open(ALIG_SCORE_FILE, 'w', encoding='utf-8') as align_score_file,\
-            io.open(LUCENE_SCORE_FILE, 'w', encoding='utf-8') as lucene_score_file:
-        
-        out_line = '{left_doc_id},{right_doc_id},{entry}\n'
+    if not WEIGHTS_ONLY:
 
-        # Write headers
-        align_file.write(out_line.format(left_doc_id='left_doc_id',
-                                              right_doc_id='righ_doc_id',
-                                              entry='match_text'))
-
-        align_score_file.write(out_line.format(left_doc_id='left_doc_id',
-                                               right_doc_id='righ_doc_id',
-                                               entry='alignment_score'))
-
-        lucene_score_file.write(out_line.format(
-            left_doc_id='left_doc_id',
-            right_doc_id='righ_doc_id',
-            entry='lucene_score'))
-
-
-        for n_align,a in enumerate(alignments):
-
-            # If is first entry write lucene score to file:
-            if a['first']:
-                lucene_score_file.write(out_line.format(
-                    left_doc_id=a['left_id'],
-                    right_doc_id=a['right_id'],
-                    entry=a['lscore']))
-
-            # Write alignment score and match text
-            align_file.write(out_line.format(left_doc_id=a['left_id'],
-                                             right_doc_id=a['right_id'],
-                                             entry=a['text']))
-
-            # Alignment score
-            align_score_file.write(out_line.format(left_doc_id=a['left_id'],
-                                                   right_doc_id=a['right_id'],
-                                                   entry=a['ascore']))
-
-    
-
-    # Get indices for random samples
-    n = 1000
-    np.random.seed(3468934)
-    sample_1 = set(np.random.choice(alignments.size,size=n,replace=False))
-    sample_2 = set(np.random.choice(alignments.size,size=n,replace=False))
-
-    # Store the dictionary
-    alignments.dictionary.save("../../data/alignments_new/dictionary.dict")
-    
-    # Pass through the data and generate bow representations of the 2 samples
-    print('Generating random samples...')
-    with io.open(ALIG_TEXT_FILE, 'r', encoding='utf-8') as infile: 
-        # bow arrays
-        samp1_bow = []
-        samp2_bow = []
-
-        # array counter
-        s1 = 0
-        s2 = 0
-                
-        for idx, line in enumerate(infile):
-
-            # Skip header
-            if idx == 0:
-                continue
-            # Select line if it is in one of the samples
-            if idx in sample_1:
-                cells = line.split(',')
-                text = cells[2].split()
-                tokens = alignments._proc_text(text)
-                samp1_bow.append(alignments.dictionary.doc2bow(tokens))
-                s1 += 1
-
-            if idx in sample_2:
-                cells = line.split(',')
-                text = cells[2].split()
-                tokens = alignments._proc_text(text)
-                samp2_bow.append(alignments.dictionary.doc2bow(tokens))
-                s2 += 1
-    
-        # Transform to sparse doc-term-matrix (first 1000 rows are samp1)
-        samps = samp1_bow + samp2_bow
-        data = []
-        rows = []
-        cols = []
-        for i, doc in enumerate(samps):
-            for x in doc:
-                data.append(x[1])
-                cols.append(x[0])
-                rows.append(i)
-        compmat = sps.csr_matrix((data, (rows, cols)), 
-                shape=(len(samps), len(alignments.dictionary)))
-        
-        # Pickle the compmat and the alignmetns obj
-        pickle.dump(compmat, open("compmat.p", "wb"))
-        pickle.dump(alignments.dictionary, open("dictionary.p", "wb"))
-
-
-    print('Calculating weights...')
-    # Pass through the data again and calculate cosine similarities between each 
-    # alignment text and each row of the 2 vectors
-
-
-    # Split up the file
-    n_chunks = 80
-    chunk_dir = '/storage/home/fjl128/scratch/text_reuse'
-    #chunk_dir = 'temp/'
-    fstem = 'alignments_chunk_{}.csv'
-
-
-    # open file handles
-    handles = []
-    for i in range(n_chunks):
-        fname = os.path.join(chunk_dir, fstem.format(i))
-        handles.append(io.open(fname, 'w', encoding='utf-8'))
-
- 
-    with io.open(ALIG_TEXT_FILE, 'r', encoding='utf-8') as infile:
-
-        for idx, line in enumerate(infile):
+        print('Creating dictionary and output files...')
+        with io.open(ALIG_TEXT_FILE, 'w', encoding='utf-8') as align_file,\
+                io.open(ALIG_SCORE_FILE, 'w', encoding='utf-8') as align_score_file,\
+                io.open(LUCENE_SCORE_FILE, 'w', encoding='utf-8') as lucene_score_file:
             
-            #skip header
-            if idx == 0:
-                continue
+            out_line = '{left_doc_id},{right_doc_id},{entry}\n'
 
-            i = idx % n_chunks
-            handles[i].write(line)
+            # Write headers
+            align_file.write(out_line.format(left_doc_id='left_doc_id',
+                                                  right_doc_id='righ_doc_id',
+                                                  entry='match_text'))
+
+            align_score_file.write(out_line.format(left_doc_id='left_doc_id',
+                                                   right_doc_id='righ_doc_id',
+                                                   entry='alignment_score'))
+
+            lucene_score_file.write(out_line.format(
+                left_doc_id='left_doc_id',
+                right_doc_id='righ_doc_id',
+                entry='lucene_score'))
+
+
+            for n_align,a in enumerate(alignments):
+
+                # If is first entry write lucene score to file:
+                if a['first']:
+                    lucene_score_file.write(out_line.format(
+                        left_doc_id=a['left_id'],
+                        right_doc_id=a['right_id'],
+                        entry=a['lscore']))
+
+                # Write alignment score and match text
+                align_file.write(out_line.format(left_doc_id=a['left_id'],
+                                                 right_doc_id=a['right_id'],
+                                                 entry=a['text']))
+
+                # Alignment score
+                align_score_file.write(out_line.format(left_doc_id=a['left_id'],
+                                                       right_doc_id=a['right_id'],
+                                                       entry=a['ascore']))
 
         
+
+        # Get indices for random samples
+        n = 1000
+        np.random.seed(3468934)
+        sample_1 = set(np.random.choice(alignments.size,size=n,replace=False))
+        sample_2 = set(np.random.choice(alignments.size,size=n,replace=False))
+
+        # Store the dictionary
+        alignments.dictionary.save("../../data/alignments_new/dictionary.dict")
+        
+        # Pass through the data and generate bow representations of the 2 samples
+        print('Generating random samples...')
+        with io.open(ALIG_TEXT_FILE, 'r', encoding='utf-8') as infile: 
+            # bow arrays
+            samp1_bow = []
+            samp2_bow = []
+
+            # array counter
+            s1 = 0
+            s2 = 0
+                    
+            for idx, line in enumerate(infile):
+
+                # Skip header
+                if idx == 0:
+                    continue
+                # Select line if it is in one of the samples
+                if idx in sample_1:
+                    cells = line.split(',')
+                    text = cells[2].split()
+                    tokens = alignments._proc_text(text)
+                    samp1_bow.append(alignments.dictionary.doc2bow(tokens))
+                    s1 += 1
+
+                if idx in sample_2:
+                    cells = line.split(',')
+                    text = cells[2].split()
+                    tokens = alignments._proc_text(text)
+                    samp2_bow.append(alignments.dictionary.doc2bow(tokens))
+                    s2 += 1
+        
+            # Transform to sparse doc-term-matrix (first 1000 rows are samp1)
+            samps = samp1_bow + samp2_bow
+            data = []
+            rows = []
+            cols = []
+            for i, doc in enumerate(samps):
+                for x in doc:
+                    data.append(x[1])
+                    cols.append(x[0])
+                    rows.append(i)
+            compmat = sps.csr_matrix((data, (rows, cols)), 
+                    shape=(len(samps), len(alignments.dictionary)))
+            
+            # Pickle the compmat and the alignmetns obj
+            pickle.dump(compmat, open("compmat.p", "wb"))
+            pickle.dump(alignments.dictionary, open("dictionary.p", "wb"))
+
+
+        print('Calculating weights...')
+        # Pass through the data again and calculate cosine similarities between each 
+        # alignment text and each row of the 2 vectors
+
+
+        # Split up the file
+
+        # open file handles
+        handles = []
+        for i in range(n_chunks):
+            fname = os.path.join(chunk_dir, fstem.format(i))
+            handles.append(io.open(fname, 'w', encoding='utf-8'))
+
+     
+        with io.open(ALIG_TEXT_FILE, 'r', encoding='utf-8') as infile:
+
+            for idx, line in enumerate(infile):
+                
+                #skip header
+                if idx == 0:
+                    continue
+
+                i = idx % n_chunks
+                handles[i].write(line)
+
+            
         # Close file connections
         for i in range(n_chunks):
             handles[i].close()
- 
-        
-        # Generate pbs jobs
-        with io.open('pbs_temp.txt', 'r') as tempfile:
-            template = tempfile.read()
 
-        # Submit jobs
-        for i in range(n_chunks):
-            fname = os.path.join(chunk_dir, fstem.format(i))
-            job = template.format(input_file=fname)
-            fjob = 'align_weight_{}.pbs'.format(i)
-            with io.open(fjob, 'w') as jobfile:
-                jobfile.write(job)
-            # Submit job
-            subprocess.check_output(['qsub', fjob])
-            print('submitted {}'.format(fjob))
-            time.sleep(2)
-            os.remove(fjob)   
+        
+    # Generate pbs jobs
+    with io.open('pbs_temp.txt', 'r') as tempfile:
+        template = tempfile.read()
+
+    # Submit jobs
+    for i in range(n_chunks):
+        fname = os.path.join(chunk_dir, fstem.format(i))
+        job = template.format(input_file=fname)
+        fjob = 'align_weight_{}.pbs'.format(i)
+        with io.open(fjob, 'w') as jobfile:
+            jobfile.write(job)
+        # Submit job
+        subprocess.check_output(['qsub', fjob])
+        print('submitted {}'.format(fjob))
+        time.sleep(2)
+        os.remove(fjob)   

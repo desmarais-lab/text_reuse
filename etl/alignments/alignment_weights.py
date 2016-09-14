@@ -56,7 +56,7 @@ if __name__ == "__main__":
     with io.open(CMFILE, 'rb') as infile:
         compmat = pickle.load(infile)
 
-    outline = '{left_doc_id},{right_doc_id},{score_1},{score_2}\n'
+    outline = '{left_doc_id},{right_doc_id},{weight_1},{weight_2}\n'
     
     stemmer = Stemmer.Stemmer('english').stemWord
     alignments = AlignmentMatchText('xyz', stemmer=stemmer,

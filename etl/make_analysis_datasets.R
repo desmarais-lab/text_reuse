@@ -1,25 +1,29 @@
 library(dplyr)
 library(ggplot2)
 
+# Parameters
 args <- commandArgs(trailingOnly = TRUE)
 SMALL <- as.logical(args[1])
+
 
 # Load Alignments and lucene scores
 cat("Loading alignment data...\n")
 
 if(SMALL) {
-    alignments <- tbl_df(read.csv('../data/lid/alignments_1000_b2b_ns.csv', 
-                         header = TRUE, stringsAsFactors = FALSE, nrows = 50000))
-    lucene_scores <- tbl_df(read.csv('../data/lid/lucene_scores_1000.csv',            #still contains same-state dyads
-                         header = TRUE, stringsAsFactors = FALSE, nrows = 50000))
+    alignments <- tbl_df(read.csv('../data/alignments_new/bill2bill_scores.csv', 
+                         header = TRUE, stringsAsFactors = FALSE, nrows = 5000))
+    lucene_scores <- tbl_df(read.csv('../data/alignments_new/lucene_scores_1000.csv',
+                         header = TRUE, stringsAsFactors = FALSE, nrows = 5000))
 } else {
-    alignments <- tbl_df(read.csv('../data/lid/alignments_1000_b2b_ns.csv', 
+    alignments <- tbl_df(read.csv('../data/alignments_new/bill2bill_scores.csv', 
                          header = TRUE, stringsAsFactors = FALSE))
-    lucene_scores <- tbl_df(read.csv('../data/lid/lucene_scores_1000.csv', 
+    lucene_scores <- tbl_df(read.csv('../data/alignments_new/lucene_scores_1000.csv', 
                          header = TRUE, stringsAsFactors = FALSE))
 }
 
 # Merge them and discard lucene
+print(head(alignments))
+print(head(lucene_scores))
 alignments <- left_join(alignments, lucene_scores, by = c("left_doc_id",
                                                           "right_doc_id"))
 rm(lucene_scores)
@@ -104,7 +108,7 @@ meta$bill_length <- as.integer(meta$bill_length)
 meta <- tbl_df(meta)
 
 
-## Match alignments with ideology scores and document length
+## Match alignments with ideology scores
 ### Join info on left bill
 cat("Joining datasets...\n")
 temp <- mutate(meta, left_doc_id = unique_id, left_ideology = sponsor_idology,
@@ -118,7 +122,7 @@ temp <- mutate(meta, right_doc_id = unique_id, right_ideology = sponsor_idology,
     dplyr::select(right_doc_id, right_ideology, right_length)
 df <- left_join(df, temp, by = "right_doc_id")
 
-# Calculate ideological distance and combined doc length
+# Calculate ideological distance
 df <- mutate(df, ideology_dist = (left_ideology - right_ideology)^2)
 
 cat("Descriptives for ideology data\n")
@@ -140,11 +144,11 @@ sink()
 
 # Save ideology data
 fname <- ifelse(SMALL, "../data/ideology_analysis/ideology_small.RData",
-       "../data/ideology_analysis/ideology.R")
+       "../data/ideology_analysis/ideology.RData")
 cat(paste0("Saving to ", fname, "\n"))
 save(df, file = fname)
 
-
+stop("stopped")
 cat("========================================================================\n")
 cat("Data preprocessing for ncsl analysis\n")
 cat("========================================================================\n")
@@ -153,15 +157,12 @@ cat("========================================================================\n"
 # Load the ncsl alignment raw data and log scores, aggregate by bill pair
 # and remove same state bill pairs
 retx <- function(x, i) x[i] 
-ncsl_raw <- tbl_df(read.csv('../data/ncsl/ncsl_alignment_scores.csv',
+ncsl_raw <- tbl_df(read.csv('../data/alignments_new/ncsl_adjusted.csv',
                             stringsAsFactors = FALSE, header = TRUE))%>%
-  mutate(old_score = score, score = adj_score) %>%
-  select(-adj_score)
+  mutate(score = alignment_score)
 
-ncsl_alignments <- filter(ncsl_raw, !is.na(score)) %>%
-    filter(score != 0) %>%
-    #mutate(score = log(score), old_score = log(old_score)) %>%
-    group_by(left_doc_id, right_doc_id) %>%
+
+ncsl_alignments <- group_by(ncsl_raw, left_doc_id, right_doc_id) %>%
     summarize(score = sum(score), count = n(), old_score = sum(old_score)) %>%
     mutate(left_state = sapply(strsplit(left_doc_id, "_"), retx, 1),
            right_state = sapply(strsplit(right_doc_id, "_"), retx, 1),
@@ -194,9 +195,6 @@ reverse <- data.frame("left_doc_id" = bill_pairs$right_doc_id,
                       "right_doc_id" = bill_pairs$left_doc_id)
 bill_pairs <- tbl_df(rbind(bill_pairs, reverse))
 
-
-
-
 # Get 'same-table-indicator'
 ## Join with topic tables
 temp <- mutate(ncsl_bills, left_doc_id = matched_from_db, left_table = topic) %>%
@@ -216,10 +214,13 @@ bill_pairs <- left_join(df, ncsl_alignments,
 
 df <- filter(bill_pairs, !is.na(score)) %>%
     select(-left_table, -right_table)
+
+## Join with the cosine similarity scores
+ncsl_cosine <- tbl_df(read.csv('../data/ncsl/cosine_similarities.csv', 
+                               stringsAsFactors = FALSE, header = TRUE))
+df <- left_join(df, ncsl_cosine, by = c("left_doc_id", "right_doc_id"))
+print(head(df))
 rm(bill_pairs)
-
-
-
 
 # Write out the list of ncsl bill ids (lid format)
 #out_ids <- unique(df$left_doc_id)

@@ -180,7 +180,7 @@ if __name__ == "__main__":
 
             lucene_score_file.write(out_line.format(
                 left_doc_id='left_doc_id',
-                right_doc_id='righ_doc_id',
+                right_doc_id='right_doc_id',
                 entry='lucene_score'))
 
 

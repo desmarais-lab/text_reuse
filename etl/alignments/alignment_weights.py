@@ -12,7 +12,7 @@ import numpy as np
 import os
 
 
-def calc_similarities(inline, comparison, n, dictionary):
+def calc_similarities(inline, comparison, n, dictionary, align):
     '''
     Calculate the cosines similarity between an alignment and the
     other sampled alignments
@@ -21,12 +21,13 @@ def calc_similarities(inline, comparison, n, dictionary):
     comparision: scipy.csc_matrix, comparison docs
     n: size of each comparison set
     dictionary: gensim dictionary for the corpus
+    align: AlignmentMatchText class
     '''
 
     # Preprocess input alignment
-    left_doc_id, right_doc_id, text = line.split(',')
+    left_doc_id, right_doc_id, text = inline.split(',')
     text = text.strip('\n')
-    tokens = alignments._proc_text(text.split())
+    tokens = align._proc_text(text.split())
     bow = dictionary.doc2bow(tokens)
 
     # Generate sparse vector
@@ -36,7 +37,7 @@ def calc_similarities(inline, comparison, n, dictionary):
     sparse = sps.csr_matrix((data, (rows, cols)), 
             shape=(1, len(dictionary)))
 
-    score = cosine_similarity(sparse, compmat).squeeze()
+    score = cosine_similarity(sparse, comparison).squeeze()
     score1 = np.round(score[:n].mean(), decimals=4)
     score2 = np.round(score[n:].mean(), decimals=4)
 
@@ -73,7 +74,7 @@ if __name__ == "__main__":
 
         for line in infile:
             out = calc_similarities(inline=line, comparison=compmat, n=1000,
-                    dictionary=dicti)
+                    dictionary=dicti, align=alignments)
             outfile.write(outline.format(left_doc_id=out[0],
                                          right_doc_id=out[1],
                                          score_1=out[2],

@@ -26,7 +26,7 @@ class AlignmentMatchText(object):
     matched text of the alignment as a list
     '''
     
-    def __init__(self, infile, stemmer, remove_same_state):
+    def __init__(self, infile, stemmer, remove_same_state, type="all"):
         self.infile = infile
         self.exclude = set(['', ' '])
         self.size = 0
@@ -34,62 +34,99 @@ class AlignmentMatchText(object):
         self.stemmer = stemmer
         self.remove_same_state = remove_same_state
         self.schar = re.compile('[^A-Za-z]')
+        self.type = type
 
 
     def __iter__(self):
+
         with io.open(self.infile, 'r', encoding='utf-8') as infile:
-            
-            first = True
-            for i,line in enumerate(infile):
-                s = time.time()
-                doc = self._json_from_line(line, i) 
-                if doc is None:
-                    continue
-                try:
-                    alignments = doc['alignment_results']
-                    left_doc_id = doc['query_document_id']
-                    left_state = left_doc_id[0:2]
-                    
-                except KeyError:
-                  continue
 
-                for right_doc in alignments:
+            if self.typ == "ncsl":
 
+                for i, line in enumerate(infile):
 
-                    right_doc_id = right_doc['document_id']
-                    right_state = right_doc_id[0:2]
-                    
-                    lucene_score = right_doc['lucene_score'] 
-
-
-                    if self.remove_same_state and left_state == right_state:
+                    doc = self._json_from_line(line, i)
+                    if doc is None:
                         continue
 
-                    for b in right_doc['alignments']:
-                        out = self._matches_only(b['left'], b['right'])
-                        
-                        align_score = b['score']
-                         
-                        # Update the dictionary
+                    try:
+                        alignments = doc['alignments']
+                        left_doc_id = doc['left_bill']
+                        right_doc_id = doc['right_bill']
+                        left_state = left_doc_id[0:2]
+                        right_state = right_doc_id[0:2]
+                    except KeyError:
+                        print('Key error in line {}'.format(i))
+                        continue
+
+                    for a in alignments:
+                        out = self._matches_only(a['left'], a['right'])
+                        align_score = a['score']
                         out_proc = self._proc_text(out)
                         self.dictionary.add_documents([out_proc])
-
                         out = ' '.join(out)
                         if out in self.exclude:
                             out = '_'
                         yield {'left_id': left_doc_id,
                                'right_id': right_doc_id,
                                'text': out,
-                               'lscore': lucene_score,
                                'ascore': align_score,
                                'first': first}
                         self.size += 1
 
-                        # Flag for first entry
-                        first = False
+            if self.type == "all":
 
-                    # Reset flag for first entry (of a left bill)
-                    first = True
+                first = True
+                for i,line in enumerate(infile):
+
+                    s = time.time()
+                    doc = self._json_from_line(line, i) 
+
+                    if doc is None:
+                        continue
+
+                    try:
+                        alignments = doc['alignment_results']
+                        left_doc_id = doc['query_document_id']
+                        left_state = left_doc_id[0:2]
+                    except KeyError:
+                      continue
+
+                    for right_doc in alignments:
+
+                        right_doc_id = right_doc['document_id']
+                        right_state = right_doc_id[0:2]
+                        
+                        lucene_score = right_doc['lucene_score'] 
+
+                        if self.remove_same_state and left_state == right_state:
+                            continue
+
+                        for b in right_doc['alignments']:
+                            out = self._matches_only(b['left'], b['right'])
+                            
+                            align_score = b['score']
+                             
+                            # Update the dictionary
+                            out_proc = self._proc_text(out)
+                            self.dictionary.add_documents([out_proc])
+
+                            out = ' '.join(out)
+                            if out in self.exclude:
+                                out = '_'
+                            yield {'left_id': left_doc_id,
+                                   'right_id': right_doc_id,
+                                   'text': out,
+                                   'lscore': lucene_score,
+                                   'ascore': align_score,
+                                   'first': first}
+                            self.size += 1
+
+                            # Flag for first entry
+                            first = False
+
+                        # Reset flag for first entry (of a left bill)
+                        first = True
 
     def _proc_text(self, word_list):
         out = []

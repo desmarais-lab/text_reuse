@@ -66,4 +66,4 @@ condition in the iterator of `AlignmentMatchText()` in
 * `data/alignments_new/ncsl_adjusted.csv`: Final adjusted scores for further
     analysis
 
-Takes about 30 min.
+Takes about 1h.

@@ -110,6 +110,8 @@ if __name__ == "__main__":
     print('Calculating similarities')
     csims = cosine_similarity(dtm)
 
+    # Store output (store the complete matrix w/o diagonal, in case 
+    # left and right bill is different in the other datasets
     outline = '{},{},{}\n'
     with io.open('../data/ncsl/cosine_similarities.csv', 'w') as outfile:
         outfile.write(outline.format('left_doc_id',
@@ -118,7 +120,7 @@ if __name__ == "__main__":
 
         for i in range(len(ids_with_text)):
             for j in range(len(ids_with_text)):
-                if j >= i:
-                    break
+                if i == j:
+                    continue
                 outfile.write(outline.format(ids[i], ids[j], 
                                              csims[i][j]))

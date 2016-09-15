@@ -35,16 +35,16 @@ class AlignmentMatchText(object):
         self.remove_same_state = remove_same_state
         self.schar = re.compile('[^A-Za-z]')
         self.type = type
+        self.no_align = 0
 
 
     def __iter__(self):
 
         with io.open(self.infile, 'r', encoding='utf-8') as infile:
 
-            if self.typ == "ncsl":
+            if self.type == "ncsl":
 
                 for i, line in enumerate(infile):
-
                     doc = self._json_from_line(line, i)
                     if doc is None:
                         continue
@@ -59,6 +59,10 @@ class AlignmentMatchText(object):
                         print('Key error in line {}'.format(i))
                         continue
 
+                    if alignments is None:
+                        self.no_align += 1
+                        continue
+
                     for a in alignments:
                         out = self._matches_only(a['left'], a['right'])
                         align_score = a['score']
@@ -70,9 +74,10 @@ class AlignmentMatchText(object):
                         yield {'left_id': left_doc_id,
                                'right_id': right_doc_id,
                                'text': out,
-                               'ascore': align_score,
-                               'first': first}
+                               'ascore': align_score}
                         self.size += 1
+            print('{} out of {} w/o alignments'.format(self.no_align, i))
+ 
 
             if self.type == "all":
 

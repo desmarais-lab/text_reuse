@@ -28,12 +28,15 @@ from functools import partial
 # TODO: dedicated I/O process for result output. There have been some conflicts
 # (very few though)
 
-def align_pair(c):
+def align_pair(c, split):
     '''
     c: tuple, (left_bill, right_bill)
+    split: bool, should bills be split in sections
     '''
     s = time.time()
-    alignments = lidy.align_bill_pair(c[0], c[1])
+    alignments = lidy.align_bill_pair(right_doc_id=c[0], 
+                                      left_doc_id=c[1],
+                                      split_sections=split)
     out = {'left_bill': c[0], 
            'right_bill': c[1], 
            'alignments':alignments}
@@ -52,15 +55,11 @@ if __name__ == '__main__':
     # Number of processes
     n_proc = 40
      
-    outfile_name = '../data/alignments_new/ncsl_pair_alignments.json'
-    #outfile_name = 'ncsl_pair_alignments.json'
+    OUTF = '../data/alignments_new/ncsl_pair_alignments_nosplit.json'
+    #OUTF = 'ncsl_pair_alignments.json'
 
-    # Set up logging
-    logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger('elasticsearch').setLevel(logging.ERROR)
-    logging.getLogger('urllib3').setLevel(logging.ERROR)
-    logging.getLogger('json').setLevel(logging.ERROR)
-             
+    SPLIT=False
+     
     # Initialize aligner
     aligner = AffineLocalAligner(match_score=4, mismatch_score=-1, gap_start=-3, 
                                  gap_extend = -1.5)
@@ -79,10 +78,12 @@ if __name__ == '__main__':
     
     combos = [x for x in c]
 
+    part_align_pair = partial(align_pair, split=SPLIT)
+
     pool = multiprocessing.Pool(processes=n_proc) 
-    results = pool.map_async(align_pair, combos).get(9999999)
+    results = pool.map_async(part_align_pair, combos).get(9999999)
     
     # Write output
-    with io.open(outfile_name, 'w', encoding='utf-8') as outfile:
+    with io.open(OUTF, 'w', encoding='utf-8') as outfile:
         for r in results:
             outfile.write(unicode(json.dumps(r)) + '\n')

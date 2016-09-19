@@ -22,26 +22,29 @@ if(SMALL) {
 }
 
 # Merge them and discard lucene
-print(head(alignments))
-print(head(lucene_scores))
 alignments <- left_join(alignments, lucene_scores, by = c("left_doc_id",
                                                           "right_doc_id"))
 rm(lucene_scores)
 gc()
 
+# Remove 0 alignments
+alignments <- filter(alignments, alignment_score != 0)
+
 cat("========================================================================\n")
 cat("Descriptive statistics for alignments\n")
 cat("========================================================================\n")
+
+r <- range(alignments$alignment_score)
 
 # Descriptive stats for alignment dataset
 sink('alignments_descriptives.txt')
 cat(paste0("Number of bill dyads: ", nrow(alignments), '\n'))
 cat(paste0("Mean score: ", mean(alignments$alignment_score), '\n'))
 cat(paste0("Median score: ", median(alignments$alignment_score), '\n'))
+cat(paste0("Range: ", r), '\n')
 sink()
 
 # Distribution of alignment scores
-r <- range(alignments$alignment_score)
 thresholds <- exp(seq(log(r[1]), log(r[2]), length.out = 100))
 
 hm <- function(threshold) sum(alignments$alignment_score < threshold) / nrow(alignments)
@@ -53,7 +56,7 @@ source('../analysis/plot_theme.R')
 
 p <- ggplot(pdat) + 
     geom_line(aes(x = Score, y = Proportion), size = 1.2) + 
-    scale_x_log10(breaks = c(1, 10, 100, 1000, 10000)) + 
+    scale_x_log10() + 
     xlab("X") +
     ylab("P(Score < X)") +
     plot_theme
@@ -74,7 +77,6 @@ p <- ggplot(alignments, aes(x = lucene_score, y = alignment_score)) +
 cat('Saving plot...\n')
 ggsave(plot = p, '../manuscript/figures/alignment_lucene.png', 
        width = p_width, height = 0.65 * p_width)
-
 
 alignments$lucene_score <- NULL
 
@@ -148,26 +150,23 @@ fname <- ifelse(SMALL, "../data/ideology_analysis/ideology_small.RData",
 cat(paste0("Saving to ", fname, "\n"))
 save(df, file = fname)
 
-stop("stopped")
 cat("========================================================================\n")
 cat("Data preprocessing for ncsl analysis\n")
 cat("========================================================================\n")
 
 
-# Load the ncsl alignment raw data and log scores, aggregate by bill pair
-# and remove same state bill pairs
+# Load the ncsl alignment raw data and aggregate to bill-dyads
 retx <- function(x, i) x[i] 
-ncsl_raw <- tbl_df(read.csv('../data/alignments_new/ncsl_adjusted.csv',
+ncsl_raw <- tbl_df(read.csv('../data/alignments_new/ncsl_adjusted_nosplit.csv',
                             stringsAsFactors = FALSE, header = TRUE))%>%
   mutate(score = alignment_score)
+ncsl_raw$alignment_score <- NULL
 
 
 ncsl_alignments <- group_by(ncsl_raw, left_doc_id, right_doc_id) %>%
-    summarize(score = sum(score), count = n(), old_score = sum(old_score)) %>%
+    summarize(score = sum(score), count = n()) %>%
     mutate(left_state = sapply(strsplit(left_doc_id, "_"), retx, 1),
-           right_state = sapply(strsplit(right_doc_id, "_"), retx, 1),
-           old_score = log(old_score),
-           score = log(score)) %>%
+           right_state = sapply(strsplit(right_doc_id, "_"), retx, 1)) %>%
     filter(left_state != right_state) %>%
     select(-left_state, -right_state)
 
@@ -219,20 +218,26 @@ df <- filter(bill_pairs, !is.na(score)) %>%
 ncsl_cosine <- tbl_df(read.csv('../data/ncsl/cosine_similarities.csv', 
                                stringsAsFactors = FALSE, header = TRUE))
 df <- left_join(df, ncsl_cosine, by = c("left_doc_id", "right_doc_id"))
-print(head(df))
 rm(bill_pairs)
+
+p <- ggplot(df, aes(x = cosine_similarity, y = score)) + 
+    stat_binhex(bins = 30) +
+    scale_y_log10() +
+    xlab("Cosine Similarity") + 
+    ylab("Alignment Score") + 
+    scale_fill_gradient(low = cbPalette[1], high = cbPalette[2],
+                        labels = function (x) round(x, 0)) +
+    guides(fill=guide_legend(title="Count")) +
+    plot_theme
+ggsave(plot = p, '../manuscript/figures/ncsl_alignment_cosine.png', 
+       width = p_width, height = 0.65 * p_width)
 
 # Write out the list of ncsl bill ids (lid format)
 #out_ids <- unique(df$left_doc_id)
 #writeLines(out_ids, con = '../data/ncsl_analysis/ncsl_analysis.')
 
+# Remove 0 scores
+df <- filter(df, score != 0)
+
 cat("Store the data\n")
-save(x = df, file = '../data/ncsl_analysis/ncsl_analysis.RData')
-
-cat("========================================================================\n")
-cat("Data preprocessing for lucene analysis\n")
-cat("========================================================================\n")
-
-save(alignments, file = '../data/lucene_analysis/lucene_analysis.RData')
-
-
+save(x = df, file = '../data/ncsl_analysis/ncsl_analysis_nosplit.RData')

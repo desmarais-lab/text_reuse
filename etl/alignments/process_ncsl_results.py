@@ -26,10 +26,10 @@ if __name__ == "__main__":
 
     # Set parameters
     ## Files
-    FULL_ALIG_FILE = '../../data/alignments_new/ncsl_pair_alignments.json'
-    ALIG_SCORE_FILE = '../../data/alignments_new/ncsl_pair_alignments.csv'
-    ALIG_TEXT_FILE = '../../data/alignments_new/ncsl_align_text.csv' 
-    ADJ_SCORE_FILE = '../../data/alignments_new/ncsl_adjusted.csv'
+    FULL_ALIG_FILE = '../../data/alignments_new/ncsl_pair_alignments_nosplit.json'
+    ALIG_SCORE_FILE = '../../data/alignments_new/ncsl_pair_alignments_nosplit.csv'
+    ALIG_TEXT_FILE = '../../data/alignments_new/ncsl_align_text_nosplit.csv' 
+    ADJ_SCORE_FILE = '../../data/alignments_new/ncsl_adjusted_nosplit.csv'
     
     ## Options
     remove_same_state = False

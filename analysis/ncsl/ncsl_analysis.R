@@ -1,112 +1,38 @@
 library(dplyr)
 library(ggplot2)
 library(xtable)
+library(ROCR)
 
 # Load the data (data preprocessing in `/etl/make_analysis_datasets.R`)
+load('../../data/ncsl_analysis/ncsl_analysis_nosplit.RData')
+df_nosplit <- df
 load('../../data/ncsl_analysis/ncsl_analysis.RData')
+df_cosim <- select(df, -count, -score) %>%
+    mutate(score = cosine_similarity, cosine_similarity = NULL)
 source('../plot_theme.R')
 
 # Descriptives
 # ==============================================================================
 
-# Exclude technical correction bill
-df <- filter(df, score != max(score))
-
-# Summary stats
-# Adjusted score
-group_by(df, same_table) %>% 
-    summarize(mean = mean(score),
-              median = median(score),
-              q25 = quantile(score, 0.25),
-              q75 = quantile(score, 0.75),
-              stdev = sqrt(var(score)))
-# Old score
-group_by(df, same_table) %>% 
-    summarize(mean = mean(old_score),
-              median = median(old_score),
-              q25 = quantile(old_score, 0.25),
-              q75 = quantile(old_score, 0.75),
-              stdev = sqrt(var(old_score)))
-
-# Clustered bootstrap regression model
-
-## Model
-mod <- lm(score ~ same_table, data = df)
-
-## Uncertainty using the bootstrap
-B <- 1000
-
-clusters <- unique(df$left_doc_id)
-nc <- length(clusters)
-out <- matrix(rep(NA, B * 2), nc = 2, nr = B)
-
-for(i in 1:B) {
-    
-    # Sample clusters and build iteration-dataset
-    sc <- sample(clusters, nc, replace = TRUE)
-    dat <- filter(df, is.element(left_doc_id, sc))
-    
-    # fit models 
-    bs_mod <- lm(score ~ same_table, data = dat)
-    coefs <- coef(bs_mod)
-    out[i, ] <- coefs
-    
-    if(i %% 10 == 0){
-        print(i)
-    }
-}
-
-## Interpret
-
-
-# Difference in means
-t.test(df$score[df$same_table == 0], df$score[df$same_table == 1])
-t.test(df$old_score[df$same_table == 0], df$old_score[df$same_table == 1])
-
-# Box Plots
-ggplot(df) +
-    geom_boxplot(aes(x = as.factor(same_table), y = score)) + 
-    plot_theme
-
-ggplot(df) +
-    geom_boxplot(aes(x = as.factor(same_table), y = old_score)) + 
-    plot_theme
-
-
-ggplot(df) +
-    geom_histogram(aes(x = score), color = "white") +
-    facet_wrap(~ same_table, ncol = 1) +
-    plot_theme
-
 # Alignment examples
-align_text <- tbl_df(read.table('../../data/ncsl/unique_alignments.tsv',
-                                sep = '\t', stringsAsFactors = FALSE,
-                                header = TRUE))
-align_text <- align_text[order(align_text$count, decreasing = TRUE), ]
+# TODO: regenerate for new alignments
+align_text <- tbl_df(read.table('../../data/ncsl/ncsl_unique_align.csv',
+                                sep = ',', stringsAsFactors = FALSE,
+                                header = TRUE)) %>%
+    arrange(desc(count))
+# 4 most commont
+fmc <- head(align_text, 5)
 
-head(as.data.frame(align_text))
-
-
-# Distribution stats
-
-# Frequency of scores higher 5 / 10
-sink('ncsl_data_descriptives.txt')
-cat(paste0('Frequency of scores higher than 5: '), 
-    sum(df$score > 6) / nrow(df),
-    '\n')
-cat(paste0('Frequency of scores higher than 7: '), 
-    sum(df$score > 8) / nrow(df),
-    '\n')
-cat(paste0('Proportion in same table: '), 
-    sum(df$same_table) / nrow(df),
-    '\n')
-
+# Make table:
+sink('../../manuscript/tables/align_exmpls.tex')
+xtable(fmc)
 sink()
 
-# Precision recall curve
+# Precision recall plots and area under the curve
 # ==============================================================================
 
-pr <- function(threshold) {
+# Precision / recall function
+pr <- function(threshold, score, true) {
     predicted <- ifelse(score >= threshold, 1, 0)
     p <- length(which(predicted == 1))
     tp <- length(which(predicted == 1 & true == 1))
@@ -116,96 +42,141 @@ pr <- function(threshold) {
     return(c(precision, recall))
 }
 
-# Adjusted score
-r <- range(df$score, na.rm = TRUE)
-thresholds <- seq(r[1], r[2], length.out = 100)
-
-score = df$score
-true = df$same_table
-
-prec_rec <- t(sapply(thresholds, pr))
-
-df_1 <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
+# Precision recall curve and AUC function
+prc_auc <- function(dat, cosim=FALSE) {
+    
+    # Get precision and recall for all thresholds
+    score <- dat$score
+    true <- dat$same_table
+    r <- range(score, na.rm = TRUE)
+    if(cosim) thresholds <- seq(r[1], r[2], length.out = 100)
+    else thresholds <- exp(seq(log(r[1]), log(r[2]), length.out = 100))
+    prec_rec <- t(sapply(thresholds, pr, score = score, true = true))
+    df_1 <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
                  threshold = rep(c(thresholds), 2),
                  type = rep(c("precision", "recall"), each = nrow(prec_rec)))
+    
+    # Make the plot
+    if(cosim){
+    plt <- ggplot(df_1) + 
+        geom_density(aes(x = score, y = ..scaled..), data = dat, fill = "black",
+                     alpha = 0.05, color = "white", adjust = 4) +
+        geom_line(aes(y = value, x = threshold, color = type, linetype = type),
+                  size = 1.2) + 
+        scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1, 1.25)) +
+        geom_hline(aes(yintercept = 1), linetype = 2, alpha = 0.2) +
+        scale_color_manual(values = cbPalette, 
+                           labels = c("Precision", "Recall"),
+                           name = "") +
+        scale_linetype_manual(values = c(1, 3), 
+                           labels = c("Precision", "Recall"),
+                           name = "") +
+        xlab("Score Threshold") + ylab("Precision / Recall") +
+        plot_theme
+    } else {
+     plt <- ggplot(df_1) + 
+        geom_density(aes(x = score, y = ..scaled..), data = dat, fill = "black",
+                     alpha = 0.05, color = "white", adjust = 4) +
+        geom_line(aes(y = value, x = threshold, color = type, linetype = type),
+                  size = 1.2) + 
+        scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1, 1.25)) +
+        scale_x_log10(breaks = c(1, 10, 100, 1000, 10000)) +
+        geom_hline(aes(yintercept = 1), linetype = 2, alpha = 0.2) +
+        scale_color_manual(values = cbPalette, 
+                           labels = c("Precision", "Recall"),
+                           name = "") +
+        scale_linetype_manual(values = c(1, 3), 
+                           labels = c("Precision", "Recall"),
+                           name = "") +
+        xlab("Score Threshold") + ylab("Precision / Recall") +
+        plot_theme       
+    }
+       
+    # Area under the curve 
+    p <- prediction(dat$score, dat$same_table)
+    auc <- performance(p, measure = 'auc')
+    
+    return(list("prp" = plt, "auc" = auc@y.values[[1]]))
+}
+
+# Make plots and get measures for all three scores
+auc_tab <- as.data.frame(matrix(NA, nc = 2, nr = 3))
+colnames(auc_tab) <- c("Score", "AUC")
+auc_tab$Score <- c("Alignment No Split", "Alignment Split", "Cosine Similarity")
+
+## No Split
+out_nosplit <- prc_auc(df_nosplit)
+auc_tab[1, 2] <- out_nosplit$auc
+ggsave(filename = '../../manuscript/figures/ncsl_pr_nosplit.png', 
+       plot = out_nosplit$prp, width = p_width, height = 0.65 * p_width)
+
+## Split
+out_split <- prc_auc(df)
+auc_tab[2, 2] <- out_split$auc
+ggsave(filename = '../../manuscript/figures/ncsl_pr_split.png', 
+       plot = out_split$prp, width = p_width, height = 0.65 * p_width)
+
+## Cosine similarity
+out_cosim <- prc_auc(df_cosim, cosim=TRUE)
+auc_tab[3, 2] <- out_cosim$auc
+ggsave(filename = '../../manuscript/figures/ncsl_pr_cosm.png', 
+       plot = out_cosim$prp, width = p_width, height = 0.65 * p_width)
 
 
-ggplot(df_1) + 
-    geom_density(aes(x = score, y = ..scaled..), data = df, fill = "black",
-                 alpha = 0.05, color = "white") +
-    geom_line(aes(y = value, x = threshold, color = type, linetype = type),
-              size = 1.2) + 
-    #scale_x_log10(breaks = c(0, 1, 10, 100)) +
-    scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1, 1.25)) +
-    geom_hline(aes(yintercept = 1), linetype = 2, alpha = 0.2) +
-    scale_color_manual(values = cbPalette, 
-                       labels = c("Precision", "Recall"),
-                       name = "") +
-    scale_linetype_manual(values = c(1, 3), 
-                       labels = c("Precision", "Recall"),
-                       name = "") +
-    xlab("Log Score Threshold") + ylab("Precision / Recall") +
-    plot_theme
+# Distribution stats
 
-ggsave('../../manuscript/figures/ncsl_prec_rec_adj.png', width = p_width, 
-       height = 0.65 * p_width)
+# Frequency of scores higher 50 / 100
+sink('../../manuscript/tables/prec_rec_distri.txt')
+cat(paste0('Frequency of scores higher than 5: '), 
+    sum(df_nosplit$score > 50) / nrow(df_nosplit),
+    '\n')
+cat(paste0('Frequency of scores higher than 7: '), 
+    sum(df_nosplit$score > 100) / nrow(df_nosplit),
+    '\n')
+cat(paste0('Proportion in same table: '), 
+    sum(df_nosplit$same_table) / nrow(df_nosplit),
+    '\n')
+sink()
 
 
-# Old score
-r <- range(df$old_score, na.rm = TRUE)
-thresholds <- seq(r[1], r[2], length.out = 100)
+# Clustered bootstrap regression model
 
-score = df$old_score
-true = df$same_table
+## Model
+mod <- lm(log(score) ~ same_table, data = df_nosplit)
 
-prec_rec <- t(sapply(thresholds, pr))
+## Uncertainty using the bootstrap
+B <- 1000
 
-df_1 <- data.frame(value = c(prec_rec[, 1], prec_rec[, 2]),
-                 threshold = rep(c(thresholds), 2),
-                 type = rep(c("precision", "recall"), each = nrow(prec_rec)))
+clusters <- unique(df$left_doc_id)
+nc <- length(clusters)
+out <- matrix(rep(NA, B * 2), nc = 2, nr = B)
+out_cs <- matrix(rep(NA, B * 2), nc = 2, nr = B)
 
+for(i in 1:B) {
+    
+    # Sample clusters and build iteration-dataset
+    sc <- sample(clusters, nc, replace = TRUE)
+    dat <- filter(df_nosplit, is.element(left_doc_id, sc))
+    
+    # fit models 
+    bs_mod <- lm(log(score) ~ same_table, data = dat)
+    coefs <- coef(bs_mod)
+    out[i, ] <- coefs
+        
+    if(i %% 10 == 0){
+        print(i)
+    }
+}
 
-ggplot(df_1) + 
-    geom_density(aes(x = old_score, y = ..scaled..), data = df, fill = "black",
-                 alpha = 0.05, color = "white") +
-    geom_line(aes(y = value, x = threshold, color = type, linetype = type),
-              size = 1.2) + 
-    #scale_x_log10(breaks = c(0, 1, 10, 100)) +
-    scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1, 1.25)) +
-    geom_hline(aes(yintercept = 1), linetype = 2, alpha = 0.2) +
-    scale_color_manual(values = cbPalette, 
-                       labels = c("Precision", "Recall"),
-                       name = "") +
-    scale_linetype_manual(values = c(1, 3), 
-                       labels = c("Precision", "Recall"),
-                       name = "") +
-    xlab("Log Score Threshold") + ylab("Precision / Recall") +
-    plot_theme
+## Make the table
+ci <- quantile(out[, 2], c(0.025, 0.975))
+b <- coef(mod)[2]
 
-ggsave('../../manuscript/figures/ncsl_prec_rec_old.png', width = p_width, 
-       height = 0.65 * p_width)
+reg_tab <- as.data.frame(matrix(NA, nc = 3, nr = 1))
+colnames(reg_tab) <- c("Coefficient", "Std. Error", "95\\% CI")
+rownames(reg_tab) <- c("Same Table")
+reg_tab[1, ] <- c(round(b, 3), round(sd(out[, 2]), 3), paste(round(ci[1], 3), round(ci[2], 3)))
 
-
-# F1 score
-f1 <- prec_rec[, 1] * prec_rec[ , 2] / (prec_rec[, 1] + prec_rec[ ,2])
-df1 <- data.frame("f1_score" = f1, "threshold" = thresholds)
-
-ggplot(df1) + 
-    geom_line(aes(x = thresholds, y = f1_score))
-
-# Distributions of alignment scores in same table and not same table
-score_st <- filter(df, same_table==1 & !is.na(score)) %>% select(score)
-score_st <- score_st$score
-
-score_nst <- filter(df, same_table==0 & !is.na(score)) %>% select(score)
-score_nst <- score_nst$score
-
-df2 <- data.frame(score = c(score_st, score_nst), 
-                  group = c(rep("same_table", length(score_st)), 
-                            rep("not_same_table", length(score_nst))))
-ggplot(df2) + 
-    geom_histogram(aes(x=score, y=..ncount../sum(..ncount..)), 
-                   fill = cbPalette[1], color = "white", bins=30) +
-    theme_bw() + facet_wrap(~group, ncol=1) + 
-    ylab("Proportion") + xlab("Alignment Score")
-ggsave('../../manuscript/figures/align_distri_ncsl_tables.png')
+sink('../../manuscript/tables/ncsl_bs_reg.tex')
+xtable(reg_tab, digits = 3)
+sink()

@@ -58,6 +58,7 @@ if __name__ == '__main__':
     OUTF = '../data/alignments_new/ncsl_pair_alignments_nosplit.json'
     #OUTF = 'ncsl_pair_alignments.json'
 
+    ## Should bills be split in sections before alignment
     SPLIT=False
      
     # Initialize aligner

@@ -96,7 +96,6 @@ if(length(args) > 0) {
         op <- sapply(out, function(x) do.call(cbind, x)[2, ])
         outputs[[i]] <- op
         i <- i + 1
-        print(i)
     }
 
     final_out <- do.call(cbind, outputs)
@@ -106,9 +105,8 @@ if(length(args) > 0) {
 
     out <- list("bootstrap_results" = final_out, "base_model" = base_model_coefs)
     save(out, file = paste0(data_dir, "regression_results.RData"))
-    print(dim(final_out))
-
 }
+
 INTERACTIVE = FALSE
 
 if(INTERACTIVE) {

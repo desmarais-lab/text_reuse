@@ -4,9 +4,9 @@ state_diffusion_edges <- read.csv("~/dropbox/professional/Research/Active/Diffus
 # subset to 2008 edges
 state_diffusion_edges2008 <- subset(state_diffusion_edges,year==2008)
 
-alignments <- read.csv("~/Dropbox/professional/Research/Active/Diffusion_Networks/text_reuse/analysis/diffusion/alignments_1000_s2s.csv",stringsAsFactors=F)
+alignments <- read.csv("../../data/alignments_new/state2state_scores.csv",stringsAsFactors=F)
 
-state_coverage <- read.csv("~/Dropbox/professional/Research/Active/Diffusion_Networks/text_reuse/analysis/diffusion/nbills_by_state.csv",stringsAsFactors=F)
+state_coverage <- read.csv("../../data/lid/nbills_by_state.csv",stringsAsFactors=F)
 
 ustates <- sort(unique(c(alignments$left_state,alignments$right_state)))
 ustates <- ustates[which(!is.element(ustates,c("pr","dc")))]

@@ -63,19 +63,19 @@ authors and do not necessarily reflect those of the sponsor.}}
 
 \maketitle
 
-
-
 \singlespacing
 \begin{abstract} 
     \noindent The identification of substantively similar policy proposals in both proposed and adopted legislation is important to scholars of public policy diffusion and legislative politics. Conventional, manual, approaches are prohibitively costly in constructing datasets that accurately represent policymaking across policy domains, geographic units, and/or time. We propose the use of text-sequencing algorithms, applied to legislative text, to identify bills that introduce similar policy proposals. We present three ground truth tests, applied to a corpus of 500,000 bills from US-state legislatures. First, we show that bills introduced by ideologically similar sponsors are more likely to exhibit a high degree of text reuse. Second, we show that bills classified by the National Council of State Legislatures as covering the same policies exhibit a high degree of text re-use. Third, we show that rates of text reuse across state borders correlate strongly with the diffusion networks recently introduced by Desmarais, Harden and Boehmke (2015).
 
 \end{abstract}
 
-
 \doublespacing
 \clearpage
 
-\section{Introduction} The diffusion of public policy has been a central focus in political science research since at least \citet{walker1969}. Research on public policy adoption and diffusion has conventionally relied on modestly-sized, hand-coded datasets that record when a set of jurisdictions adopt one or a handful of similar policies \citep{boehmke2012}. In this paper we draw upon a voluminous and comprehensive source of data with which to measure the consideration and adoption of similar policies -- the text of legislation considered in US state legislatures. We take an automated, text-as-data, approach to the analysis of bill text. This vastly increases the volume of data that can be included in policy adoption research. 
+
+\section{Introduction} 
+
+The diffusion of public policy has been a central focus in political science research since at least \citet{walker1969}. Research on public policy adoption and diffusion has conventionally relied on modestly-sized, hand-coded datasets that record when a set of jurisdictions adopt one or a handful of similar policies \citep{boehmke2012}. In this paper we draw upon a voluminous and comprehensive source of data with which to measure the consideration and adoption of similar policies -- the text of legislation considered in US state legislatures. We take an automated, text-as-data, approach to the analysis of bill text. This vastly increases the volume of data that can be included in policy adoption research. 
 
 Through the development of automated text-analytic methods of measuring policy diffusion we consider several methodological challenges and broader conceptual hurdles. The central methodological puzzles are two-fold. First, we need to extract segments of text in pieces of legislation that communicate similar policy enactments. Second, we need to develop a method for quantitatively scoring the reused text between bills. The main conceptual puzzle with which we engage is the potential ambiguity regarding whether two policies should be considered the same for the purposes of policy diffusion research. Considering precedents in the literature, we argue for conceptualizing policy adoption in terms of a continuum of similarity rather than a dichotomy of equivalence.
 
@@ -93,8 +93,8 @@ Public policy research on cross-jurisdiction comparable policy actions has conve
  %%% How has policy similarity been defined, conceptually %%% 
 We now consider the coding rules used in past research to define sets of equivalent, or at least similar, policies. Perhaps the broadest approach---studying policies adopted within a domain, but moving the status quo in opposite directions---is represented by \citet{glick1992judicial}. Glick studies judicial enactments related to the ``right to die''---the right of patients or their representatives to end the use of life-preserving medical technology. He considers an adoption to include any judicial enactment on this topic, whether they restrict medical providers' deference to the patients or enact broad patients' rights.  \citet{berry1990} look at policy change in a uniform direction---states' adoption of lotteries. Lotteries, of course, vary in terms of their rules and financial models, but all of the policies studied by \citet{berry1990} moved the status quo from no state lottery to the existence of a state lottery. \citet{volden2006} considers a broad array of state laws---those implemented for the Federal Health and Human Services Children's Health Insurance Program (CHIP). CHIP laws were coded for six policy characteristics and then analyzed for diffusion dynamics. Lastly, \citet{mooney1995legislative} provides an example of quantitative coding of policies adopted in a given domain. They code the permissiveness of state abortion laws (pre Roe v. Wade) on a five-point scale. These examples convey the variability with which scholars have defined the set of policies that are considered to be comparable across state borders.
 
-\section{Detecting Policy Similarity through Text Reuse}
 
+\section{Detecting Policy Similarity through Text Reuse}
 
 The above review of the ways in which researchers have defined comparable policies offers clarity regarding the implicit concepts underlying policy comparability. We see that policies that are considered comparable exhibit two qualities. First, they often, but do not always, move the status quo in a similar direction. This could be thought of as ideological similarity. Second, they enact policy in similar domains---either narrowly or broadly conceived. Before we describe the algorithm we use for detecting text re-use, and validate that algorithm, we draw upon these two concepts to define the latent variable we seek to measure through the assessment of text overlap. Specifically, we are motivated by the fact that researchers do not typically focus on strictly equivalent policies. Rather, they deem policies comparable if they are highly similar along one or two dimensions---policy domain and (optionally) ideological direction. 
 
@@ -176,7 +176,9 @@ In our analyses we use a slightly modified version of the local alignment algori
 
 \section{Policy Similarity in US State Legislation}
 % What we will provide through the application of the SW algorithm?
-Through the application of the SW algorithm to US state legislation, we will provide a quantitative measure of policy similarity between bill sections. We follow \citet{wilkerson2015tracing} in focusing on sections, as bills can contain many separate policy proposals. The similarity measures between sections that we identify can be aggregated up to the bill, legislator or state levels. The measures we provide can be used to test hypotheses regarding, among other topics, public policy diffusion, legislative politics, political parties, and interest groups.  
+Through the application of the SW algorithm to US state legislation, we will
+provide a quantitative measure of policy similarity between bills. The
+similarity measures between bills  that we identify can be aggregated up to the legislator or state levels. The measures we provide can be used to test hypotheses regarding, among other topics, public policy diffusion, legislative politics, political parties, and interest groups.  
 
 \subsection{Data}
 We apply the SW algorithm to a database of US state bills, collected by
@@ -201,8 +203,9 @@ consists of three major steps: 1) Pre-processing and selection of documents to c
 
 \subsection{Pre Processing and Selection}
 
-All bills are split up into sections in order to be able to detect all alignments between two bills. Because the SW algorithm only returns the one best alignment between two sequences, relevant information might be lost when considering every bill as one large sequence of words. 
-The SW algorithm is computationally demanding and an exhaustive comparison of all possible bill-section-pairs is not feasible (with $500,000$ bills, assuming each bill consists on average of four sections this would amount to about $2 * 10^{12}$ comparisons). \citet{wilkerson2015tracing} encountered the same problem and excluded bills that don't have at least five matching 10-grams. Since this implies considerable exact character matches, we see this as a too restrictive for our application. Because the text we are using originates in 50 different legislatures, exact character matches might obfuscate valuable text reuse just because of small formatting changes, changes of state names, etc. 
+The SW algorithm is computationally demanding and an exhaustive comparison of
+all possible bill-pairs is not feasible (with $500,000$ bills this would amount
+to about $124 * 10^9$ bill pairs). \citet{wilkerson2015tracing} encountered the same problem and excluded bills that don't have at least five matching 10-grams. Since this implies considerable exact character matches, we see this as a too restrictive for our application. Because the text we are using originates in 50 different legislatures, exact character matches might obfuscate valuable text reuse just because of small formatting changes, changes of state names, etc. 
 Instead we choose to rely on a procedure that is based on finding bills with
 similar language. We store all available bills in an Elastic Search database.
 Elastic search is an open source web search engine which is designed to find
@@ -227,7 +230,9 @@ potentially relevant bills is always much smaller than 1000.}
 
 \subsection{Bill Alignment Computation}
 
-Once the candidate sections are selected, the alignments are calculated for all possible bill-section-dyads, section-pairs from the same bill and section pairs from the same state are excluded. We exclude same-state comparisons in the current analysis since our validation exercises are focused on cross-state comparisons. We refer to the two sections involved in each alignment process as `left' and `right' sections. The algorithm returns parts of the left and right section that are determined to be aligned as well as a score. We refer to these three pieces of information as an alignment. 
+Once the candidate bills are selected, the alignments are calculated for all
+possible bill-dyads, bill pairs from the same state are available but excluded
+for the analyses below. We exclude same-state comparisons in the current analysis since our validation exercises are focused on cross-state comparisons. We refer to the two sections involved in each alignment process as `left' and `right' sections. The algorithm returns parts of the left and right section that are determined to be aligned as well as a score. We refer to these three pieces of information as an alignment. 
 
 \clearpage
 

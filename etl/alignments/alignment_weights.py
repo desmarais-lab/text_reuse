@@ -69,13 +69,13 @@ if __name__ == "__main__":
         # write header
         outfile.write(outline.format(left_doc_id='left_doc_id',
                                      right_doc_id='right_doc_id',
-                                     score_1='score_1',
-                                     score_2='score_2'))
+                                     weight_1='score_1',
+                                     weight_2='score_2'))
 
         for line in infile:
             out = calc_similarities(inline=line, comparison=compmat, n=1000,
                     dictionary=dicti, align=alignments)
             outfile.write(outline.format(left_doc_id=out[0],
                                          right_doc_id=out[1],
-                                         score_1=out[2],
-                                         score_2=out[3]))
+                                         weight_1=out[2],
+                                         weight_2=out[3]))

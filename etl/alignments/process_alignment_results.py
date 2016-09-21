@@ -43,7 +43,8 @@ class AlignmentMatchText(object):
         with io.open(self.infile, 'r', encoding='utf-8') as infile:
 
             if self.type == "ncsl":
-
+                
+                # Loop over bill pairs
                 for i, line in enumerate(infile):
                     doc = self._json_from_line(line, i)
                     if doc is None:
@@ -62,7 +63,8 @@ class AlignmentMatchText(object):
                     if alignments is None:
                         self.no_align += 1
                         continue
-
+                    
+                    # Loop over alignments
                     for a in alignments:
                         out = self._matches_only(a['left'], a['right'])
                         align_score = a['score']
@@ -76,12 +78,10 @@ class AlignmentMatchText(object):
                                'text': out,
                                'ascore': align_score}
                         self.size += 1
-            print('{} out of {} w/o alignments'.format(self.no_align, i))
- 
 
             if self.type == "all":
 
-                first = True
+                # Loop over left bills
                 for i,line in enumerate(infile):
 
                     s = time.time()
@@ -96,7 +96,8 @@ class AlignmentMatchText(object):
                         left_state = left_doc_id[0:2]
                     except KeyError:
                       continue
-
+                    
+                    # Loop over right bills
                     for right_doc in alignments:
 
                         right_doc_id = right_doc['document_id']
@@ -106,32 +107,33 @@ class AlignmentMatchText(object):
 
                         if self.remove_same_state and left_state == right_state:
                             continue
-
-                        for b in right_doc['alignments']:
-                            out = self._matches_only(b['left'], b['right'])
-                            
+                        
+                        # Loop over alignments and find max alignment
+                        alignments = np.empty(shape=len(right_doc['alignments']))
+                        for idx,b in enumerate(right_doc['alignments']):
                             align_score = b['score']
-                             
-                            # Update the dictionary
-                            out_proc = self._proc_text(out)
-                            self.dictionary.add_documents([out_proc])
+                            alignments[idx] = align_score
+                        
+                        # Extract matching text and score from max alignment 
+                        score = alignments.max()
+                        max_idx = alignments.argmax()
+                        max_align = right_doc['alignments'][max_idx]
+                        out = self._matches_only(max_align['left'], max_align['right'])
 
-                            out = ' '.join(out)
-                            if out in self.exclude:
-                                out = '_'
-                            yield {'left_id': left_doc_id,
-                                   'right_id': right_doc_id,
-                                   'text': out,
-                                   'lscore': lucene_score,
-                                   'ascore': align_score,
-                                   'first': first}
-                            self.size += 1
+                        # Update the dictionary
+                        out_proc = self._proc_text(out)
+                        self.dictionary.add_documents([out_proc])
 
-                            # Flag for first entry
-                            first = False
+                        out = ' '.join(out)
+                        if out in self.exclude:
+                            out = '_'
+                        yield {'left_id': left_doc_id,
+                               'right_id': right_doc_id,
+                               'text': out,
+                               'lscore': lucene_score,
+                               'ascore': score}
+                        self.size += 1
 
-                        # Reset flag for first entry (of a left bill)
-                        first = True
 
     def _proc_text(self, word_list):
         out = []
@@ -178,18 +180,16 @@ if __name__ == "__main__":
     # Set parameters
     ## Files
     FULL_ALIG_FILE = '../../data/alignments_new/alignments_1000.json'
-    ALIG_SCORE_FILE = '../../data/alignments_new/alignments_1000.csv'
+    ALIG_SCORE_FILE = '../../data/alignments_new/alignment_scores.csv'
     ALIG_TEXT_FILE = '../../data/alignments_new/alignment_match_text.csv' 
-    LUCENE_SCORE_FILE = '../../data/alignments_new/lucene_scores_1000.csv'
+    LUCENE_SCORE_FILE = '../../data/alignments_new/lucene_scores.csv'
 
-    
     ## Options
     remove_same_state = True
     WEIGHTS_ONLY = True
     
     n_chunks = 80
     chunk_dir = '/storage/home/fjl128/scratch/text_reuse'
-    #chunk_dir = 'temp/'
     fstem = 'alignments_chunk_{}.csv'
 
 
@@ -229,11 +229,10 @@ if __name__ == "__main__":
             for n_align,a in enumerate(alignments):
 
                 # If is first entry write lucene score to file:
-                if a['first']:
-                    lucene_score_file.write(out_line.format(
-                        left_doc_id=a['left_id'],
-                        right_doc_id=a['right_id'],
-                        entry=a['lscore']))
+                lucene_score_file.write(out_line.format(
+                    left_doc_id=a['left_id'],
+                    right_doc_id=a['right_id'],
+                    entry=a['lscore']))
 
                 # Write alignment score and match text
                 align_file.write(out_line.format(left_doc_id=a['left_id'],
@@ -292,11 +291,11 @@ if __name__ == "__main__":
             data = []
             rows = []
             cols = []
-            for i, doc in enumerate(samps):
+            for j, doc in enumerate(samps):
                 for x in doc:
                     data.append(x[1])
                     cols.append(x[0])
-                    rows.append(i)
+                    rows.append(j)
             compmat = sps.csr_matrix((data, (rows, cols)), 
                     shape=(len(samps), len(alignments.dictionary)))
             
@@ -348,7 +347,11 @@ if __name__ == "__main__":
         with io.open(fjob, 'w') as jobfile:
             jobfile.write(job)
         # Submit job
-        subprocess.check_output(['qsub', fjob])
+        try:
+            response = subprocess.check_output(['qsub', fjob])
+        except subprocess.CalledProcessError:
+            print(response)
+            raise
         print('submitted {}'.format(fjob))
         time.sleep(2)
         os.remove(fjob)   

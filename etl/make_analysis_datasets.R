@@ -10,14 +10,14 @@ SMALL <- as.logical(args[1])
 cat("Loading alignment data...\n")
 
 if(SMALL) {
-    alignments <- tbl_df(read.csv('../data/alignments_new/bill2bill_scores.csv', 
+    alignments <- tbl_df(read.csv('../data/alignments_new/adjusted_scores.csv', 
                          header = TRUE, stringsAsFactors = FALSE, nrows = 5000))
-    lucene_scores <- tbl_df(read.csv('../data/alignments_new/lucene_scores_1000.csv',
+    lucene_scores <- tbl_df(read.csv('../data/alignments_new/lucene_scores.csv',
                          header = TRUE, stringsAsFactors = FALSE, nrows = 5000))
 } else {
-    alignments <- tbl_df(read.csv('../data/alignments_new/bill2bill_scores.csv', 
+    alignments <- tbl_df(read.csv('../data/alignments_new/adjusted_scores.csv', 
                          header = TRUE, stringsAsFactors = FALSE))
-    lucene_scores <- tbl_df(read.csv('../data/alignments_new/lucene_scores_1000.csv', 
+    lucene_scores <- tbl_df(read.csv('../data/alignments_new/lucene_scores.csv', 
                          header = TRUE, stringsAsFactors = FALSE))
 }
 

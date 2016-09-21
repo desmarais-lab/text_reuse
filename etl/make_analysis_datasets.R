@@ -1,6 +1,6 @@
 library(dplyr)
 library(ggplot2)
-
+library(stargazer)
 # Parameters
 args <- commandArgs(trailingOnly = TRUE)
 SMALL <- as.logical(args[1])
@@ -9,26 +9,39 @@ SMALL <- as.logical(args[1])
 # Load Alignments and lucene scores
 cat("Loading alignment data...\n")
 
+fast_read <- function(filename) {
+    samp <- read.table(filename, header = TRUE, nrows = 2, stringsAsFactors = FALSE,
+                       sep = ',')
+    classes <- sapply(samp, class)
+    return(read.table(filename, header = TRUE, colClasses = classes,
+                      stringsAsFactors = FALSE, sep = ',', comment.char = ""))
+}
+
+
+#library(microbenchmark)
+#f <- '../data/alignments_new/sample.csv'
+#microbenchmark(fast_read(f), read.csv(f))
+
 if(SMALL) {
     alignments <- tbl_df(read.csv('../data/alignments_new/adjusted_scores.csv', 
                          header = TRUE, stringsAsFactors = FALSE, nrows = 5000))
     lucene_scores <- tbl_df(read.csv('../data/alignments_new/lucene_scores.csv',
                          header = TRUE, stringsAsFactors = FALSE, nrows = 5000))
 } else {
-    alignments <- tbl_df(read.csv('../data/alignments_new/adjusted_scores.csv', 
-                         header = TRUE, stringsAsFactors = FALSE))
-    lucene_scores <- tbl_df(read.csv('../data/alignments_new/lucene_scores.csv', 
-                         header = TRUE, stringsAsFactors = FALSE))
+    alignments <- tbl_df(fast_read('../data/alignments_new/adjusted_scores.csv'))
+    lucene_scores <- tbl_df(fast_read('../data/alignments_new/lucene_scores.csv')) 
 }
 
 # Merge them and discard lucene
 alignments <- left_join(alignments, lucene_scores, by = c("left_doc_id",
                                                           "right_doc_id"))
+# Remove 0 alignments
+# Choose weighted score as alignmetn score (weighted score from sample 1)
+alignments <- filter(alignments, alignment_score != 0) %>% 
+    mutate(alignment_score = score_1, score_2 = NULL, score_1 = NULL)
+
 rm(lucene_scores)
 gc()
-
-# Remove 0 alignments
-alignments <- filter(alignments, alignment_score != 0)
 
 cat("========================================================================\n")
 cat("Descriptive statistics for alignments\n")
@@ -41,7 +54,7 @@ sink('alignments_descriptives.txt')
 cat(paste0("Number of bill dyads: ", nrow(alignments), '\n'))
 cat(paste0("Mean score: ", mean(alignments$alignment_score), '\n'))
 cat(paste0("Median score: ", median(alignments$alignment_score), '\n'))
-cat(paste0("Range: ", r), '\n')
+cat(paste("Range:", r[1], r[2]), '\n')
 sink()
 
 # Distribution of alignment scores
@@ -56,7 +69,7 @@ source('../analysis/plot_theme.R')
 
 p <- ggplot(pdat) + 
     geom_line(aes(x = Score, y = Proportion), size = 1.2) + 
-    scale_x_log10() + 
+    scale_x_log10(breaks=c(1, 10, 100, 1000, 10000)) + 
     xlab("X") +
     ylab("P(Score < X)") +
     plot_theme
@@ -78,12 +91,16 @@ cat('Saving plot...\n')
 ggsave(plot = p, '../manuscript/figures/alignment_lucene.png', 
        width = p_width, height = 0.65 * p_width)
 
-alignments$lucene_score <- NULL
+lucene_mod <- lm(alignment_score ~ lucene_score, data = alignments)
+
+sink('../manuscript/tables/lucene_regression.txt')
+stargazer(lucene_mod)
+sink()
+
 
 cat("========================================================================\n")
 cat("Data preprocessing for ideology analysis\n")
 cat("========================================================================\n")
-
 
 # Load metadata
 cat("Loading metadata...\n")

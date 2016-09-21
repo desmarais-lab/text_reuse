@@ -7,7 +7,19 @@ import os
 import time
 import sys
 
-BASE = sys.argv[1] == "True"
+# Get mode from cline argument
+if sys.argv[1] == "all":
+    specific_job = None
+    BASE = False
+elif sys.arrv[1] == "base":
+    specific_job = None
+    BASE = True
+else:
+    try:
+        specific_job = int(sys.argv[1])
+    except ValueError:
+        raise ValueError('Invalid mode argument')
+    BASE = False
 
 # Load template file
 with io.open('bs_reg_temp.txt', 'r') as infile:
@@ -24,6 +36,9 @@ if not BASE:
 
     # Bootstrap jobs
     for n in range(N_PROC):
+        if specific_job is not None:
+            if n != specific_job:
+                continue
         job = template.format(mode = "bootstrap",
                               job_number = n,
                               n_iter = n_per_job)

@@ -10,7 +10,7 @@ import time
 
 if __name__ == "__main__":
 
-    OFILE = '../../data/alignments_new/alignments_1000.csv'
+    OFILE = '../../data/alignments_new/alignment_scores.csv'
     SFILE = '../../data/alignments_new/adjusted_scores.csv'
     CDIR = '/storage/home/fjl128/scratch/text_reuse/adjusted*.csv'
     N_CHUNKS = 80
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     
    
     with io.open(SFILE, 'w', encoding='utf-8') as outfile,\
-            io.open(OFILE, 'r', encoding='utf-8') as infile:
+         io.open(OFILE, 'r', encoding='utf-8') as infile:
 
         # Prepare output file
         out_line = '{left},{right},{ascore},{score_1},{score_2}\n'

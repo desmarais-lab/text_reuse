@@ -1,0 +1,30 @@
+
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Wed, Sep 21, 2016 - 02:51:56 PM
+\begin{table}[!htbp] \centering 
+  \caption{} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{1}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-2} 
+\\[-1.8ex] & alignment\_score \\ 
+\hline \\[-1.8ex] 
+ lucene\_score & 254.125$^{***}$ \\ 
+  & (0.087) \\ 
+  & \\ 
+ Constant & 10.911$^{***}$ \\ 
+  & (0.007) \\ 
+  & \\ 
+\hline \\[-1.8ex] 
+Observations & 129,102,295 \\ 
+R$^{2}$ & 0.062 \\ 
+Adjusted R$^{2}$ & 0.062 \\ 
+Residual Std. Error & 77.441 (df = 129102293) \\ 
+F Statistic & 8,493,858.000$^{***}$ (df = 1; 129102293) \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 

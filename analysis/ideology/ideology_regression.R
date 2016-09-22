@@ -93,13 +93,17 @@ if(length(args) > 0) {
         load(paste0(res_dir, file))
         op <- sapply(out, function(x) do.call(cbind, x)[2, ])
         outputs[[i]] <- op
+
         i <- i + 1
+        print(paste('Processed', file))
     }
 
     final_out <- do.call(cbind, outputs)
 
     load(paste0(res_dir, "quantreg_mods.RData"))
     base_model_coefs <- sapply(mods, function(x) x[2])
+
+    print(dim(final_out))
 
     out <- list("bootstrap_results" = final_out, "base_model" = base_model_coefs)
     save(out, file = paste0(data_dir, "regression_results.RData"))

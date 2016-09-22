@@ -1,5 +1,5 @@
 # Read in complete dyadic dataset from APSR 
-state_diffusion_edges <- read.csv("~/dropbox/professional/Research/Active/Diffusion_Networks/text_reuse/data/apsr_replication_files/dhb2015apsr-networks.csv",stringsAsFactors=F)
+state_diffusion_edges <- read.csv("../../data/diffusion/dhb2015apsr-networks.csv",stringsAsFactors=F)
 
 # subset to 2008 edges
 state_diffusion_edges2008 <- subset(state_diffusion_edges,year==2008)
@@ -30,7 +30,7 @@ align_amat <- matrix(0,length(ustates),length(ustates))
 # assure the nodes are consistent
 rownames(align_amat) <- colnames(align_amat) <- ustates
 # add in ties
-align_amat[cbind(tolower(alignments$left_state),tolower(alignments$right_state))] <- alignments$sum_log_score
+align_amat[cbind(tolower(alignments$left_state),tolower(alignments$right_state))] <- alignments$sum_score
 # make sure it is undirected
 align_amat <- align_amat + t(align_amat)
 
@@ -63,9 +63,9 @@ colnames(results_log) <- c("Coefficient","p-value")
 ## Prepare results for table
 library(xtable)
 results_all <- cbind(results,results_log)
-xtable(results_all,dig=4)
+xtable(results_all,dig=2)
 
-# boxplots 
+# boxplots
 x <- diff_amat[lower.tri(diff_amat)]
 y <- log(align_amat)[lower.tri(align_amat)]
 

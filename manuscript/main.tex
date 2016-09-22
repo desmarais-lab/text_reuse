@@ -101,6 +101,7 @@ The above review of the ways in which researchers have defined comparable polici
 We see past work that has identified sets of comparable policies as focusing on sets of policies that meet some threshold of similarity. As such, the latent variable that we argue below is measured effectively through text re-use is {\em policy similarity}. The text in legislation is an aggregate representation of the dimensions underlying the policies proposed therein. These dimensions include the domain of the policy, the ideological position enacted by the policy, the level of specificity in the policy enactment, and several other salient features of policy that are communicated through the text in legislation. We do not claim that the re-use of text can be used to measure these dimensions in a specific, dis-aggregated way. Rather, text re-use serves as a summary measure of the greatest overlap observed across all relevant policy dimensions represented in legislative text. 
 
 \subsection{Detecting Text Reuse}
+\label{sec:d_t_r}
 To assess the maximal similarity of policies proposed in two pieces of legislation, we seek to identify large segments of equivalent or highly similar text (i.e., text reuse between bills). Alignment algorithms for discovering similar long sequences of text stand in contrast to bag-of-words methods, which are based on the comparison of word occurrence frequencies in documents. Bag-of-words methods may be effective for capturing broad topical areas in legislation, but will provide results that are too coarse for precisely assessing policy overlap. For example, in modeling bills in the US Congress using statistical topic models, arguably the canonical bag-of-words method for text analysis, \citet{gerrish2011predicting} find that topic models for legislative text perform most effectively when parameterized with 64 topics to model a corpus of 4,447 bills. While 64 topics provides a fairly detailed categorization of the domains covered in legislation, it is unrealistic to think that this method can isolate individual policy proposals.  Considering \citeapos{gerrish2011predicting} results again, that would mean that the US Congress considers nearly seventy bills, on average, for each specific policy proposed. 
 
 There are a variety of algorithms designed to automatically detect text reuse between documents mostly originating in the plagiarism detection literature \citep[see e.g.][for an overview]{potthast2013overview}. In political science, \citet{wilkerson2015tracing} introduced the Smith-Waterman local alignment algorithm (SW algorithm) to detect overlapping language in congressional bills in order to trace policy ideas through the legislative process of the US Congress. We use the same algorithm to detect text reuse in US state bills, however, our implementation of the algorithm differs slightly. The SW algorithm was developed by \citet{smith1981identification} in molecular biology, in order to match genetic sequences. Given two sequences (of genes or words) it calculates the optimal alignment (match) between these sequences. 
@@ -184,7 +185,11 @@ similarity measures between bills  that we identify can be aggregated up to the 
 We apply the SW algorithm to a database of US state bills, collected by
 \citet{burgess2016legislative} and the Sunlight
 Foundation\footnote{\url{http://sunlightfoundation.com/}}. This data base
-contains approximately 500,000 bills from 2008 to 2015. Not all bills from all
+contains approximately 500,000 bills from 2008 to 2015\footnote{Since
+    computation is very demanding for this problem, the results reported in this
+    version of the paper are based on a random sample of about half of the
+    bills. We are in the process of completing the analyses for the whole
+dataset.}. Not all bills from all
 states are available for the whole time period. Figure \ref{fig:bill_desc}
 displays the year ranges and number of bills in the bill data base. This
 collection of bills is based on all bills that are available through the
@@ -200,6 +205,9 @@ Sunlight Foundation's \url{openstates.org} API. \url{openstates.org} is a websit
 Our approach of applying the SW algorithm is similar to
 \citet{wilkerson2015tracing} but differs in several key respects. The analysis
 consists of three major steps: 1) Pre-processing and selection of documents to compare, 2) alignment computation, 3) post hoc refinement (boiler plate removal). 
+
+
+
 
 \subsection{Pre Processing and Selection}
 
@@ -258,12 +266,10 @@ Left Text & Right Text & Score\\
 
 \clearpage
 
-From this procedure we obtain ca. $10^9$ individual alignments (that is, shared
-text between two sections of two bills) which corresponds to about $2 * 10^6$ bill dyads
-($1.3 * 10^6$ bill dyads excluding within-state alignments). Figure
-\ref{fig:alignment_score_distribution} displays the cumulative frequency
+From this procedure we obtain ca. $1.2 * 10^8$ individual alignments (that is, shared
+text between two bills). Figure \ref{fig:alignment_score_distribution} displays the cumulative frequency
 distribution of the alignments. The vast majority of alignments are very small
-(less than 10). We use the alignment score as the quantitative measure of policy similarity. However, as we discuss below, due to the presence of extreme outliers, we work with this measure on the log scale. In order to aggregate the alignments to the bill level, we sum the alignment scores for each section pair of the corresponding bill dyad. Table \ref{tab:alignment_examples} displays three examples of section alignments. The `Left Text' and `Right Text' columns display the optimal alignment for the two sections the alignment score is displayed in the `Score' column. This example shows the reuse of legislative text in three states (New Jersey, North Carolina and Georgia).
+(less than 50). Table \ref{tab:alignment_examples} displays three examples of alignments. The `Left Text' and `Right Text' columns display the optimal alignment for the two sections the alignment score is displayed in the `Score' column. This example shows the reuse of legislative text in three states (New Jersey, North Carolina and Georgia).
 
 
 \begin{figure}[ht!]
@@ -287,8 +293,33 @@ that is passed several times (i.e., in separate bills) within the same state is 
 substantively irrelevant. Using these facts allows us to accumulate a large amount of labeled data---all alignments between bills that have both passed in the same state---which we use to train a machine learning classifier to exclude boiler plate alignments. In addition to the text
 itself, we use the position in the text as a feature in the classifier. This approach is very similar to that taken by \citet{wilkerson2015tracing}, except we would not use human coders to label boiler plate alignments.
 
-In the second approach we describe, which we have implemented in one analysis below, we do not exclude boiler plate according to a classification dichotomy. Rather, we down-weight common alignments in calculating similarity between bills. Alignments are identified at the section level, meaning that we identify up to $n_1 \times n_2$ alignments between two bills, with $n_1$ and $n_2$ being the number of sections in the two bills. The similarity score between two bills is calculated as the natural log of the sum of the numeric score associated with each section-pair alignment. To adjust for common alignments, we divide the raw alignment score from the SW algorithm by the frequency with which that exact same alignment occurs across the entire database of section-pair alignment. In this approach we follow the common intuition in natural language processing that the informativeness of text is inversely related to the frequency with which that text occurs \citep{robertson2004understanding} (see, e.g., the regular application of term frequency–inverse document frequency (tf-idf) to pre- or post-process text-based datasets and results). This measure is different and potentially preferable in two ways. First, it does not require the use of human coders. Second, it places text on a continuum of uniqueness rather than dichotomizes it as boiler plate or not.
+In the second approach we describe, which we have implemented in one analysis
+below, we do not exclude boiler plate according to a classification dichotomy.
+Rather, we down-weight alignments alignments that consist of language that is
+very common to all alignments. The underlying logic is that language that
+appears in a large number of other alignments is probably not related to
+specific policies. For examples alignments consisting of many stop words such as
+`the' or `a' or of common procedural language like `legislature` or `section'
+are most likely part of phrases that are either very frequent in common language
+or very frequent in the legislative context. 
+In order to quantify the similarity to common alignments, we calculate the
+cosine similarity of the bag-of-words vector of each alignment with a random
+sample of 1000 alignments\footnote{We rely on a random sample for computational
+reasons, calculating the complete similarity matrix is computationally
+unfeasible and unnecessary.}. The adjusted score for two bills $Y$ and $Y$ is
+then:
 
+\begin{equation}
+    S^*_{X,Y} = S_{X,Y} \left(1 -
+    \frac{1}{1000}\sum_{i=1}^{1000}\frac{\mathbf{\mathcal{A}_{X,Y}} \bullet
+    {\mathbf{\mathcal{A}_i}}}{\lVert\mathbf{\mathcal{A}_{X,Y}\rVert\lVert\mathbf{\mathcal{A}_i}}\rVert}\right)
+\end{equation}
+
+Where $S_{X,Y}$ is the alignment score as described in Section \ref{sec:d_t_r},
+$\mathbf{\mathcal{A}_j}$ is the bag-of-word vector representation of the
+matching alignment text and $i = 1,\dots,1000$ are the sample alignments.
+
+In this approach we follow the common intuition in natural language processing that the informativeness of text is inversely related to the frequency with which that text occurs \citep{robertson2004understanding} (see, e.g., the regular application of term frequency–inverse document frequency (tf-idf) to pre- or post-process text-based datasets and results). This measure is different and potentially preferable in two ways. First, it does not require the use of human coders. Second, it places text on a continuum of uniqueness rather than dichotomizes it as boiler plate or not.
 
 
 \section{Evaluation of Validity}
@@ -330,75 +361,29 @@ bills in sections, calculate the pairwise section alignments. This results in
 approximately $10^7$ section-dyads. We then aggregate these section-dyads to the
 bill-dyad level. 
 
-For this analysis we additionally employed the boilerplate adjustment strategy
-described above\footnote{We plan to use boiler plate adjustment for all
-    analyses. We are experimenting with the boiler plate removal on this
-    analysis because the smaller size of the data. The final evaluation will be
-    conducted on a held out data set of ncsl tables that is not included in the
-current sample}. Before aggregating the alignments to the bill-dyad level, their
-score is weighted by the inverse frequency of the alignment in the set of all
-alignments for this analysis\footnote{The exact procedure is to compile the
-matching elements of the two aligned sequences to a string that can then be
-matched. This means that mismatches and gaps are ignored, since they would make
-the alignment text unique.}. This results in down-weighting of alignments that occur too often to
-be considered relevant policy language. Table
-\ref{tab:expl_align_freq} displays some example alignments with very high and
-very low frequency. From analysis of these frequencies we find that all alignments
-that occur very frequent are indeed boilerplate. However, there are also still
-many boilerplate alignments that occur infrequently. The currently employed
-approach therefore improves the signal in the alignment score, but could be
-further improved by matching and aggregating not only equal but also similar alignments (e.g. using another alignment
-step or bag-of-words similarity measures).
-
-\begin{table}[]
-\centering
-\caption{Example alignment text of comparable length occurring with high and low frequency.}
-\label{tab:expl_align_freq}
-\begin{tabular}{lll}
-\hline
-Frequency & Matched Alignment Text                           & Rank   \\
-\hline
-1         & to the treasurer of the county in which the      & 1      \\
-1         & shall be for purposes of this                    & 1      \\
-1         & of the higher education act of 1965              & 1      \\
-...       & ...                                              & ...    \\
-7089      & be it enacted by the legislature of the state of & 244747 \\
-19349     & be it enacted by the of the state of             & 244840 \\
-21100     & is amended to read as follows                    & 244847 \\
-\hline
-\end{tabular}
-\end{table}
-
-
 Figure \ref{fig:ncsl_prec_rec} displays the performance of the alignment score
 in predicting if two bills are in the same NCSL table. We present
 precision---the proportion of bill pairs with a given alignment score that
 exceed the threshold on the $x$-axis that are in the same NCSL table, and
 recall---the proportion of same-NCSL-table pairs that exceed a given alignment
-score threshold. We display the results for the alignment scores adjusted for
-boilerplate (left panel) and the unweighted scores (right panel). We see
-moderate to high precision --- 60\% - 100\% with moderate
-(higher than 6) to high alignment scores (about 1\% or 2000 of bill-dyad alignment
-scores fall into this category) for the adjusted scores. The
-threshold-classification using the unweighted scores performs much worse. This
-is due to the fact that some bills with large numbers of section have high
-bill-dyad level alignment scores simply due to the fact that they have many
-boilerplate alignments. These results indicate that down-weighting by inverse
-frequency is a promising direction to take. 
-
-Recall is low at thresholds that produce reasonable precision (above 6), but that is expected for our case, as
+score threshold. We see very high precision when setting the threshold to
+relatively high scores ($>100$). Recall is low at thresholds that produce
+reasonable precision (above 100), but that is expected for our case, as
 (1) the introduction of similar policies in bills in tow different states is a
 rare event, and relatedly, (2) the appearance of two bills in the same NCSL
-table is a relatively rare event (8\% in the current analysis); and classifier recall is notoriously low in rare event data \citep{weiss2000learning}---even commonly approaching zero, as in our case \citep{weiss2004mining}. Our results suggest that the presence of a large alignment score between bills is an effective indicator of policy similarity.
+table is a relatively rare event (8\% in the current analysis); and classifier
+recall is notoriously low in rare event data \citep{weiss2000learning}---even
+commonly approaching zero, as in our case \citep{weiss2004mining}. Our results
+suggest that the presence of a large alignment score between bills is an
+effective indicator of policy similarity. Futher more, low recall has
+
+
 
 \begin{figure}
-\centering     %%% not \center
-\subfigure[Precision recall curve for boilerplate adjusted
-scores]{\label{fig:prec_rec_adj}\includegraphics[width=0.4\textwidth]{figures/ncsl_prec_rec_adj.png}}
-\subfigure[Precision recall curve for unweighted
-scores]{\label{fig:prec_rec_old}\includegraphics[width=0.4\textwidth]{figures/ncsl_prec_rec_old.png}}
+\centering
+\includegraphics[width=0.8\textwidth]{figures/ncsl_pr_nosplit.png}
 \caption{Precision-Recall curve for classifying two bills being in the same
-    ncsl table by thresholding the bill-dyad alignment score. The left panel displays the curve for the alignment scores weighted by the inverse frequency of the alignment, the left panel displays the curve for the unweighted scores. The x axis
+    ncsl table by thresholding the bill-dyad alignment score. The x axis
 displays the threshold, the y axis represents precision and recall. The shaded
 area in the background displays the frequency distribution of the alignment
 scores.}
@@ -410,6 +395,8 @@ scores.}
 
 To evaluate whether text re-use corresponds to the transfer of policy, we test whether the presence of a diffusion network tie between two states is a predictor of text reuse. We use the policy diffusion networks inferred in \citet{desmarais2015}. The diffusion networks were inferred using policy adoption sequences, and the network inference algorithm developed by \citet{gomez2010inferring}. A tie from state $i$ to state $j$ in the diffusion network indicates that state $j$ has frequently emulated state $i$'s policies in the preceding thirty-five years. To calculate an aggregate alignment score for each state-pair we calculate the sum of the natural logs of the alignment scores associated with each pair of bills across the two states. We use the log since a handful of large alignment scores lead to extreme outliers on the original scales. The ``Diffusion Ties'' variable indicates the presence of a diffusion edge between states in the 2008 diffusion network, as measured by \citet{desmarais2015}. The diffusion network in 2008 is inferred using policy adoptions in the 35 years preceding (and excluding) 2008.  There is one observation in the analysis for each of the 1,225 unique state-pairs. Since this is dyadic data, we use a matrix permutation method, quadratic assignment procedure, to calculate $p$-values \citep{krackhardt1988}. As a robustness check, we run the model with both the identity and log link.\footnote{The $p$-values were calculated using 5,000 random matrix permutations.}
 
+% latex table generated in R 3.2.3 by xtable 1.8-2 package
+% Wed Sep 21 20:12:14 2016
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
@@ -418,10 +405,10 @@ To evaluate whether text re-use corresponds to the transfer of policy, we test w
   \hline
  & Coefficient & p-value & Coefficient & p-value \\ 
   \hline
-Intercept & -6760712.2229 & 0.0048 & 8.2122 & 0.0000 \\ 
-  Diffusion Tie & 498466.2990 & 0.0496 & 0.2683 & 0.0968 \\ 
-  Coverage & 2199070.8445 & 0.0000 & 1.4324 & 0.0000 \\ 
-   \hline
+Intercept & -33577305.97 & 0.00 & 10.04 & 0.00 \\ 
+  Diffusion Tie & 2423709.31 & 0.05 & 0.27 & 0.10 \\ 
+  Coverage & 10938819.90 & 0.00 & 1.38 & 0.00 \\ 
+  \hline
 \end{tabular}
 \caption{Predicting number of alignments in legislation across states with diffusion ties. Coefficients calculated with OLS regression. $p$-values based on 5,000 QAP permuations.}
 \label{tab:qap.diffusion}
@@ -444,13 +431,13 @@ able to uniquely match about $8,000$ legislators to their records in the ideal
 point data. This allowed us to obtain ideal points for the sponsors of $58\%$ of
 bills and $48*10^6$ ($38\%$) pairs of bills. In order to assess the validity of text reuse as a measure of substantive policy overlap, we expect the quality of the alignments to be inversely correlated to the distance between the bills sponsors' ideal points. The ideal points are located on a common scale across all states, the distance between sponsors from different states is therefore meaningful. 
 
-In the following sections we present several analyses to assess this correlation. When we are generating the alignments the bills are split up into sections. We generate an alignment score for a bill dyad by first taking the logarithm and then summing over all section dyads of the bill dyad. The ideal point of the bill is derived from the ideal point of the primary bill sponsor. For bills with several primary sponsors we use the average of those sponsors' ideal points to obtain a single measure. Figure \ref{fig:ideology_plot} displays the distribution of ideological distance and log-alignment score for the roughly 50 million dyads in the dataset. Each dot is a hexagonal tile, the color of the tile represents the number of dyads in that area. Two major observations can be made in this plot. First, the vast majority of alignment scores are close to zero. Second, the triangular shape of the distribution indicates the high precision - low recall character of the alignment score discussed above: few bills exhibit meaningful policy overlap with other bills, but in the region of lower ideological distance we observe a greater occurrence of positive outliers, which arise from significant policy overlap. 
+In the following sections we present several analyses to assess this correlation. The ideal point of the bill is derived from the ideal point of the primary bill sponsor. For bills with several primary sponsors we use the average of those sponsors' ideal points to obtain a single measure. Figure \ref{fig:ideology_plot} displays the distribution of ideological distance and log-alignment score for the roughly 50 million dyads in the dataset. Each dot is a hexagonal tile, the color of the tile represents the number of dyads in that area. Two major observations can be made in this plot. First, the vast majority of alignment scores are close to zero. Second, the triangular shape of the distribution indicates the high precision - low recall character of the alignment score discussed above: few bills exhibit meaningful policy overlap with other bills, but in the region of lower ideological distance we observe a greater occurrence of positive outliers, which arise from significant policy overlap. 
 
 In order to investigate this pattern more closely, we additionally calculate
 quantile regressions for the relationship between the alignment score and the
 ideological distance. Figure \ref{fig:quantile_regression} displays the
 coefficients from quantile regressions on a sequence of quantiles from the
-median to the 0.995th quantile. Confidence intervals are calculated by resampling bills, which represents an implementation of the clustered nonparametric bootstrap proposed by \citet{harden2011bootstrap}. We see that there is no relationship between the ideological similarity of bill sponsors and the median alignment scores between bills. However, as the quantile we model increases---especially above the 90th percentile, we see that the relationship grows strong and negative in magnitude, and is statistically significant. These results both validate the use of text reuse as a measure of policy similarity, and reinforce the high precision and low recall nature of text reuse as a measure of policy similarity.
+median to the 0.995th quantile. Confidence intervals are calculated by resampling bills, which represents an implementation of the clustered nonparametric bootstrap \citet[see e.g.][]{harden2011bootstrap}. Coefficients significant at the 95\% level are displayed in black, insignificant coefficients are grey. We see that there is only a very weak relationship between the ideological similarity of bill sponsors and the median alignment scores between bills. However, as the quantile we model increases we see that the relationship grows strong and negative in magnitude, and is statistically significant. These results both validate the use of text reuse as a measure of policy similarity, and reinforce the high precision and low recall nature of text reuse as a measure of policy similarity.
 
 
 \begin{figure}[ht!]i
@@ -466,7 +453,7 @@ median to the 0.995th quantile. Confidence intervals are calculated by resamplin
     \caption{Coefficients of quantile regression for alignment score on
     ideological distance. Dots indicate the point estimate. Horizontal bar
 represent 95\% confidence intervals obtained via the clustered bootstrap, [using
-500 iterations]. Note that the x-axis is not in a natural scale}
+1200 iterations]. Note that the x-axis is not in a natural scale}
     \label{fig:quantile_regression}
 \end{figure}
 

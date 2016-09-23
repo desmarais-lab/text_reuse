@@ -338,7 +338,7 @@ We use three strategies in order to assess the validity of text reuse as a measu
 
 \subsection{NCSL Tables}
 
-In our first validation exercise, we consider whether high alignment scores provide a reliable signal of similar policy proposals. To build a ground truth data set in terms of policy proposal, we rely on thematic tables published by the National Council of State Legislatures (NCSL).\footnote{\url{www.ncsl.org}}  We collected a sample of these tables with the following procedure:
+In our first validation exercise, we consider whether high alignment scores provide a reliable signal of similar policy proposals. To build a ground truth data set in terms of similar policy proposals, we rely on thematic tables published by the National Council of State Legislatures (NCSL).\footnote{\url{www.ncsl.org}}  We collected a sample of these tables with the following procedure:
 
 \begin{singlespacing}
 
@@ -348,14 +348,15 @@ In our first validation exercise, we consider whether high alignment scores prov
     \item Select bills that fulfill these three conditions:
         \begin{enumerate}
             \item The website is a NCSL table
-            \item The table refers (at least in part) to legislation introduced in 2011 or later.             \item The table contains less than 100 individual bills. 
+            \item The table refers (at least in part) to legislation introduced in 2011 or later.          
+             \item The table contains less than 100 individual bills. 
         \end{enumerate}
-    \item Scrape all information from these tables
+    \item Scrape all bills from these tables
 \end{enumerate}
 
 \end{singlespacing}
 
-Condition a) is necessary, since some of the urls returned by the web query refer to blog entries or to protected websites that require NCSL membership. The rationale behind condition b) is to maximize the number of bills we can match to our database (see Figure \ref{fig:bill_desc}). We additionally constrain the number of bills per table to be below 100, in order to assure, that the topic of the table is not too broad. We chose 100 since this number would correspond roughly to two bills per state (often there is a house and a senate bill in each state for a particular policy).
+Condition a) is necessary, since some of the urls returned by the web query refer to blog entries or to protected websites that require NCSL membership. The rationale behind condition b) is to maximize the number of bills we can match to our database (see Figure \ref{fig:bill_desc}). We additionally constrain the number of bills per table to be below 100, in order to avoid tables that cover very broad topics. We chose 100 since this number would correspond roughly to two bills per state (often there is a house and a senate bill in each state for a particular policy).
 The web query from step 1 returned 266 urls. From the 50 sampled urls 22
 fulfilled the three criteria. From these 22 tables we constructed a dataset of
 950 bills, of which we could match 704 to our bill database\footnote{We
@@ -384,7 +385,7 @@ table is a relatively rare event (8\% in the current analysis); and classifier
 recall is notoriously low in rare event data \citep{weiss2000learning}---even
 commonly approaching zero, as in our case \citep{weiss2004mining}. Our results
 suggest that the presence of a large alignment score between bills is an
-effective indicator of policy similarity. Futher more, low recall has
+effective indicator of policy similarity. 
 
 
 
@@ -402,7 +403,7 @@ scores.}
 
 \subsection{Diffusion networks and Text re-use}
 
-To evaluate whether text re-use corresponds to the transfer of policy, we test whether the presence of a diffusion network tie between two states is a predictor of text reuse. We use the policy diffusion networks inferred in \citet{desmarais2015}. The diffusion networks were inferred using policy adoption sequences, and the network inference algorithm developed by \citet{gomez2010inferring}. A tie from state $i$ to state $j$ in the diffusion network indicates that state $j$ has frequently emulated state $i$'s policies in the preceding thirty-five years. To calculate an aggregate alignment score for each state-pair we calculate the sum of the natural logs of the alignment scores associated with each pair of bills across the two states. We use the log since a handful of large alignment scores lead to extreme outliers on the original scales. The ``Diffusion Ties'' variable indicates the presence of a diffusion edge between states in the 2008 diffusion network, as measured by \citet{desmarais2015}. The diffusion network in 2008 is inferred using policy adoptions in the 35 years preceding (and excluding) 2008.  There is one observation in the analysis for each of the 1,225 unique state-pairs. Since this is dyadic data, we use a matrix permutation method, quadratic assignment procedure, to calculate $p$-values \citep{krackhardt1988}. As a robustness check, we run the model with both the identity and log link.\footnote{The $p$-values were calculated using 5,000 random matrix permutations.}
+To evaluate whether text re-use corresponds to the transfer of policy, we test whether the presence of a diffusion network tie between two states is a predictor of text reuse. We use the policy diffusion networks inferred in \citet{desmarais2015}. The diffusion networks were inferred using policy adoption sequences, and the network inference algorithm developed by \citet{gomez2010inferring}. A tie from state $i$ to state $j$ in the diffusion network indicates that state $j$ has frequently emulated state $i$'s policies in the preceding thirty-five years. To calculate an aggregate alignment score for each state-pair we calculate the sum of the natural logs of the alignment scores associated with each pair of bills across the two states. We use the log since a handful of large alignment scores lead to extreme outliers on the original scales. The ``Diffusion Ties'' variable indicates the presence of a diffusion edge between states in the 2008 diffusion network, as measured by \citet{desmarais2015}. The diffusion network in 2008 is inferred using policy adoptions in the 35 years preceding (and excluding) 2008.  There is one observation in the analysis for each of the 1,225 unique state-pairs. Since this is dyadic data, we use a matrix permutation method, quadratic assignment procedure, to calculate $p$-values \citep{krackhardt1988}. As a robustness check, we run the model with both the identity and log link.\footnote{The $p$-values were calculated using 5,000 random matrix permutations.} We also control for a dyadic variable (Coverage) equal to the product of the number of years for which we have data for each state in the dyad.
 
 % latex table generated in R 3.2.3 by xtable 1.8-2 package
 % Wed Sep 21 20:12:14 2016
@@ -417,11 +418,11 @@ Intercept & -33577305.967 & 0.997 & 10.041 & 0.000 \\
     Coverage & 10938819.897 & 0.000 & 1.379 & 0.000 \\ 
  & Coefficient & p-value & Coefficient & p-value \\ 
 \end{tabular}
-\caption{Predicting number of alignments in legislation across states with diffusion ties. Coefficients calculated with OLS regression. $p$-values based on 5,000 QAP permuations.}
+\caption{Predicting aggregate cross-state alignment scores with diffusion ties. Coefficients calculated with OLS regression. $p$-values based on 5,000 QAP permuations.}
 \label{tab:qap.diffusion}
 \end{table}
 
-Results of the dyadic regression are presented in Table \ref{tab:qap.diffusion}. In both specifications there is a positive relationship between the number of diffusion ties and the number of alignments. The relationship is statistically significant at the 0.05 level with the identity link and at the 0.10 level with the log link. Furthermore, the magnitudes of the relationships are substantively significant. With the identity link, the presence of a diffusion tie leads to a 0.25 standard deviation increase in the expected aggregate alignment score.Based on the log link, the addition of a diffusion tie corresponds to a 30\% increase in the expected aggregated alignment score.\footnote{Calculated as $100\times \left[ \exp(0.2683)-1\right] = 30.77$}. These results offer further evidence of the validity of quantifying text re-use as a measure of policy similarity, as the aggregate volume of text re-use between states is positively associated with previously-identified diffusion ties between states.
+Results of the dyadic regression are presented in Table \ref{tab:qap.diffusion}. In both specifications there is a positive relationship between the number of diffusion ties and the number of alignments. The relationship is statistically significant at the 0.05 level (one tailed) in each analysis. Furthermore, the magnitudes of the relationships are substantively significant. With the identity link, the presence of a diffusion tie leads to a 0.25 standard deviation increase in the expected aggregate alignment score {\bf FRIDO, WOULD YOU VERIFY THE SD NUMBER HERE, OR EVEN JUST STANDARDIZE THE COEFFICIENTS IN THE IDENTITY LINK MODEL BY DIVIDING BY THE SD?}. Based on the log link, the addition of a diffusion tie corresponds to a 30\% increase in the expected aggregated alignment score.\footnote{Calculated as $100\times \left[ \exp(0.266)-1\right] = 30.47$}. These results offer further evidence of the validity of quantifying text re-use as a measure of policy similarity, as the aggregate volume of text re-use between states is positively associated with previously-identified diffusion ties between states.
 
 
 \subsection{Ideological Distance of Aligned Bills}

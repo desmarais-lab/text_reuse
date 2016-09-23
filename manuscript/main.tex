@@ -295,7 +295,7 @@ distribution of the alignments. The vast majority of alignments are very small
 
 \subsection{Approaches to Adjusting for Boiler Plate Text}
 
-Legislation is full of textual content that is not very useful in identifying the novel policy proposal(s) offered by the bill. Such text includes procedural language, headers, section titles, and common phrases such as definitions of legal terms, tax brackets, etc. Text that is irrelevant to specific policy proposals represents a major---perhaps the primary---limitation on the capacity for text reuse to identify the emulation of policies across bills. \citet{wilkerson2015tracing} use human coders to identify alignment text that is unrelated to policy content. They call this text ``boiler plate.'' Given a large set of hand-labeled alignments, they use a machine learning algorithm to classify text as either boiler plate or not based on the textual content of the alignment, and exclude alignments labeled as boiler plate. This represents one possible approach, but has two limitations. The first is that the use of human coders to label data to train the classifier is costly. The second is that the classification and exclusion approach treats legislative text as conforming to a procedural-or-not dichotomy, where language in a bill may be situated on a continuum in terms of the degree to which it is specific to the policy proposal(s) offered in the bill. We discuss two alternative approaches to adjusting for boiler plate text in alignments.
+Legislation is full of textual content that is not very useful in identifying the novel policy proposal(s) offered by the bill. Such text includes procedural language, headers, section titles, and common phrases such as definitions of legal terms, tax brackets, etc. Text that is irrelevant to specific policy proposals represents a major---perhaps the primary---limitation on the capacity for text reuse to identify the emulation of policies across bills. \citet{wilkerson2015tracing} use human coders to identify alignment text that is unrelated to policy content. They call this text ``boiler plate.'' Given a large set of hand-labeled alignments, they use a machine learning algorithm to classify text as either boiler plate or not based on the textual content of the alignment, and exclude alignments labeled as boiler plate. This represents one possible approach, but has two limitations. The first is that the use of human coders to label data to train the classifier is costly. The second is that the classification and exclusion approach treats legislative text as conforming to a procedural-or-not dichotomy, where language in a bill may be situated on a continuum in terms of the degree to which it contributes to the policy proposal(s) offered in the bill. We discuss two alternative approaches to adjusting for boiler plate text in alignments.
 
 The first approach also relies on an automatic classifier, but we propose a novel approach for
 generating training data without relying on human coders. We posit that boiler plate language is highly repetitive within states. Furthermore, language
@@ -303,20 +303,19 @@ that is passed several times (i.e., in separate bills) within the same state is 
 substantively irrelevant. Using these facts allows us to accumulate a large amount of labeled data---all alignments between bills that have both passed in the same state---which we use to train a machine learning classifier to exclude boiler plate alignments. In addition to the text
 itself, we use the position in the text as a feature in the classifier. This approach is very similar to that taken by \citet{wilkerson2015tracing}, except we would not use human coders to label boiler plate alignments.
 
-In the second approach we describe, which we have implemented in one analysis
-below, we do not exclude boiler plate according to a classification dichotomy.
-Rather, we down-weight alignments alignments that consist of language that is
+In the second approach we describe, which we have implemented in the analyses we present below, we do not exclude boiler plate according to a classification dichotomy.
+Rather, we down-weight alignments that consist of language that is
 very common to all alignments. The underlying logic is that language that
 appears in a large number of other alignments is probably not related to
-specific policies. For examples alignments consisting of many stop words such as
+specific policies. For example, alignments consisting of many stop words such as
 `the' or `a' or of common procedural language like `legislature` or `section'
 are most likely part of phrases that are either very frequent in common language
 or very frequent in the legislative context. 
 In order to quantify the similarity to common alignments, we calculate the
 cosine similarity of the bag-of-words vector of each alignment with a random
 sample of 1000 alignments\footnote{We rely on a random sample for computational
-reasons, calculating the complete similarity matrix is computationally
-unfeasible and unnecessary.}. The adjusted score for two bills $Y$ and $Y$ is
+reasons. Calculating the complete similarity matrix is computationally
+infeasible and unnecessary.}. The adjusted score for two bills $Y$ and $Y$ is
 then:
 
 \begin{equation}
@@ -329,12 +328,12 @@ Where $S_{X,Y}$ is the alignment score as described in Section \ref{sec:d_t_r},
 $\mathbf{\mathcal{A}_j}$ is the bag-of-word vector representation of the
 matching alignment text and $i = 1,\dots,1000$ are the sample alignments.
 
-In this approach we follow the common intuition in natural language processing that the informativeness of text is inversely related to the frequency with which that text occurs \citep{robertson2004understanding} (see, e.g., the regular application of term frequency–inverse document frequency (tf-idf) to pre- or post-process text-based datasets and results). This measure is different and potentially preferable in two ways. First, it does not require the use of human coders. Second, it places text on a continuum of uniqueness rather than dichotomizes it as boiler plate or not.
+In this approach we follow the common intuition in natural language processing that the informativeness of text is inversely related to the frequency with which that text occurs \citep{robertson2004understanding} (see, e.g., the regular application of term frequency--inverse document frequency (tf-idf) to pre- or post-process text-based datasets and results). This measure is different and potentially preferable in two ways. First, it does not require the use of human coders. Second, it places text on a continuum of uniqueness rather than dichotomizes it as boiler plate or not.
 
 
-\section{Evaluation of Validity}
+\section{Empirical Evaluation of Validity}
 
-We use three strategies in order to assess the validity of text reuse as a measure of policy equivalence. First, we evaluate whether there is a disproportionately high number of alignments between bills on the same policy area. Second, we analyze how well the bill similarity aggregated to the state level corresponds with policy diffusion networks identified in previous research \citep{desmarais2015}. And third, we study the relationship between the ideological distance between the sponsors of bills and the alignment scores between those bills. If substantive policy content, and importantly, the same ideological direction of the provisions is detected by the alignment algorithm, we will expect an inverse relationship between these two measures.
+We use three strategies in order to assess the validity of text reuse as a measure of policy similarity. First, we evaluate whether there is a disproportionately high number of alignments between bills on the same policy area. Second, we analyze how well the bill similarity aggregated to the state level corresponds with policy diffusion networks identified in previous research \citep{desmarais2015}. And third, we study the relationship between the ideological distance between the sponsors of bills and the alignment scores between those bills. If substantive policy content, and importantly, the same ideological direction of the provisions is detected by the alignment algorithm, we will expect an inverse relationship between these two measures.
 
 
 \subsection{NCSL Tables}

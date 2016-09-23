@@ -413,10 +413,11 @@ To evaluate whether text re-use corresponds to the transfer of policy, we test w
 \hline
 & \multicolumn{2}{c}{Identity Link} & \multicolumn{2}{c}{Log Link} \\
   \hline
+   & Coefficient & p-value & Coefficient & p-value \\  \hline
 Intercept & -33577305.967 & 0.997 & 10.041 & 0.000 \\ 
   Diffusion Tie & 2423709.311 & 0.042 & 0.266 & 0.050 \\ 
     Coverage & 10938819.897 & 0.000 & 1.379 & 0.000 \\ 
- & Coefficient & p-value & Coefficient & p-value \\ 
+\hline
 \end{tabular}
 \caption{Predicting aggregate cross-state alignment scores with diffusion ties. Coefficients calculated with OLS regression. $p$-values based on 5,000 QAP permuations.}
 \label{tab:qap.diffusion}
@@ -472,9 +473,9 @@ represent 95\% confidence intervals obtained via the clustered bootstrap, [using
 \section{Conclusion}
 Scholarship on public policy and legislative politics relies heavily on measuring the content of legislation, especially with a relative or comparative approach. Manual comparison of bills is prohibitively time consuming when it comes to covering a large proportion of legislation introduced in one or more legislatures. We show that the automated detection of similar text strings in bills provides an effective approach to comparing bill contents. The log alignment scores serve as a highly valid summary measure of the similarity of two bills. We show high validity of this measure in three complimentary tests. First, it correlates with the presence of a diffusion tie inferred from patterns of policy diffusion. Second, it correlates with the ideological similarity between bill sponsors. Third, it exhibits extremely high precision in predicting whether two bills are listed in the NCSL policy area tables. We demonstrate the potential for using this data to test new or unexplored hypotheses on lawmaking in the states by testing whether bill text similarity correlates with campaign contributions to US state legislators.
 
-The log alignment scores we derive provide a resource for scholars to test hypotheses of the causes and consequences of the introduction and adoption of similar policies---a measure which crosses different policy areas, states, and time. Where and when do similar policies cross state borders? Which legislators introduce similar legislation? Does lobbying by pressure groups result in the adoption of similar policies across states? Do similar patterns of campaign contributions to legislators predict similar policies in proposed legislation? Questions such as these can be directly investigated using the policy similarity measures we introduce. 
+The alignment scores we derive provide a resource for scholars to test hypotheses of the causes and consequences of the introduction and adoption of similar policies---a measure which crosses different policy areas, states, and time. In a validation experiment, we show that a wide span of quantiles of alignment scores between bills---from the median up through and above the 99$^{th}$ percentile---are negatively correlated with the ideological distance between the legislators who introduced the two bills. This result opens the door to many other hypotheses that could be tested using alignment scores for bill pairs.  Where and when do similar policies cross state borders? Which legislators introduce similar legislation? Does lobbying by pressure groups result in the adoption of similar policies across states? Do similar patterns of campaign contributions to legislators predict similar policies in proposed legislation? Questions such as these can be directly investigated using the policy similarity measures we introduce. 
 
-A consistent result in our analysis is that the measure of policy similarity based on text reuse is high precision and low recall.  As such, in future research we advise scholars to focus on upper quantiles of the distribution of alignments, especially when considering measurements at the bill-level. This can be done through the use of quantile regression, or through thresholding on high alignment scores (e.g., 50+) to indicate the presence of highly similar policy proposals in legislation.
+The nature of our measure of policy similarity based on text reuse is that it is high precision and low recall.  As such, in future research we advise scholars to focus on upper quantiles of the distribution of alignments when the inquiry requires the identification of bills that introduce equivalent policies. For predictive modeling, this can be done through the use of quantile regression at high quantiles. For searching out bill pairs, this can be done through thresholding on high alignment scores (e.g., 50+) to indicate the presence of highly similar policy proposals in legislation.
 
 %\clearpage
 

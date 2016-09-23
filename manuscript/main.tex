@@ -385,7 +385,7 @@ table is a relatively rare event (8\% in the current analysis); and classifier
 recall is notoriously low in rare event data \citep{weiss2000learning}---even
 commonly approaching zero, as in our case \citep{weiss2004mining}. Our results
 suggest that the presence of a large alignment score between bills is an
-effective indicator of policy similarity. 
+effective indicator of policy similarity. {\bf FRIDO, I DON"T SEE ANYTHING ABOUT THE ADDITIONAL COMPARISONS YOU HAVE DONE HERE. WE DON'T REALLY PROVIDE THE READER WITH A BASELINE FOR COMPARISON HERE. WOULD YOU CALCULATE THE AUCPR OF OUR CLASSIFIER VS A RANDOM CLASSIFIER USING THE PRROC R PACKAGE? ALSO ADD THE VALUE USING THE COSINE SIMILARITY} 
 
 
 
@@ -443,7 +443,7 @@ In the following sections we present several analyses to assess this correlation
 
 In order to investigate this pattern more closely, we additionally calculate
 quantile regressions for the relationship between the alignment score and the
-ideological distance. Figure \ref{fig:quantile_regression} displays the
+ideological distance. In a quantile regression, the dependent variable is the value of the predicted quantile of the distribution of the dependent variable conditional on the independent variables (e.g., the predicted median for median regression with the quantile set to 0.50 \citep{harden2011linear}). Figure \ref{fig:quantile_regression} displays the
 coefficients from quantile regressions on a sequence of quantiles from the
 median to the 0.995th quantile. Confidence intervals are calculated by resampling bills, which represents an implementation of the clustered nonparametric bootstrap \citet[see e.g.][]{harden2011bootstrap}. Coefficients significant at the 95\% level are displayed in black, insignificant coefficients are grey. We see that there is only a very weak relationship between the ideological similarity of bill sponsors and the median alignment scores between bills. However, as the quantile we model increases we see that the relationship grows strong and negative in magnitude, and is statistically significant. These results both validate the use of text reuse as a measure of policy similarity, and reinforce the high precision and low recall nature of text reuse as a measure of policy similarity.
 

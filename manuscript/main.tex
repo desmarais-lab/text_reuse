@@ -42,9 +42,7 @@
 \newcommand{\specialcell}[2][c]{%
   \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
 
-\externaldocument{tables/ideology_regressions.tex}
-\externaldocument{tables/ncsl_crosstab.tex}
-\externaldocument{tables/time_diff_reg.tex}
+\externaldocument{tables/ncsl_auc.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -114,16 +112,35 @@ We see past work that has identified sets of comparable policies as focusing on 
 \label{sec:d_t_r}
 To assess the maximal similarity of policies proposed in two pieces of legislation, we seek to identify large segments of equivalent or highly similar text (i.e., text reuse between bills). Alignment algorithms for discovering similar long sequences of text stand in contrast to bag-of-words methods, which are based on the comparison of word occurrence frequencies in documents. Bag-of-words methods may be effective for capturing broad topical areas in legislation, but will provide results that are too coarse for precisely assessing policy overlap. For example, in modeling bills in the US Congress using statistical topic models, arguably the canonical bag-of-words method for text analysis, \citet{gerrish2011predicting} find that topic models for legislative text perform most effectively when parameterized with 64 topics to model a corpus of 4,447 bills. While 64 topics provides a fairly detailed categorization of the domains covered in legislation, it is unrealistic to think that this method can isolate individual policy proposals.  Considering \citeapos{gerrish2011predicting} results again, that would mean that the US Congress considers nearly seventy bills, on average, for each specific policy proposed. 
 
-There are a variety of algorithms designed to automatically detect text reuse between documents mostly originating in the plagiarism detection literature \citep[see e.g.][for an overview]{potthast2013overview}. In political science, \citet{wilkerson2015tracing} introduced the Smith-Waterman local alignment algorithm (SW algorithm) to detect overlapping language in congressional bills in order to trace policy ideas through the legislative process of the US Congress. We use the same algorithm to detect text reuse in US state bills, however, our implementation of the algorithm differs slightly. The SW algorithm was developed by \citet{smith1981identification} in molecular biology, in order to match genetic sequences. Given two sequences (of genes or words) it calculates the optimal alignment (match) between these sequences. 
+There are a variety of algorithms designed to automatically detect text reuse
+between documents mostly originating in the plagiarism detection literature
+\citep[see e.g.][for an overview]{potthast2013overview}. In political science,
+\citet{wilkerson2015tracing} introduced the Smith-Waterman local alignment
+algorithm (SW algorithm) to detect overlapping language in congressional bills
+in order to trace policy ideas through the legislative process of the US
+Congress. We use the same algorithm to detect text reuse in US state bills,
+however, our implementation of the algorithm differs slightly. The SW algorithm
+was developed by \citet{smith1981identification} in molecular biology, in order
+to match genetic sequences. Given two sequences (of genes or words) it
+calculates the optimal local alignment (match) between these sequences. 
 
-Sequences in text that convey similar---even equivalent---policy content often do not match perfectly. Formatting, white space, typographical errors, etc. would decrease the precision dramatically if only exact matches were used. The SW algorithm, therefore, returns the optimal alignment while allowing for mismatches and gaps. The extent to which such imperfections are tolerated is governed by parameters that are set by the researcher. There are three such parameters: the match score (reward for exactly matching words), the mismatch score (penalty for including words that do not match), and the gap score (penalty for including placeholder words in matching a shorter sequence to a longer sequence). The goal of the algorithm is to return the the alignment with the highest score given the input sequences and the parameters. Consider the following two excerpts from Alaska State Bill 203 (28th session) and North Carolina House Bill 366 (2015) respectively:
+Sequences in text that convey similar---even equivalent---policy content often
+do not match perfectly. Formatting, white space, typographical errors, etc.
+would decrease the recall dramatically if only exact matches were used. The SW
+algorithm, therefore, returns the optimal alignment while allowing for
+mismatches and gaps. The extent to which such imperfections are tolerated is
+governed by parameters that are set by the researcher. There are three such
+parameters: the match score (reward for exactly matching words), the mismatch
+score (penalty for including words that do not match), and the gap score
+(penalty for including placeholder words in matching a shorter sequence to a
+longer sequence). The goal of the algorithm is to return the alignment with the highest score given the input sequences and the parameters. Consider the following two excerpts from Alaska State Bill 203 (28th session) and North Carolina House Bill 366 (2015) respectively:
 
 \begin{quote}
 \textit{"section 1.AS44.99 is amended by adding new sections to read: article 6. compact for a balanced budget (...)"} \\
 \textit{"chapter 143 is amended by adding a new article to read: article 80. compact for a balanced budget (...)"}
 \end{quote}
 
-There is a large number of possibilities of how these sequences could be aligned. There is a trade-off between short sequences that match perfectly, and longer sequences with imperfections. For example, we could match just ``is amended by adding new'' or ``compact for a balanced budget''. However, by adding a gap between ``adding'' and ``new'' in the first sequence and accepting the mismatches ``article''-``section'' and ``6.''-``80.'', a longer alignment can be obtained: ``is amended by adding \textit{(a)} new \textit{(article/section)} to read: article \textit{(6./80.)}''. 
+These sequences could be aligned in a large number of possible ways. There is a trade-off between short sequences that match perfectly, and longer sequences with imperfections. For example, we could match just ``is amended by adding new'' or ``compact for a balanced budget''. However, by adding a gap between ``adding'' and ``new'' in the first sequence and accepting the mismatches ``article''-``section'' and ``6.''-``80.'', a longer alignment can be obtained: ``is amended by adding \textit{(a)} new \textit{(article/section)} to read: article \textit{(6./80.)}''. 
 
 Because there are so many different possibilities, it is computationally demanding to find the optimal alignment. \citet{smith1981identification} therefore proposed a dynamic programming approach that is illustrated in Figure \ref{fig:score_matrix}. Dynamic programming refers to algorithms that divide a problem into sub-problems and store results of previous calculations for later ones. In the case of the SW algorithm, the property that makes it a dynamic problem is the fact that all the alignments of shorter sub-sequences of an optimal alignment of a sequence are themselves optimal. Intuitively, if the benefits of including a sub-sequence in an alignment outweigh the penalties from mismatches and gaps in that sub-sequence, that sub-sequence will contribute positively to longer alignments to which it is appended. To make this clearer consider the beginning of the sequences in the example above:
 
@@ -154,7 +171,12 @@ The algorithm is visualized for the example above in Figure
 \begin{figure}[ht!]
 	\centering
 	\includegraphics[width=1.05\textwidth]{figures/sm.png}
-    \caption{Dynamic programming array of local alignment algorithm. The parameters in this instance are: Match Score: 5, Mismatch Score: -2, Gap Score: -1. The optimal alignment is displayed on the right side of the matrix. The left column corresponds to the text sequence in the rows of the matrix, the right column to the sequence in the columns. Mismatches are colored in red, gaps are indicated by "-" and orange color. The blue cells in the matrix display the path of the optimal alignment.}
+    \caption{Dynamic programming array of local alignment algorithm. The
+    parameters in this instance are: Match Score: 5, Mismatch Score: -2, Gap
+Score: -1. The optimal alignment is displayed on the right side of the matrix.
+The left column corresponds to the text sequence in the rows of the matrix, the
+right column to the sequence in the columns. Mismatches are colored in red, gaps
+are indicated by "-" and orange color. The highlighted (blue) cells in the matrix display the path of the optimal alignment.}
     \label{fig:score_matrix}
 \end{figure}
 
@@ -169,7 +191,8 @@ the resulting alignment sequence element $a_{i+1}$ is matched with a gap. On the
 other hand, if we move to cell $(i, j+1)$ sequence element $b_{j+1}$ is matched
 with a gap in the resulting alignment. If the first three values are all $<= 0$,
 the score in the cell is 0 meaning that no step is taken and every potential
-alignment stops at this point. This can be observed in Figure \ref{fig:score_matrix}. The blue path describes the optimal alignment. The first two elements in both sequences don't match, therefore the score remains zero. Therefore the resulting alignment starts at the fourth element of each sequence with four diagonal steps, each adding points $(\delta = 5)$ to the final score which reaches 20 at the alignment ending in ``adding''-``adding''. After that, a step to the right is taken, meaning that the additional ``a'' in the column sequence is matched with a gap in the row sequence (indicated by ``-'' and orange coloring in the result on the right hand side). The cumulative score of the alignment is reduced by $\gamma = -1$ to 19. After that only diagonal steps are taken. Note that there are two mismatches each of which reduces the score by $\epsilon = -2$. 
+alignment stops at this point. This can be observed in Figure
+\ref{fig:score_matrix}. The highlighted (blue) path describes the optimal alignment. The first two elements in both sequences don't match, therefore the score remains zero. Therefore the resulting alignment starts at the fourth element of each sequence with four diagonal steps, each adding points $(\delta = 5)$ to the final score which reaches 20 at the alignment ending in ``adding''-``adding''. After that, a step to the right is taken, meaning that the additional ``a'' in the column sequence is matched with a gap in the row sequence (indicated by ``-'' and orange coloring in the result on the right hand side). The cumulative score of the alignment is reduced by $\gamma = -1$ to 19. After that only diagonal steps are taken. Note that there are two mismatches each of which reduces the score by $\epsilon = -2$. 
 
 The optimal alignment is identified by finding the highest score in the matrix,
 at which the alignment ends, and back-tracing the path of the alignment. The
@@ -223,7 +246,7 @@ consists of three major steps: 1) Pre-processing and selection of documents to c
 
 The SW algorithm is computationally demanding and an exhaustive comparison of
 all possible bill-pairs is not feasible (with $500,000$ bills this would amount
-to about $124 * 10^9$ bill pairs). \citet{wilkerson2015tracing} encountered the same problem and excluded bills that don't have at least five matching 10-grams. Since this implies considerable exact character matches, we see this as a too restrictive for our application. Because the text we are using originates in 50 different legislatures, exact character matches might obfuscate valuable text reuse just because of small formatting changes, changes of state names, etc. 
+to about $1.24 * 10^11$ bill pairs). \citet{wilkerson2015tracing} encountered the same problem and excluded bills that don't have at least five matching 10-grams. Since this implies considerable exact character matches, we see this as a too restrictive for our application. Because the text we are using originates in 50 different legislatures, exact character matches might obfuscate valuable text reuse just because of small formatting changes, changes of state names, etc. 
 Instead we choose to rely on a procedure that is based on finding bills with
 similar language. We store all available bills in an Elastic Search database.
 Elastic search is an open source web search engine which is designed to find
@@ -236,39 +259,107 @@ document in the collection, a variation of the cosine similarity is calculated
 and the $m$ bills with the highest scores are selected for further analysis. For
 this analysis we set $k$ to 25, $n$ to 5 and $m$ to 1000\footnote{For
 details on the exact algorithm we refer the reader to the elastic search
-documentation (\url{http://sunlightfoundation.com/} as well as the lucene engine
+documentation
+(\url{https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-mlt-query.html} as well as the lucene engine
 documentation
 (\url{https://lucene.apache.org/core/4_9_0/core/org/apache/lucene/search/similarities/TFIDFSimilarity.html}).
 In order to account for the possibility of selection bias being introduced to
 our analyses through the cap of 1000 similar bills, we analyzed the results with
 different numbers of pre-selected bills. We find that this parameter, when set
 to a sufficiently high value, does not lead to such bias because the set of
-potentially relevant bills is always much smaller than 1000.}
+potentially relevant bills is always much smaller than 1000.}.
 
 
 \subsection{Bill Alignment Computation}
 
 Once the candidate bills are selected, the alignments are calculated for all
-possible bill-dyads, bill pairs from the same state are available but excluded
-for the analyses below. We exclude same-state comparisons in the current analysis since our validation exercises are focused on cross-state comparisons. We refer to the two sections involved in each alignment process as `left' and `right' sections. The algorithm returns parts of the left and right section that are determined to be aligned as well as a score. We refer to these three pieces of information as an alignment. 
+possible bill-dyads. Bill pairs from the same state are available but excluded
+for the analyses below. We exclude same-state comparisons in the current
+analysis since our validation exercises are focused on cross-state comparisons.
+We refer to the two bills involved in each alignment process as `left' and
+`right' bills. The algorithm returns parts of the left and right bills that are determined to be aligned as well as a score. We refer to these three pieces of information as an alignment. 
 
 \clearpage
 
+%\begin{table}[ht!]
+%\centering
+%\caption{Alignment Examples. Yellow highlighting shows matching sections. Dashes stand for gaps introduced by the alignment algorithm. Non highlighted text are mismatches.}
+%\label{tab:alignment_examples}
+%\bgroup
+%\def\arraystretch{2}
+%\begin{tabular}{p{0.45\textwidth}|p{0.45\textwidth}|p{0.1\textwidth}}
+%Left Text & Right Text & Score\\
+%\hline
+%\textbf{nj\_214\_A1167}: "\hl{the entire credit may not be taken for the taxable year in which the} renewable energy property \hl{is placed in service but must be taken in five equal} - \hl{installments beginning with the taxable year in which the} renewable energy property \hl{is placed in service. if, in one of the years in which the installment of a credit accrues, the} renewable energy property \hl{with respect to which the credit was claimed is disposed of}, \hl{taken out of service, or moved out of state, the credit expires and the taxpayer may not take any remaining installment of the credit. the taxpayer may, however, take the portion of an installment that accrued in a previous year and was carried forward to the extent permitted under}" & \textbf{nc\_2011\_SB747}: "\hl{the entire credit may not be taken for the taxable year in which the} facility - - \hl{is placed in service but must be taken in five equal} annual \hl{installments beginning with the taxable year in which the} facility - - \hl{is placed in service. if, in one of the years in which the installment of a credit accrues,} the facility - - \hl{with respect to which the credit was claimed is disposed} - - - \hl{of} - \hl{or taken out of service, the credit expires and the taxpayer may not take any remaining installment of the credit. the taxpayer may, however, take the portion of an installment that accrued in a previous year and was carried forward to the extent permitted under}" & $388$ \\
+%
+%\textbf{nj\_214\_A1167}: "\hl{the entire credit may not be taken for the} taxable \hl{year in which the} renewable energy \hl{property is placed in service but must be taken in} five \hl{equal installments} - - - - - \hl{beginning with the taxable year in which the}" & \textbf{ga\_2011\_12\_HB146}: "\hl{the entire credit may not be taken for the} - \hl{year in which the} - - \hl{property is placed in service but must be taken in} four \hl{equal installments} over four successive taxable years \hl{beginning with the taxable year in which the}" & 110 \\
+%
+%\textbf{nj\_214\_A1167}: "\hl{the entire credit may not be taken for the taxable year in which the}" renewable energy property is placed in service \hl{but must be taken in five equal installments beginning with the taxable year in which the} & \textbf{nc\_2009\_SB305}: "\hl{the entire credit may not be taken for the taxable year in which the} costs are paid - - - - \hl{but must be taken in five equal installments beginning with the taxable year in which the}" & 108\\
+%\hline
+%\end{tabular}
+%\egroup
+%\end{table}
+
+
 \begin{table}[ht!]
 \centering
-\caption{Alignment Examples. Yellow highlighting shows matching sections. Dashes stand for gaps introduced by the alignment algorithm. Non highlighted text are mismatches.}
+\footnotesize
+\caption{Alignment Examples. Bold (red) text are mismatches. Dashes (orange,
+light text) are  gaps introduced by the alignment algorithm. Non highlighted
+text are matches.}
 \label{tab:alignment_examples}
 \bgroup
 \def\arraystretch{2}
 \begin{tabular}{p{0.45\textwidth}|p{0.45\textwidth}|p{0.1\textwidth}}
 Left Text & Right Text & Score\\
 \hline
+\textbf{nj\_214\_A1167}: ``the entire credit may not be taken for the taxable
+year in which the \textcolor{red}{\textbf{renewable}} \textcolor{orange}{energy
+property} is placed in service but must be taken in five equal
+\textcolor{orange}{-} installments beginning with the taxable year in which the
+\textcolor{red}{\textbf{renewable}} \textcolor{orange}{energy property} is
+placed in service. if, in one of the years in which the installment of a credit
+accrues, the \textcolor{red}{\textbf{renewable}} \textcolor{orange}{energy
+property} with respect to which the credit was claimed is disposed
+\textcolor{orange}{of, taken out} of \textcolor{orange}{service}, or
+\textcolor{red}{\textbf{moved}} out of \textcolor{red}{\textbf{state,}} the
+credit expires and the taxpayer may not take any remaining installment of the
+credit. the taxpayer may, however, take the portion of an installment that
+accrued in a previous year and was carried forward to the extent permitted
+under'' & \textbf{nc\_2011\_SB747}: ''the entire credit may not be taken for the
+taxable year in which the \textcolor{red}{\textbf{facility}}
+\textcolor{orange}{- -} is placed in service but must be taken in five equal
+\textcolor{orange}{annual} installments beginning with the taxable year in
+which the \textcolor{red}{\textbf{facility}} \textcolor{orange}{- -} is placed
+in service. if, in one of the years in which the installment of a credit
+accrues, the \textcolor{red}{\textbf{facility}} \textcolor{orange}{- -} with
+respect to which the credit was claimed is disposed \textcolor{orange}{- - -} of
+\textcolor{orange}{-} or \textcolor{red}{\textbf{taken}} out of 
+\textcolor{red}{\textbf{service,}} the credit expires and the
+taxpayer may not take any remaining installment of the credit. the taxpayer may,
+however, take the portion of an installment that accrued in a previous year and
+was carried forward to the extent permitted under'' & $388$ \\
 
-\textbf{nj\_214\_A1167}: "\hl{the entire credit may not be taken for the taxable year in which the} renewable energy property \hl{is placed in service but must be taken in five equal} - \hl{installments beginning with the taxable year in which the} renewable energy property \hl{is placed in service. if, in one of the years in which the installment of a credit accrues, the} renewable energy property \hl{with respect to which the credit was claimed is disposed of}, \hl{taken out of service, or moved out of state, the credit expires and the taxpayer may not take any remaining installment of the credit. the taxpayer may, however, take the portion of an installment that accrued in a previous year and was carried forward to the extent permitted under}" & \textbf{nc\_2011\_SB747}: "\hl{the entire credit may not be taken for the taxable year in which the} facility - - \hl{is placed in service but must be taken in five equal} annual \hl{installments beginning with the taxable year in which the} facility - - \hl{is placed in service. if, in one of the years in which the installment of a credit accrues,} the facility - - \hl{with respect to which the credit was claimed is disposed} - - - \hl{of} - \hl{or taken out of service, the credit expires and the taxpayer may not take any remaining installment of the credit. the taxpayer may, however, take the portion of an installment that accrued in a previous year and was carried forward to the extent permitted under}" & $388$ \\
+\textbf{nj\_214\_A1167}: ``the entire credit may not be taken for the
+\textcolor{orange}{taxable} year in which the
+\textcolor{orange}{renewable energy} property is placed in service but
+must be taken in \textcolor{red}{\textbf{five}} equal installments
+\textcolor{orange}{- - - - -} beginning with the taxable year in which the'' &
+\textbf{ga\_2011\_12\_HB146}: ``the entire credit may not be taken for the
+\textcolor{orange}{-} year in which the \textcolor{orange}{- -} property is
+placed in service but must be taken in \textcolor{red}{\textbf{four}} equal
+installments \textcolor{orange}{over four successive taxable years}
+beginning with the taxable year in which the'' & 110 \\
 
-\textbf{nj\_214\_A1167}: "\hl{the entire credit may not be taken for the} taxable \hl{year in which the} renewable energy \hl{property is placed in service but must be taken in} five \hl{equal installments} - - - - - \hl{beginning with the taxable year in which the}" & \textbf{ga\_2011\_12\_HB146}: "\hl{the entire credit may not be taken for the} - \hl{year in which the} - - \hl{property is placed in service but must be taken in} four \hl{equal installments} over four successive taxable years \hl{beginning with the taxable year in which the}" & 110 \\
-
-\textbf{nj\_214\_A1167}: "\hl{the entire credit may not be taken for the taxable year in which the}" renewable energy property is placed in service \hl{but must be taken in five equal installments beginning with the taxable year in which the} & \textbf{nc\_2009\_SB305}: "\hl{the entire credit may not be taken for the taxable year in which the} costs are paid - - - - \hl{but must be taken in five equal installments beginning with the taxable year in which the}" & 108\\
+\textbf{nj\_214\_A1167}: ``the entire credit may not be taken for the taxable
+year in which the \textcolor{red}{\textbf{renewable energy property}}
+\textcolor{orange}{is placed in
+service} but must be taken in five equal installments beginning with the
+taxable year in which the'' & \textbf{nc\_2009\_SB305}: ``the entire credit
+may not be taken for the taxable year in which the \textcolor{red}{\textbf{costs
+are paid}} \textcolor{orange}{- - - -}
+but must be taken in five equal installments beginning with the taxable year
+in which the'' & 108\\
 \hline
 \end{tabular}
 \egroup
@@ -276,11 +367,15 @@ Left Text & Right Text & Score\\
 
 \clearpage
 
-From this procedure we obtain ca. $1.2 * 10^8$ individual alignments (that is, shared
+ Table \ref{tab:alignment_examples} displays three examples of alignments. The `Left Text' and `Right Text' columns display the optimal alignment for the two sections the alignment score is displayed in the `Score' column. This example shows the reuse of legislative text in three states (New Jersey, North Carolina and Georgia). 
+ 
+For our data we obtain from this procedure ca. $1.2 * 10^8$ individual alignments (that is, shared
 text between two bills). Figure \ref{fig:alignment_score_distribution} displays the cumulative frequency
-distribution of the alignments. The vast majority of alignments are very small
-(less than 50). Table \ref{tab:alignment_examples} displays three examples of alignments. The `Left Text' and `Right Text' columns display the optimal alignment for the two sections the alignment score is displayed in the `Score' column. This example shows the reuse of legislative text in three states (New Jersey, North Carolina and Georgia).
-
+distribution of the alignments. The lowest score is $2.3$, the highest $28811$ with a mean
+alignment score of $18.8$ (median $14.9$). From this distribution it is clear that the
+majority of alignments is small with only relatively few bill pairs having
+large alignments. Of the $120$ million bill-pairs about $800,000$ have scores
+larger than $100$ and ca. $44,000$ have scores larger than $1000$.
 
 \begin{figure}[ht!]
     \centering
@@ -300,8 +395,12 @@ Legislation is full of textual content that is not very useful in identifying th
 The first approach also relies on an automatic classifier, but we propose a novel approach for
 generating training data without relying on human coders. We posit that boiler plate language is highly repetitive within states. Furthermore, language
 that is passed several times (i.e., in separate bills) within the same state is likely to be
-substantively irrelevant. Using these facts allows us to accumulate a large amount of labeled data---all alignments between bills that have both passed in the same state---which we use to train a machine learning classifier to exclude boiler plate alignments. In addition to the text
-itself, we use the position in the text as a feature in the classifier. This approach is very similar to that taken by \citet{wilkerson2015tracing}, except we would not use human coders to label boiler plate alignments.
+substantively irrelevant. Using these facts allows us to accumulate a large
+amount of labeled data---all alignments between bills that have both passed in
+the same state---which could be used to train a machine learning classifier to exclude boiler plate alignments. In addition to the text
+itself, the position in the text can be used as a feature in the classifier.
+This approach is very similar to that taken by \citet{wilkerson2015tracing},
+except that no human coders would be required to label boiler plate alignments.
 
 In the second approach we describe, which we have implemented in the analyses we present below, we do not exclude boiler plate according to a classification dichotomy.
 Rather, we down-weight alignments that consist of language that is
@@ -315,7 +414,7 @@ In order to quantify the similarity to common alignments, we calculate the
 cosine similarity of the bag-of-words vector of each alignment with a random
 sample of 1000 alignments\footnote{We rely on a random sample for computational
 reasons. Calculating the complete similarity matrix is computationally
-infeasible and unnecessary.}. The adjusted score for two bills $Y$ and $Y$ is
+infeasible and unnecessary.}. The adjusted score for two bills $X$ and $Y$ is
 then:
 
 \begin{equation}
@@ -324,9 +423,9 @@ then:
     {\mathbf{\mathcal{A}_i}}}{\lVert\mathbf{\mathcal{A}_{X,Y}\rVert\lVert\mathbf{\mathcal{A}_i}}\rVert}\right)
 \end{equation}
 
-Where $S_{X,Y}$ is the alignment score as described in Section \ref{sec:d_t_r},
-$\mathbf{\mathcal{A}_j}$ is the bag-of-word vector representation of the
-matching alignment text and $i = 1,\dots,1000$ are the sample alignments.
+Where $S_{X,Y}$ is the alignment score, calculated as described in Section \ref{sec:d_t_r},
+$\mathbf{\mathcal{A}_i}$ is the bag-of-word vector representation of the
+matching alignment text where $i = 1,\dots,1000$ are the sample alignments.
 
 In this approach we follow the common intuition in natural language processing that the informativeness of text is inversely related to the frequency with which that text occurs \citep{robertson2004understanding} (see, e.g., the regular application of term frequency--inverse document frequency (tf-idf) to pre- or post-process text-based datasets and results). This measure is different and potentially preferable in two ways. First, it does not require the use of human coders. Second, it places text on a continuum of uniqueness rather than dichotomizes it as boiler plate or not.
 
@@ -334,7 +433,6 @@ In this approach we follow the common intuition in natural language processing t
 \section{Empirical Evaluation of Validity}
 
 We use three strategies in order to assess the validity of text reuse as a measure of policy similarity. First, we evaluate whether there is a disproportionately high number of alignments between bills on the same policy area. Second, we analyze how well the bill similarity aggregated to the state level corresponds with policy diffusion networks identified in previous research \citep{desmarais2015}. And third, we study the relationship between the ideological distance between the sponsors of bills and the alignment scores between those bills. If substantive policy content, and importantly, the same ideological direction of the provisions is detected by the alignment algorithm, we will expect an inverse relationship between these two measures.
-
 
 \subsection{NCSL Tables}
 
@@ -345,7 +443,7 @@ In our first validation exercise, we consider whether high alignment scores prov
 \begin{enumerate}
     \item Collect all urls returned by the web search query: ''site:ncsl.org ''legislation.aspx````\footnote{We used the bing websearch API to collect the urls.}
     \item Sample 50 urls
-    \item Select bills that fulfill these three conditions:
+    \item Select bills that fulfill the following three conditions:
         \begin{enumerate}
             \item The website is a NCSL table
             \item The table refers (at least in part) to legislation introduced in 2011 or later.          
@@ -359,17 +457,9 @@ In our first validation exercise, we consider whether high alignment scores prov
 Condition a) is necessary, since some of the urls returned by the web query refer to blog entries or to protected websites that require NCSL membership. The rationale behind condition b) is to maximize the number of bills we can match to our database (see Figure \ref{fig:bill_desc}). We additionally constrain the number of bills per table to be below 100, in order to avoid tables that cover very broad topics. We chose 100 since this number would correspond roughly to two bills per state (often there is a house and a senate bill in each state for a particular policy).
 The web query from step 1 returned 266 urls. From the 50 sampled urls 22
 fulfilled the three criteria. From these 22 tables we constructed a dataset of
-950 bills, of which we could match 704 to our bill database\footnote{We
-    additionally excluded one bill. Indiana 2012 HB1009
-    (\url{www.in.gov/legislative/bills/2012/HE/HE1009.1.html}), which is a
-    very long bill containing technical corrections to a large number of
-    other bills. Due to this fact it contains a large number of sections that
-produce a large outlier alignment when aggregated}. Since this is a
+950 bills, of which we could match 704 to our bill database. Since this is a
 relatively low number of bills, we then calculate the complete set of pairwise
-alignments for these bills. As described above, we split the
-bills in sections, calculate the pairwise section alignments. This results in
-approximately $10^7$ section-dyads. We then aggregate these section-dyads to the
-bill-dyad level. 
+alignments for these bills. After removing same state bill pairs we obtained ca. $216,000$ alignments.
 
 Figure \ref{fig:ncsl_prec_rec} displays the performance of the alignment score
 in predicting if two bills are in the same NCSL table. We present
@@ -381,13 +471,21 @@ relatively high scores ($>100$). Recall is low at thresholds that produce
 reasonable precision (above 100), but that is expected for our case, as
 (1) the introduction of similar policies in bills in tow different states is a
 rare event, and relatedly, (2) the appearance of two bills in the same NCSL
-table is a relatively rare event (8\% in the current analysis); and classifier
+table is a relatively rare event (8\% in the current analysis); classifier
 recall is notoriously low in rare event data \citep{weiss2000learning}---even
-commonly approaching zero, as in our case \citep{weiss2004mining}. Our results
-suggest that the presence of a large alignment score between bills is an
-effective indicator of policy similarity. {\bf FRIDO, I DON"T SEE ANYTHING ABOUT THE ADDITIONAL COMPARISONS YOU HAVE DONE HERE. WE DON'T REALLY PROVIDE THE READER WITH A BASELINE FOR COMPARISON HERE. WOULD YOU CALCULATE THE AUCPR OF OUR CLASSIFIER VS A RANDOM CLASSIFIER USING THE PRROC R PACKAGE? ALSO ADD THE VALUE USING THE COSINE SIMILARITY} 
+commonly approaching zero, as in our case \citep{weiss2004mining}. Further more,
+using a high precision - low recall classifier in our scenario where the total
+number of bill pairs is extremely large, produces a large number of interesting
+bill pairings in absolute terms. 
 
+\input{tables/ncsl_auc.tex}
 
+For a better understanding how the alignment score classification performs in
+comparison to other methods, in Table \ref{tab:ncsl_auc} we report the area under the ROC curve for the
+alignment classifier compared to a classifier based on cosine similarity of bill
+pairs and a random classifier. The first column contains the AUC values for each
+classifier. The remaining two columns display bootstrapped one-tailed p-values for the
+differences between the classifiers.Our results suggest that the presence of a large alignment score between bills is an effective indicator of policy similarity. 
 
 \begin{figure}
 \centering
@@ -399,6 +497,23 @@ area in the background displays the frequency distribution of the alignment
 scores.}
 \label{fig:ncsl_prec_rec}
 \end{figure}
+
+
+%\begin{figure}[t!]
+%    \centering
+%    \begin{subfigure}[b]{0.5\textwidth}
+%        \centering
+%        \includegraphics[height=1.2in]{figures/ncsl_pr_nosplit.png}
+%        \caption{Lorem ipsum}
+%    \end{subfigure}%
+%    ~ 
+%    \begin{subfigure}[b]{0.5\textwidth}
+%        \centering
+%        \includegraphics[height=1.2in]{figures/ncsl_pr_cosim.png}
+%        \caption{Lorem ipsum, lorem ipsum,Lorem ipsum, lorem ipsum,Lorem ipsum}
+%    \end{subfigure}
+%    \caption{Caption place holder}
+%\end{figure}
 
 
 \subsection{Diffusion networks and Text re-use}
@@ -413,17 +528,19 @@ To evaluate whether text re-use corresponds to the transfer of policy, we test w
 \hline
 & \multicolumn{2}{c}{Identity Link} & \multicolumn{2}{c}{Log Link} \\
   \hline
-   & Coefficient & p-value & Coefficient & p-value \\  \hline
-Intercept & -33577305.967 & 0.997 & 10.041 & 0.000 \\ 
-  Diffusion Tie & 2423709.311 & 0.042 & 0.266 & 0.050 \\ 
-    Coverage & 10938819.897 & 0.000 & 1.379 & 0.000 \\ 
+    & Coefficient & p-value & Coefficient & p-value \\
+    Intercept & -3.297 & 0.997 & 9.014 & 0.000 \\ 
+    Diffusion Tie & 0.238 & 0.042 & 0.239 & 0.050 \\ 
+    Coverage & 1.074 & 0.000 & 1.238 & 0.000 \\ 
 \hline
 \end{tabular}
-\caption{Predicting aggregate cross-state alignment scores with diffusion ties. Coefficients calculated with OLS regression. $p$-values based on 5,000 QAP permuations.}
+\caption{Predicting aggregate cross-state alignment scores with diffusion ties.
+Coefficients calculated with OLS regression and normalized with standard
+deviation of cross state alignment scores. $p$-values based on 5,000 QAP permuations.}
 \label{tab:qap.diffusion}
 \end{table}
 
-Results of the dyadic regression are presented in Table \ref{tab:qap.diffusion}. In both specifications there is a positive relationship between the number of diffusion ties and the number of alignments. The relationship is statistically significant at the 0.05 level (one tailed) in each analysis. Furthermore, the magnitudes of the relationships are substantively significant. With the identity link, the presence of a diffusion tie leads to a 0.25 standard deviation increase in the expected aggregate alignment score {\bf FRIDO, WOULD YOU VERIFY THE SD NUMBER HERE, OR EVEN JUST STANDARDIZE THE COEFFICIENTS IN THE IDENTITY LINK MODEL BY DIVIDING BY THE SD?}. Based on the log link, the addition of a diffusion tie corresponds to a 30\% increase in the expected aggregated alignment score.\footnote{Calculated as $100\times \left[ \exp(0.266)-1\right] = 30.47$}. These results offer further evidence of the validity of quantifying text re-use as a measure of policy similarity, as the aggregate volume of text re-use between states is positively associated with previously-identified diffusion ties between states.
+Results of the dyadic regression are presented in Table \ref{tab:qap.diffusion}. In both specifications there is a positive relationship between the number of diffusion ties and the number of alignments. The relationship is statistically significant at the 0.05 level (one tailed) in each analysis. Furthermore, the magnitudes of the relationships are substantively significant. With the identity link, the presence of a diffusion tie leads to a 0.23 standard deviation increase in the expected aggregate alignment score. Based on the log link, the addition of a diffusion tie corresponds to a 30\% increase in the expected aggregated alignment score.\footnote{Calculated as $100\times \left[ \exp(0.266)-1\right] = 30.47$}. These results offer further evidence of the validity of quantifying text re-use as a measure of policy similarity, as the aggregate volume of text re-use between states is positively associated with previously-identified diffusion ties between states.
 
 
 \subsection{Ideological Distance of Aligned Bills}

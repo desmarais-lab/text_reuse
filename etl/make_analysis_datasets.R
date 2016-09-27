@@ -54,7 +54,10 @@ sink('alignments_descriptives.txt')
 cat(paste0("Number of bill dyads: ", nrow(alignments), '\n'))
 cat(paste0("Mean score: ", mean(alignments$alignment_score), '\n'))
 cat(paste0("Median score: ", median(alignments$alignment_score), '\n'))
-cat(paste("Range:", r[1], r[2]), '\n')
+cat(paste("Range:", r[1], r[2], '\n'))
+cat(paste("N alignments > 50:", sum(alignments$alignment_score > 50), '\n'))
+cat(paste("N alignments > 100:", sum(alignments$alignment_score > 100), '\n'))
+cat(paste("N alignments > 1000:", sum(alignments$alignment_score > 1000), '\n'))
 sink()
 
 # Distribution of alignment scores

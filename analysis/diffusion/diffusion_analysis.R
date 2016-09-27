@@ -49,13 +49,15 @@ diag(coverage_mat) <- 0
 # Run ols with qap uncertainty
 set.seed(5)
 bivariate_qap <- netlm(align_amat,list(diff_amat,coverage_mat),mode="graph",reps=5000)
-results <- cbind(bivariate_qap$coefficients,bivariate_qap$pgreq)
+results <- cbind(bivariate_qap$coefficients / sd(alignments$sum_score),
+                 bivariate_qap$pgreq)
 rownames(results) <- c("Intercept","Diffusion Tie","Coverage")
 colnames(results) <- c("Coefficient","p-value")
 
 set.seed(5)
 bivariate_qap_log <- netlm(log(align_amat),list(diff_amat,coverage_mat),mode="graph",reps=5000)
-results_log <- cbind(bivariate_qap_log$coefficients,bivariate_qap_log$pgreq)
+results_log <- cbind(bivariate_qap_log$coefficients / sd(log(alignments$sum_score)),
+                     bivariate_qap_log$pgreq)
 rownames(results_log) <- c("Intercept","Diffusion Tie","Coverage")
 colnames(results_log) <- c("Coefficient","p-value")
 

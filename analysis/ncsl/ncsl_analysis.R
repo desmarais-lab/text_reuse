@@ -2,6 +2,8 @@ library(dplyr)
 library(ggplot2)
 library(xtable)
 library(ROCR)
+library(pROC)
+library(doParallel)
 
 # Load the data (data preprocessing in `/etl/make_analysis_datasets.R`)
 load('../../data/ncsl_analysis/ncsl_analysis_nosplit.RData')
@@ -100,28 +102,77 @@ prc_auc <- function(dat, cosim=FALSE) {
 }
 
 # Make plots and get measures for all three scores
-auc_tab <- as.data.frame(matrix(NA, nc = 2, nr = 3))
-colnames(auc_tab) <- c("Score", "AUC")
-auc_tab$Score <- c("Alignment No Split", "Alignment Split", "Cosine Similarity")
+auc_tab <- as.data.frame(matrix(NA, nc = 1, nr = 3))
+rownames(auc_tab) <- c("Random", "Cosine", "Alignment")
+auc_tab[, 2] <- NA
+auc_tab[, 3] <- NA
+colnames(auc_tab) <- c("AUC", "P(X<Random)", "P(X<Cosine)")
 
-## No Split
-out_nosplit <- prc_auc(df_nosplit)
-auc_tab[1, 2] <- out_nosplit$auc
-ggsave(filename = '../../manuscript/figures/ncsl_pr_nosplit.png', 
-       plot = out_nosplit$prp, width = p_width, height = 0.65 * p_width)
-
-## Split
-out_split <- prc_auc(df)
-auc_tab[2, 2] <- out_split$auc
-ggsave(filename = '../../manuscript/figures/ncsl_pr_split.png', 
-       plot = out_split$prp, width = p_width, height = 0.65 * p_width)
+## Random classifier
+score <- runif(nrow(df_nosplit))
+p <- prediction(score, dat$same_table)
+auc_tab[1, 1] <- performance(p, measure = 'auc')@y.values[[1]]
 
 ## Cosine similarity
 out_cosim <- prc_auc(df_cosim, cosim=TRUE)
-auc_tab[3, 2] <- out_cosim$auc
+auc_tab[2, 1] <- out_cosim$auc
 ggsave(filename = '../../manuscript/figures/ncsl_pr_cosm.png', 
        plot = out_cosim$prp, width = p_width, height = 0.65 * p_width)
 
+## Alignment Score
+out_nosplit <- prc_auc(df_nosplit)
+auc_tab[3, 1] <- out_nosplit$auc
+ggsave(filename = '../../manuscript/figures/ncsl_pr_nosplit.png', 
+       plot = out_nosplit$prp, width = p_width, height = 0.65 * p_width)
+
+## Bootstrap AUC differences
+
+### Prep data
+df <- select(df_nosplit, -cosine_similarity, -count)
+df_random <- df %>% mutate(score = runif(nrow(df)))
+
+### Function for each bootstrap iteration
+roc_bs <- function(){
+    # Draw bs sample
+    dr <- df_random[sample(c(1:nrow(df_random)), nrow(df_random), replace = TRUE), ]
+    dc <- df_cosim[sample(c(1:nrow(df_cosim)), nrow(df_cosim), replace = TRUE), ]
+    da <- df[sample(c(1:nrow(df)), nrow(df), replace = TRUE), ]
+    
+    # Area under the curve for each measure
+    ra <- performance(prediction(dr$score, dr$same_table), 
+                        measure = 'auc')@y.values[[1]]
+    al <- performance(prediction(da$score, da$same_table), 
+                        measure = 'auc')@y.values[[1]]
+    co <- performance(prediction(dc$score, dc$same_table), 
+                        measure = 'auc')@y.values[[1]]
+    return(list(al, co, ra))  
+}
+
+### Run in parallel
+cl <- makeCluster(12)
+registerDoParallel(cl)
+B <- 2000
+roc_res <- foreach(i=1:B, .packages = "ROCR") %dopar% roc_bs() 
+
+## Process parallel output
+b <- roc_res
+roc_res <- tbl_df(as.data.frame(t(sapply(roc_res, function(x) unlist(x)))))
+colnames(roc_res) <- c("Alignment", "Cosine", "Random")
+
+## Get P-values
+auc_tab[2, 2] <- sum(roc_res$Random > roc_res$Cosine) / B
+auc_tab[3, 2] <- sum(roc_res$Random > roc_res$Alignment) / B
+auc_tab[3, 3] <- sum(roc_res$Cosine > roc_res$Alignment) / B
+
+# Make the results table
+sink('../../manuscript/tables/ncsl_auc.tex')
+xtable(auc_tab, digits = 2, caption = paste("Area under the curve for classifier based
+       on thresholding alignment scores (Alignment), classifier based on 
+       thresholding cosine similarity score (Cosine) and random 
+       classifier (Random). The last three columns report one-tailed p-values for 
+       comparison between the AUCs. p-values are derived from", B, "non-parametric
+       bootstrap iterations."), label = "tab:ncsl_auc")
+sink()
 
 # Distribution stats
 
@@ -137,7 +188,6 @@ cat(paste0('Proportion in same table: '),
     sum(df_nosplit$same_table) / nrow(df_nosplit),
     '\n')
 sink()
-
 
 # Clustered bootstrap regression model
 

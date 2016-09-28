@@ -1,7 +1,5 @@
-library(microbenchmark)
 library(ggplot2)
 library(dplyr)
-library(quantreg)
 library(xtable)
 
 #Plotting parameters
@@ -19,15 +17,14 @@ load("../../data/ideology_analysis/ideology.RData")
 #df <- bak[sample(c(1:nrow(bak)), 1e6), ]
 #df <- bak
 
-## Descriptive scatterplot on sample of points
-quantiles <- c(seq(0.5, 0.9, by = 0.1), seq(0.91, 0.99, by = 0.01), 
-               seq(0.991, 0.995, by =0.001))
+# Descriptive scatterplot on sample of points
 
+## ALignments on natural scale
 p <- ggplot(df, aes(x = ideology_dist, y = alignment_score)) + 
-    stat_binhex(bins = 150) + 
+    stat_binhex(bins = 80) + 
     xlab("Ideological Distance") + 
     ylab("Alignment Score") + 
-    scale_fill_gradient(low = cbPalette[1], high = cbPalette[2], trans = "log",
+    scale_fill_gradient(low = "grey60", high = "grey1", trans = "log",
                         labels = function (x) round(x, 0)) +
     guides(fill=guide_legend(title="Count")) +
     plot_theme
@@ -35,16 +32,8 @@ cat('Saving plot...\n')
 ggsave(plot = p, '../../manuscript/figures/ideology_plot.png', 
        width = p_width, height = 0.65 * p_width)
 
-
-p <- ggplot(df, aes(x = ideology_dist, y = alignment_score)) + 
-    stat_binhex(bins = 150) + 
-    scale_y_log10() + 
-    xlab("Ideological Distance") + 
-    ylab("Alignment Score") + 
-    scale_fill_gradient(low = cbPalette[1], high = cbPalette[2], trans = "log",
-                        labels = function (x) round(x, 0)) +
-    guides(fill=guide_legend(title="Count")) +
-    plot_theme
+## Alignments on log scale
+p <- p + scale_y_log10() + ylab("Log Alignment Score")
 cat('Saving plot...\n')
 ggsave(plot = p, '../../manuscript/figures/ideology_plot_log.png', 
        width = p_width, height = 0.65 * p_width)

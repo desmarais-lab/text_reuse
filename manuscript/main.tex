@@ -247,7 +247,7 @@ consists of three major steps: 1) Pre-processing and selection of documents to c
 
 The SW algorithm is computationally demanding and an exhaustive comparison of
 all possible bill-pairs is not feasible (with $500,000$ bills this would amount
-to about $1.24 * 10^11$ bill pairs). \citet{wilkerson2015tracing} encountered the same problem and excluded bills that don't have at least five matching 10-grams. Since this implies considerable exact character matches, we see this as a too restrictive for our application. Because the text we are using originates in 50 different legislatures, exact character matches might obfuscate valuable text reuse just because of small formatting changes, changes of state names, etc. 
+to about $1.24 * 10^{11}$ bill pairs). \citet{wilkerson2015tracing} encountered the same problem and excluded bills that don't have at least five matching 10-grams. Since this implies considerable exact character matches, we see this as a too restrictive for our application. Because the text we are using originates in 50 different legislatures, exact character matches might obfuscate valuable text reuse just because of small formatting changes, changes of state names, etc. 
 Instead we choose to rely on a procedure that is based on finding bills with
 similar language. We store all available bills in an Elastic Search database.
 Elastic search is an open source web search engine which is designed to find

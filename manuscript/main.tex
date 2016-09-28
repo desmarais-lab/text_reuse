@@ -23,7 +23,8 @@
 \usepackage{xcolor}
 \usepackage{soul}
 \usepackage{amsfonts}
-\usepackage{subfigure}
+%\usepackage{subfigure}
+\usepackage{subcaption}
 
 \def\citeapos#1{\citeauthor{#1}'s (\citeyear{#1})}
 
@@ -487,34 +488,37 @@ pairs and a random classifier. The first column contains the AUC values for each
 classifier. The remaining two columns display bootstrapped one-tailed p-values for the
 differences between the classifiers.Our results suggest that the presence of a large alignment score between bills is an effective indicator of policy similarity. 
 
-\begin{figure}
-\centering
-\includegraphics[width=0.8\textwidth]{figures/ncsl_pr_nosplit.png}
-\caption{Precision-Recall curve for classifying two bills being in the same
-    ncsl table by thresholding the bill-dyad alignment score. The x axis
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.8\textwidth]{figures/ncsl_pr_nosplit.png}
+%\caption{Precision-Recall curve for classifying two bills being in the same
+%    ncsl table by thresholding the bill-dyad alignment score. The x axis
+%displays the threshold, the y axis represents precision and recall. The shaded
+%area in the background displays the frequency distribution of the alignment
+%scores.}
+%\label{fig:ncsl_prec_rec}
+%\end{figure}
+
+\begin{figure}[ht!]
+    \centering
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/ncsl_pr_nosplit.png}
+        \caption{Precision-Recall curve for classifier based on alignment scores.}
+    \end{subfigure}%
+    ~ 
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/ncsl_pr_cosm.png}
+        \caption{Precision-Recall curve for classifier based on cosine similarity.}
+    \end{subfigure}
+    \caption{Precision-Recall curve for classifying two bills being in the same
+    ncsl table by thresholding the bill-dyad alignment score. The dotted (yellow) line is recall, the solid (black) line is precision. The x axis
 displays the threshold, the y axis represents precision and recall. The shaded
 area in the background displays the frequency distribution of the alignment
 scores.}
 \label{fig:ncsl_prec_rec}
 \end{figure}
-
-
-%\begin{figure}[t!]
-%    \centering
-%    \begin{subfigure}[b]{0.5\textwidth}
-%        \centering
-%        \includegraphics[height=1.2in]{figures/ncsl_pr_nosplit.png}
-%        \caption{Lorem ipsum}
-%    \end{subfigure}%
-%    ~ 
-%    \begin{subfigure}[b]{0.5\textwidth}
-%        \centering
-%        \includegraphics[height=1.2in]{figures/ncsl_pr_cosim.png}
-%        \caption{Lorem ipsum, lorem ipsum,Lorem ipsum, lorem ipsum,Lorem ipsum}
-%    \end{subfigure}
-%    \caption{Caption place holder}
-%\end{figure}
-
 
 \subsection{Diffusion networks and Text re-use}
 
@@ -559,27 +563,52 @@ bills and $48*10^6$ ($38\%$) pairs of bills. In order to assess the validity of 
 
 In the following sections we present several analyses to assess this correlation. The ideal point of the bill is derived from the ideal point of the primary bill sponsor. For bills with several primary sponsors we use the average of those sponsors' ideal points to obtain a single measure. Figure \ref{fig:ideology_plot} displays the distribution of ideological distance and log-alignment score for the roughly 50 million dyads in the dataset. Each dot is a hexagonal tile, the color of the tile represents the number of dyads in that area. Two major observations can be made in this plot. First, the vast majority of alignment scores are close to zero. Second, the triangular shape of the distribution indicates the high precision - low recall character of the alignment score discussed above: few bills exhibit meaningful policy overlap with other bills, but in the region of lower ideological distance we observe a greater occurrence of positive outliers, which arise from significant policy overlap. 
 
+\begin{figure}[ht!]
+    \centering
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/ideology_plot.png}
+        \caption{Hexbin plot with alignments on natural scale.}
+    \end{subfigure}%
+    ~ 
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/ideology_plot_log.png}
+        \caption{Hexbin plot with alignments on $log_{10}$ scale.}
+    \end{subfigure}
+    \caption{Hexbin plot of alignment score and ideological distance of all 50
+    million bill-dyads. The shading of the bins indicates the density of data in
+    the bin.}
+    \label{fig:ideology_plot}
+\end{figure}
+
+
 In order to investigate this pattern more closely, we additionally calculate
 quantile regressions for the relationship between the alignment score and the
 ideological distance. In a quantile regression, the dependent variable is the value of the predicted quantile of the distribution of the dependent variable conditional on the independent variables (e.g., the predicted median for median regression with the quantile set to 0.50 \citep{harden2011linear}). Figure \ref{fig:quantile_regression} displays the
 coefficients from quantile regressions on a sequence of quantiles from the
-median to the 0.995th quantile. Confidence intervals are calculated by resampling bills, which represents an implementation of the clustered nonparametric bootstrap \citet[see e.g.][]{harden2011bootstrap}. Coefficients significant at the 95\% level are displayed in black, insignificant coefficients are grey. We see that there is only a very weak relationship between the ideological similarity of bill sponsors and the median alignment scores between bills. However, as the quantile we model increases we see that the relationship grows strong and negative in magnitude, and is statistically significant. These results both validate the use of text reuse as a measure of policy similarity, and reinforce the high precision and low recall nature of text reuse as a measure of policy similarity.
+median to the 0.995th quantile. Confidence intervals are calculated by
+resampling bills, which represents an implementation of the clustered
+nonparametric bootstrap \citep{harden2011bootstrap}. Coefficients significant at the 95\% level are displayed in black, insignificant coefficients are grey. We see that there is only a very weak relationship between the ideological similarity of bill sponsors and the median alignment scores between bills. However, as the quantile we model increases we see that the relationship grows strong and negative in magnitude, and is statistically significant. These results both validate the use of text reuse as a measure of policy similarity, and reinforce the high precision and low recall nature of text reuse as a measure of policy similarity.
 
 
-\begin{figure}[ht!]i
-    \centering
-    \includegraphics[width=0.8\textwidth]{figures/ideology_plot.png}
-    \caption{Hexbin plot of alignment score and ideological distance of all 50 million bill dyads.}
-    \label{fig:ideology_plot}
-\end{figure}
+%\begin{figure}[ht!]i
+%    \centering
+%    \includegraphics[width=0.8\textwidth]{figures/ideology_plot.png}
+%    \caption{Hexbin plot of alignment score and ideological distance of all 50
+%    million bill dyads. The shading of the bins indicates the density of data in
+%the bin.}
+%    \label{fig:ideology_plot}
+%\end{figure}
+
 
 \begin{figure}[ht!]
     \centering
     \includegraphics[width=0.8\textwidth]{figures/quantile_regression.png}
     \caption{Coefficients of quantile regression for alignment score on
     ideological distance. Dots indicate the point estimate. Horizontal bar
-represent 95\% confidence intervals obtained via the clustered bootstrap, [using
-1200 iterations]. Note that the x-axis is not in a natural scale}
+represent 95\% confidence intervals obtained with clustered bootstrap. 
+Note that the x-axis is not in a natural scale.}
     \label{fig:quantile_regression}
 \end{figure}
 

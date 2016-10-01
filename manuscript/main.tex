@@ -625,7 +625,7 @@ The nature of our measure of policy similarity based on text reuse is that it is
 
 %\clearpage
 
-\bibliographystyle{chicago}
+\bibliographystyle{authoryear1}
 \bibliography{bibliography}
 
 \clearpage
@@ -641,7 +641,7 @@ $F_i$ is the alignment of size $i$ with $i = 1,2,...,(n + k - 1)$. $S(F_i)$ is t
     $\mathcal{B}$, Mismatch, Match) . This alignment is optimal when $S(F_1)$ is maximized
 \item Every alignment's score $S(F_i)$ with $i > 1$ when maximized, is composed of the score of the `one-shorter' alignment $S(F_{i-1})$ and the score of the $i$-th element. If not the score could be increased by choosing a different $F_{i-1}$ that has a higher score.
 \item By induction therefore follows that every alignment represented in the
-    dynamic programming matrix (\ref{fig:score_matrix}) and calculated according
+    dynamic programming matrix (Figure \ref{fig:score_matrix}) and calculated according
         to Equations \ref{eqn:scoring} and \ref{eqn:fill} is an optimal alignment
     ending in the locations specified by the row and column index in the matrix.
 \item The dynamic programming matrix contains all possible alignments. Since

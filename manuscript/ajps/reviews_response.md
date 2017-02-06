@@ -89,6 +89,9 @@ First, in Section 3, I'm convinced that text re-use is an important, politically
 Some further questions on this point:
  - Do we really believe that the measure proposed in this paper is interval-level interpretable? The probability of a long string of text being replicated verbatim or near-verbatim by chance is approximately zero, so we could instead treat similarity scores over a certain threshold as evidence that the authors of a given text were "influenced" by reading a second text. If the latent concept of interest is "policy similarity" (however defined), then presumably we care about more than the simple text on the page. At minimum, we care about implementation, and the relationship between text and implementation is not addressed in this paper. The authors might consider re-framing their notion of policy similarity as "formal similarity," or some similar term.
 
+[Partially Addressed] N
+
+
  - If we do want to treat policy similarity as an interval-level concept, do we really believe that we can compare blocks of text directly? Some pieces of text are surely more influential than others, and the authors should at least address the issue of text comparability. The discussion of "boilerplate" text addresses this point implicitly, but problems with comparability of text chunks should be made explicit.
 
 Second, in Sections 4-5, parameter setting decisions throughout the paper are not clearly justified. Is there any reason why we might favor a particular gap/mismatch penalization scheme in SWAlign, or the particular search scheme as articulated the last paragraph in Section 4.2? If parameter setting is essentially arbitrary, are there any opportunities for parameter optimization (e.g. cross-validation against some ground-truth objective), or existing values in the literature?

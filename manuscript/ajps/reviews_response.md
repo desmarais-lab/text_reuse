@@ -107,6 +107,8 @@ Second, in Sections 4-5, parameter setting decisions throughout the paper are no
 
 Third, the discussion of TF-IDF weighting to identify boilerplate text is interesting and novel, and I would like to see it expanded further. Other weighting schemes or boilerplate adjustment mechanisms should be discussed (e.g. using word2vec embeddings to classify boilerplate language). The reason for selecting TF-IDF weights in particular should be described in more detail.
 
+[Addressed] I both expanded the discussion of Wilkerson et al. and our approach, and also noted that dealing with boilerplate is an important open area for research in leg politics.
+
 Fourth, I'd like a clearer justification for the choice of the NCSL classification task as a validity exercise. Relatively little detail is given in the paper about methodology that the NCSL used to build their tables and identify comparable documents, the underlying level of variation in the NCSL tables, or similar concerns.
 
 Finally, some smaller notes:

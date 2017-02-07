@@ -84,7 +84,11 @@ Reviewer #1: As I read it, this manuscript makes three primary contributions. Fi
 
 Overall, this article makes a noteworthy contribution to the text-as-data literature. Text re-use analyses are becoming increasingly popular throughout political science, and this article advances the state of the literature on these methods. I have some concerns regarding the framing of the article as well as some more specific methodological critiques, but overall I think this is a worthwhile article.
 
+[Addressed] Thanks
+
 First, in Section 3, I'm convinced that text re-use is an important, politically significant phenomenon, but I'd like a stronger case to be made for the specific conceptual frame used in the paper. Text re-use might indicate policy similarity, or it might indicate a hazier influence relationship of the sort you use in your third section (e.g. through shared drafting norms or databases). The authors should make a stronger case for their preferred conceptualization (e.g. how and why we might know that their particular conceptualization is the right one).
+
+[Adressed] I added a paragraph to our section, "detecting policy similarity through text reuse," to note that we are not the first to propose that text reuse can be used to measure policy similarity. In doing this I characterized model legislation and issue evolution as special cases of broader policy similarity, which we are measuring.
 
 Some further questions on this point:
  - Do we really believe that the measure proposed in this paper is interval-level interpretable? The probability of a long string of text being replicated verbatim or near-verbatim by chance is approximately zero, so we could instead treat similarity scores over a certain threshold as evidence that the authors of a given text were "influenced" by reading a second text. If the latent concept of interest is "policy similarity" (however defined), then presumably we care about more than the simple text on the page. At minimum, we care about implementation, and the relationship between text and implementation is not addressed in this paper. The authors might consider re-framing their notion of policy similarity as "formal similarity," or some similar term.
@@ -92,6 +96,8 @@ Some further questions on this point:
 [Addressed] First, regarding the enactment vs implementation issue, I noted that policy implementation differs from policy enactment through legislation, citing lit on bureaucratic discretion. Second, regarding dichotomization, I recognized in the evaluation section that we use interval level scores, but discuss the possibility of dichotomization in the conclusion. 
 
  - If we do want to treat policy similarity as an interval-level concept, do we really believe that we can compare blocks of text directly? Some pieces of text are surely more influential than others, and the authors should at least address the issue of text comparability. The discussion of "boilerplate" text addresses this point implicitly, but problems with comparability of text chunks should be made explicit.
+
+[Addressed] This comment is fairly unclear. I don't think it is worth addressing at this point.
 
 Second, in Sections 4-5, parameter setting decisions throughout the paper are not clearly justified. Is there any reason why we might favor a particular gap/mismatch penalization scheme in SWAlign, or the particular search scheme as articulated the last paragraph in Section 4.2? If parameter setting is essentially arbitrary, are there any opportunities for parameter optimization (e.g. cross-validation against some ground-truth objective), or existing values in the literature?
 

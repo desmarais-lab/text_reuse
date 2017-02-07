@@ -82,6 +82,8 @@ think the first possibility --- 2 empirical applications to demonstrate the appl
 
 Reviewer #1: As I read it, this manuscript makes three primary contributions. First, the manuscript provides a conceptualization of "policy similarity," and argues that text re-use is related to that conceptual viewpoint. Second, the manuscript provides a description of Smith-Waterman Algorithm (SWAlign), and offers advice and variants on the basic algorithm for potential users. Third, the manuscript provides a series of ground-truth validity tests of the procedure.
 
+[Adressed] Just overview
+
 Overall, this article makes a noteworthy contribution to the text-as-data literature. Text re-use analyses are becoming increasingly popular throughout political science, and this article advances the state of the literature on these methods. I have some concerns regarding the framing of the article as well as some more specific methodological critiques, but overall I think this is a worthwhile article.
 
 [Addressed] Thanks
@@ -100,6 +102,8 @@ Some further questions on this point:
 [Addressed] This comment is fairly unclear. I don't think it is worth addressing at this point.
 
 Second, in Sections 4-5, parameter setting decisions throughout the paper are not clearly justified. Is there any reason why we might favor a particular gap/mismatch penalization scheme in SWAlign, or the particular search scheme as articulated the last paragraph in Section 4.2? If parameter setting is essentially arbitrary, are there any opportunities for parameter optimization (e.g. cross-validation against some ground-truth objective), or existing values in the literature?
+
+[Addressed] I cited the Burgess et al. paper and said that we were using their parameter values. Frido, it does not look like we are using their values. Please check.
 
 Third, the discussion of TF-IDF weighting to identify boilerplate text is interesting and novel, and I would like to see it expanded further. Other weighting schemes or boilerplate adjustment mechanisms should be discussed (e.g. using word2vec embeddings to classify boilerplate language). The reason for selecting TF-IDF weights in particular should be described in more detail.
 

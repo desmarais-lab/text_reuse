@@ -389,7 +389,7 @@ larger than $100$ and ca. $44,000$ have scores larger than $1000$.
     \label{fig:alignment_score_distribution}
 \end{figure}
 
-
+In their application of the SW algorithm to the dataset that we use, \citet{burgess2016legislative} optimize the SW algorithm parameters through a predictive experiment. They collected 165 bills that were hand labeled by experts to reuse text from one or more bills within the 165 bill corpus. Looking at all 13,530 pairs of bills that can be formed from the corpus of 165, they used the alignment score to predict whether or not there was text reuse between the bills. They found the optimal parameters, in terms of area under the ROC curve, were a match score of 3, mismatch score of -2, and gap score of -3. We followed \citet{burgess2016legislative} in setting the parameters of the SW algorithm since they use the same data and have already optimized the parameter values. Future work should expand upon treatment of these parameter values in at least two directions. First, it would be valuable to develop a criterion function such that one does not need hand labeled data, which is costly and may exhibit its own biases, to select parameter values. Second, it would be valuable to develop an approach to representing uncertainty in the parameter values as well as in the optimal alignments and scores.
 
 \subsection{Approaches to Adjusting for Boiler Plate Text}
 

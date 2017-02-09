@@ -2,9 +2,6 @@
 #PBS -l walltime=10:00:00
 #PBS -l pmem=40gb
 #PBS -A {allocation}
-#PBS -e /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/logs/pbs_error/
-#PBS -o /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/logs/pbs_output/
+#PBS -oe /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/logs/pbs_output
 
-export TEXT_REUSE=/storage/home/fjl128/bruce_shared/text_reuse/
-cd /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/logs
-python /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/single_bill_to_bill_matches.py "{bill_id}"
+python b2b_alignment.py "{bill_id}"

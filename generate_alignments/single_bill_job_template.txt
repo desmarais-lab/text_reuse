@@ -2,8 +2,11 @@
 #PBS -l walltime=10:00:00
 #PBS -l pmem=10gb
 #PBS -A {allocation}
-#PBS -o /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/pbs_output
-#PBS -e /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/pbs_output
+#PBS -j oe
+#PBS -o pbs_output/
+#PBS -e pbs_output/
 
 cd $PBS_O_WORKDIR
-python b2b_alignment.py "{bill_id}"
+dig +short myip.opendns.com @resolver1.opendns.com
+python b2b_alignment.py "{bill_id}" "{n_right_bills}" "{match}" "{mismatch}" "{gap}" "{output_dir}" "{es_ip}"
+

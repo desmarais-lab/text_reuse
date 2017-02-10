@@ -73,7 +73,6 @@ def write_outputs(alignments, bill_id, status, time, n_bills, n_success,
 
         swriter = csv.writer(sf, delimiter=',', quotechar='"', 
                              quoting=csv.QUOTE_MINIMAL)
-
         swriter.writerow([bill_id, status, round(time, 4), n_bills, n_success])
         
         if len(alignments) > 0:
@@ -99,14 +98,13 @@ if __name__ == "__main__":
     # Config
     # =========================================================================
     BILL_ID = sys.argv[1]
-    ES_IP = ["http://elasticsearch.dssg.io:9200/"]
     
-    N_RIGHT_BILLS = 2
-    MATCH_SCORE = 3
-    MISMATCH_SCORE = -2
-    GAP_SCORE = -3
-    #OUTPUT_DIR = "/storage/group/bbd5087_collab/text_reuse/data/aligner_output"
-    OUTPUT_DIR = "../data/aligner_output"
+    N_RIGHT_BILLS = int(sys.argv[2])
+    MATCH_SCORE = int(sys.argv[3])
+    MISMATCH_SCORE = int(sys.argv[4])
+    GAP_SCORE = int(sys.argv[5])
+    OUTPUT_DIR = sys.argv[6]
+    ES_IP = sys.argv[7]
     # =========================================================================
     
     alignments = []
@@ -117,13 +115,14 @@ if __name__ == "__main__":
 
     try:
         # Establish elastic search connection
-        es = ES(ES_IP, timeout = 100)
+        es = ES(ES_IP, timeout=1000)
 
         if not es.ping():
             raise NoConnectionError()
 
         # Get text of the left bill
-        query_doc = es.get_source(index="state_bills", id=BILL_ID, doc_type="_all")
+        query_doc = es.get_source(index="state_bills", id=BILL_ID, 
+                                  doc_type="_all")
 
         if query_doc is None:
             raise NoBillError()

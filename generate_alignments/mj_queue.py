@@ -2,7 +2,6 @@
 #
 # Author: Fridolin Linder
 
-from __future__ import unicode_literals
 import subprocess
 import re
 import os
@@ -28,13 +27,14 @@ class PBSQueue(object):
     allocation: str, allocation name to submit to
     num_jobs: int, how many jobs sould be running in parallel
     bill_list: list, of bills to generate jobs for
-    job_template: str, template with placeholder for allocation and input bill
-    job_dir: str, directory name to store temporary job files
+    job_template: str, template with placeholder for allocation and input bill 
+        job_dir: str, directory name to store temporary job files
     sleep_time: int, waiting time between submission of single jobs
     '''
 
-    def __init__(self, user_id, allocation, num_jobs, bill_list, job_template, job_dir,
-                 sleep_time):
+    def __init__(self, user_id, allocation, num_jobs, bill_list, job_template, 
+                 job_dir, sleep_time, n_right_bills, match, mismatch, gap, 
+                 output_dir, es_ip, bill_status_file, alignment_master_file):
 
         self.split_regex = re.compile(r'\s+')
         self.status = None
@@ -43,8 +43,16 @@ class PBSQueue(object):
         self.user_id = user_id
         self.bill_queue = bill_list
         self.last_difference = 0
-        self.template = job_template
+        self.template = job_template 
         self.allocation = allocation
+        self.n_right_bills = n_right_bills
+        self.match = match
+        self.mismatch = mismatch
+        self.gap = gap
+        self.output_dir = output_dir
+        self.es_ip = es_ip
+        self.bill_status_file=bill_status_file
+        self.alignment_master_file=alignment_master_file
 
         self.job_dir = job_dir
 
@@ -182,7 +190,13 @@ class PBSQueue(object):
         str, path/name of the jobfile
         '''
         job = self.template.format(bill_id=bill_id,
-                                   allocation=self.allocation)
+                                   allocation=self.allocation,
+                                   n_right_bills=self.n_right_bills,
+                                   match=self.match,
+                                   mismatch=self.mismatch,
+                                   gap=self.gap,
+                                   output_dir=self.output_dir,
+                                   es_ip=self.es_ip)
         bill_id = re.sub('[^A-Za-z0-9]', '_', bill_id)
         name = 'b2b_job_' + bill_id + '.sh'
         jobname = os.path.join(self.job_dir, name)
@@ -198,6 +212,41 @@ class PBSQueue(object):
         jobfiles = glob.glob(os.path.join(self.job_dir, "b2b_*"))
         for f in jobfiles:
             os.remove(f)
+    
+    def collect_results(self):
+
+        # If master files don't exist, create them
+        if not os.path.exists(self.alignment_master_file):
+            with open(self.alignment_master_file, 'w') as outfile:
+                header = ('left_id,right_id,score,left_alignment_text,right_ali'
+                          'gnment_text,lucene_score,max_lucene_score,compute_ti'
+                           'me\n')
+                outfile.write(header)
+
+        if not os.path.exists(self.bill_status_file):
+            with open(self.bill_status_file, 'w') as outfile:
+                outfile.write('bill_id,status,time,n_bills,n_successfull\n')
+
+        # Bill status
+        status_dir = os.path.join(self.output_dir, "bill_status")
+        with open(self.bill_status_file, 'a+') as outfile:
+            for file in os.listdir(status_dir):
+                f = os.path.join(status_dir, file)
+                with open(f, 'r') as infile:
+                    line = infile.read()
+                    outfile.write(line)
+                os.remove(f)
+
+        # Alignments
+        alignment_dir = os.path.join(self.output_dir, "alignments")
+        with open(self.alignment_master_file, 'a+') as outfile:
+            for file in os.listdir(alignment_dir):
+                f = os.path.join(alignment_dir, file)
+                with open(f, 'r') as infile:
+                    for line in infile:
+                        outfile.write(line)
+                os.remove(f)
+
 
 
 if __name__ == "__main__":
@@ -206,11 +255,18 @@ if __name__ == "__main__":
     # Config
     # =====================================================================
     USER_ID = 'fjl128'
-    NUM_JOBS = 10
-    #BILL_IDS = 'bill_ids.txt'
-    BILL_IDS = 'test_bill_ids.txt'
+    NUM_JOBS = 80
+    BILL_IDS = 'bill_ids.txt'
     ALLOCATION = 'bbd5087-himem_collab'
-    BILL_STATUS_FILE = '../data/aligner_output/bill_status.csv'
+
+    N_RIGHT_BILLS = 2
+    MATCH_SCORE = 3
+    MISMATCH_SCORE = -2
+    GAP_SCORE = -3
+    OUTPUT_DIR = '/storage/group/bbd5087_collab/text_reuse/data/aligner_output/'
+    BILL_STATUS_FILE = os.path.join(OUTPUT_DIR, 'bill_status.csv')
+    ALIGNMENT_MASTER_FILE = os.path.join(OUTPUT_DIR, 'alignments.csv')
+    ES_IP = "http://elasticsearch.dssg.io:9200/"
     # =====================================================================
 
     ## Temp job file directory
@@ -243,24 +299,50 @@ if __name__ == "__main__":
                      job_template=template, 
                      job_dir=job_dir, 
                      sleep_time=2, 
-                     allocation=ALLOCATION)
+                     allocation=ALLOCATION,
+                     n_right_bills=N_RIGHT_BILLS,
+                     match=MATCH_SCORE,
+                     mismatch=MISMATCH_SCORE,
+                     gap=GAP_SCORE,
+                     output_dir=OUTPUT_DIR,
+                     es_ip=ES_IP,
+                     bill_status_file=BILL_STATUS_FILE,
+                     alignment_master_file=ALIGNMENT_MASTER_FILE
+                     )
 
     # Main loop
-    while True:
-        queue.update()
-        ts = time.time()
-        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        
-        if len(queue.bill_queue) == 0:
-            print("Finished")
-            break
+    try:
+        while True:
+            queue.update()
+            ts = time.time()
+            st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            
+            if len(queue.bill_queue) == 0:
+                print("Finished")
+                break
 
-        if queue.running_jobs >= queue.num_jobs:
-            print("[{}]: {} jobs running. No new jobs.".format(st, queue.running_jobs))
+            if queue.running_jobs >= queue.num_jobs:
+                print("[{}]: {} jobs running. No new jobs.".format(st, queue.running_jobs))
+                time.sleep(2)
+            else:
+                n_submitted = queue.submit_jobs()
+            print("[{}]: {} jobs running. Submitted {} jobs".format(st, queue.running_jobs,
+                                                                    n_submitted))
             time.sleep(5)
-        else:
-            n_submitted = queue.submit_jobs()
-        print("[{}]: {} jobs running. Submitted {} jobs".format(st, queue.running_jobs,
-                                                                n_submitted))
-        time.sleep(60)
-        queue.clear_job_dir()
+            queue.clear_job_dir()
+
+    except KeyboardInterrupt:
+        print("[{}]: Terminating...".format(st))
+        raise
+    finally:        
+        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        print("[{}]: Cleaning up...".format(st))
+ 
+        queue.update()
+        # Wait until all jobs are terminated, then collect results
+        while queue.running_jobs > 0:
+            print("[{}]: There are still jobs running. Waiting...".format(st))
+            time.sleep(10)
+            queue.update()
+
+        queue.collect_results()

@@ -111,6 +111,8 @@ Third, the discussion of TF-IDF weighting to identify boilerplate text is intere
 
 Fourth, I'd like a clearer justification for the choice of the NCSL classification task as a validity exercise. Relatively little detail is given in the paper about methodology that the NCSL used to build their tables and identify comparable documents, the underlying level of variation in the NCSL tables, or similar concerns.
 
+[Addressed] Added a cite explaining what the NCSL is, as well as several references to papers that use the NCSL to identify policy-specific lists of bills/policies across states.
+
 Finally, some smaller notes:
 - The discussion of SWAlign is generally good, but the description of the dynamic implementation is somewhat tough to follow.
 

@@ -13,6 +13,7 @@ import argparse
 import datetime
 import sys
 import shutil
+import csv
 
 
 class PBSQueue(object):
@@ -33,19 +34,20 @@ class PBSQueue(object):
     '''
 
     def __init__(self, user_id, allocation, num_jobs, bill_list, job_template, job_dir,
-            sleep_time):
+                 sleep_time):
+
         self.split_regex = re.compile(r'\s+')
         self.status = None
         self.num_jobs = num_jobs
         self.running_jobs = 0
-	self.user_id = user_id
+        self.user_id = user_id
         self.bill_queue = bill_list
         self.last_difference = 0
         self.template = job_template
-        self.prog_f_name = 'mj_queue_prog.txt'
         self.allocation = allocation
 
         self.job_dir = job_dir
+
         if os.path.exists(self.job_dir):
             shutil.rmtree(self.job_dir)
             os.makedirs(self.job_dir)
@@ -53,16 +55,7 @@ class PBSQueue(object):
             os.makedirs(self.job_dir) 
 
         self.sleep_time = sleep_time
-
-    def _update_prog_file(self, job):
-        '''
-        Update the permanent progress file
-        '''
-
-        with io.open(self.prog_f_name, 'a+', encoding='utf-8') as progfile:
-            progfile.write(job)
-            progfile.write(u'\n')
-            
+   
 
     def update(self):        
         '''
@@ -84,13 +77,10 @@ class PBSQueue(object):
         while response is None:
             try:
                 ntry += 1
-                response = subprocess.check_output(['qstat', '-u', self.user_id])
+                response = subprocess.getoutput("qstat -u {}".format(self.user_id))
             except subprocess.CalledProcessError as error:
                 if ntry > 5:
                     raise
-                rc = error.returncode
-                print "Error in qsub in _submit_job(). Returncode: {}".format(rc) 
-                print "Taking a break..."
                 time.sleep(10)
                 pass
 
@@ -117,9 +107,10 @@ class PBSQueue(object):
         '''
         self.last_difference = self.num_jobs - self.running_jobs
         c = 1
+        n_submitted = 0
 
         # Submit jobs until num_job is reached
-        while c <= self.last_difference:
+        while c <= self.last_difference and len(self.bill_queue) >= 1:
             c += 1
             new_job = self._make_job(self.bill_queue[0])
  
@@ -129,25 +120,23 @@ class PBSQueue(object):
             while response == None:
                 try:
                     ntry += 1
-                    response = subprocess.check_output(['qsub', new_job]) 
+                    response = subprocess.getoutput("qsub {}".format(new_job))
 
                 except subprocess.CalledProcessError as error:
 
                     # Raise exception and halt program after 5 unsuccesful tries 
                     if ntry > 5:
                         raise
-
                     c -= 1
-                    rc = error.returncode
-                    print "Error in qsub in _submit_job(). Returncode: {}".format(rc) 
-                    print "Taking a break..."
                     # Wait before re-trying
                     time.sleep(60)
                     pass
 
-            self._update_prog_file(self.bill_queue[0])
             self.bill_queue.pop(0)
+            n_submitted += 1
             time.sleep(self.sleep_time)
+
+        return n_submitted
 
 
     def _parse_output(self, output):
@@ -169,13 +158,13 @@ class PBSQueue(object):
         jobs = [] 
         for line in lines:
             els = self.split_regex.split(line)
-            try:	
-            	j = {"id_": els[0], "user": els[1], "queue": els[2], "name": els[3],
-                 	"status": els[9], "elapsed_time": els[10]}    
-            	jobs.append(j)
-
-	    except IndexError:
- 		pass
+            try:    
+                j = {"id_": els[0], "user": els[1], "queue": els[2], "name": els[3],
+                     "status": els[9], "elapsed_time": els[10]}    
+                jobs.append(j)
+            
+            except IndexError:
+                pass
 
         return jobs
 
@@ -212,21 +201,32 @@ class PBSQueue(object):
 
 
 if __name__ == "__main__":
-   
-    # Parameteres
+    
+    # =====================================================================
+    # Config
+    # =====================================================================
     USER_ID = 'fjl128'
-    NUM_JOBS = 85
-    BILL_IDS = 'bill_ids_batch_2.txt'
+    NUM_JOBS = 10
+    #BILL_IDS = 'bill_ids.txt'
+    BILL_IDS = 'test_bill_ids.txt'
     ALLOCATION = 'bbd5087-himem_collab'
-
-    # Prepare inputs
+    BILL_STATUS_FILE = '../data/aligner_output/bill_status.csv'
+    # =====================================================================
 
     ## Temp job file directory
     job_dir = 'pbs_scripts_' + ALLOCATION
 
     ## List of bills to be processed (bill ids - ids in progress file)
-    temp = io.open('mj_queue_prog.txt').readlines()
-    processed_bills = set([e.strip('\n') for e in temp])
+    
+    ### Get bills that already have been processed
+    processed_bills = set()
+
+    if os.path.exists(BILL_STATUS_FILE):
+        with open(BILL_STATUS_FILE, 'r') as csvfile:
+             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+             for row in reader:
+                 processed_bills.update([row[0]])
+
     temp = io.open(BILL_IDS).readlines()
     all_bills = [e.strip('\n') for e in temp]
     bill_list = [e for e in all_bills if e not in processed_bills]
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         template = templatefile.read()
     
     # Initialize Queue monitor
-    print 'Initialize queue with {} jobs'.format(len(bill_list))
+    print('Initialize queue with {} jobs'.format(len(bill_list)))
     queue = PBSQueue(user_id=USER_ID, 
                      num_jobs=NUM_JOBS, 
                      bill_list=bill_list, 
@@ -248,19 +248,19 @@ if __name__ == "__main__":
     # Main loop
     while True:
         queue.update()
-	ts = time.time()
-	st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        ts = time.time()
+        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
         
         if len(queue.bill_queue) == 0:
-            print "Finished"
+            print("Finished")
             break
 
         if queue.running_jobs >= queue.num_jobs:
-            print "[{}]: {} jobs running. No new jobs.".format(st, queue.running_jobs)
+            print("[{}]: {} jobs running. No new jobs.".format(st, queue.running_jobs))
             time.sleep(5)
         else:
-            queue.submit_jobs()
-	    print "[{}]: {} jobs running. Submitted {} jobs".format(st, queue.running_jobs,
-                                                                queue.last_difference)
-            time.sleep(60)
-            queue.clear_job_dir()
+            n_submitted = queue.submit_jobs()
+        print("[{}]: {} jobs running. Submitted {} jobs".format(st, queue.running_jobs,
+                                                                n_submitted))
+        time.sleep(60)
+        queue.clear_job_dir()

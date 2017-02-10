@@ -44,17 +44,19 @@ def similar_doc_query(es_connection, text, state_id, num_results):
     }
 
     results = es_connection.search(index="state_bills", body=query,
-                                   fields=["state", "bill_document_last"], 
+                                   #fields=["state", "bill_document_last"], 
                                    size=num_results)
+     
+
     max_score = results['hits']['max_score']
     results = results['hits']['hits']
     result_docs = []
     for res in results:
         doc = {}
-        for f in res['fields']:
-            doc[f] = res['fields'][f][0]
-        doc['score'] = res['_score']
-        doc['id'] = res['_id']
+        doc["bill_document_last"] = res["_source"]["bill_document_last"]
+        doc["state"] = res["_source"]["state"]
+        doc["score"] = res["_score"]
+        doc["id"] = res["_id"]
         result_docs.append(doc)
 
     return result_docs, max_score
@@ -99,7 +101,7 @@ if __name__ == "__main__":
     BILL_ID = sys.argv[1]
     ES_IP = ["http://elasticsearch.dssg.io:9200/"]
     
-    N_RIGHT_BILLS = 500
+    N_RIGHT_BILLS = 2
     MATCH_SCORE = 3
     MISMATCH_SCORE = -2
     GAP_SCORE = -3
@@ -164,6 +166,8 @@ if __name__ == "__main__":
             alignments.append(alignment)
             n_success += 1
 
+        print("Sucessfully terminated")
+
     # Handle exceptions
     except NoConnectionError:
         status = "connection_error"
@@ -177,11 +181,12 @@ if __name__ == "__main__":
     except KeyboardInterrupt as e:
         raise e
 
-    except Exception as e:
+    except:
         status = "other_error"
-        raise e
+        raise
 
     finally:
         elapsed_time = time() - start_time 
         write_outputs(alignments, BILL_ID, status, elapsed_time, n_right_bills,
                       n_success, OUTPUT_DIR)
+

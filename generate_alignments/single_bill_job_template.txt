@@ -1,7 +1,9 @@
 #PBS -l nodes=1:ppn=1
 #PBS -l walltime=10:00:00
-#PBS -l pmem=40gb
+#PBS -l pmem=10gb
 #PBS -A {allocation}
-#PBS -oe /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/logs/pbs_output
+#PBS -o /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/pbs_output
+#PBS -e /storage/home/fjl128/bruce_shared/text_reuse/generate_alignments/pbs_output
 
+cd $PBS_O_WORKDIR
 python b2b_alignment.py "{bill_id}"

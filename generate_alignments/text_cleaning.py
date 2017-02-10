@@ -43,10 +43,6 @@ def clean_text(text, lower = True):
         ntext_list.append(line)
 
     return "\n".join(ntext_list)
- 
- 
-
-
    
 
 def split_to_sections(cleantext,state):
@@ -143,7 +139,6 @@ def delete_numbers_in_lines (chunked_list):
     return chunked_list
 
 
-
 #Delete multiple new lines for each section
 def delete_lines (chunked_list):
     '''
@@ -151,7 +146,6 @@ def delete_lines (chunked_list):
     '''
     chunked_list = [re.sub( '\s+', ' ', x) for x in chunked_list]
     return chunked_list
-        
 
 
 def clean_document(doc_text, state_id):
@@ -166,13 +160,12 @@ def clean_document(doc_text, state_id):
 
     return " ".join(doc_text_sections)
 
+
 #delete boiler plate present in all alec exposed bills after "effective date"
 def delete_boiler_plate_alec_exposed (chunked_list):
     chunked_list = [re.sub('({effective date).*$', ' ', x) for x in chunked_list]
     chunked_list = chunked_list[1:]
     return chunked_list
-
-#good example is test_clean_text_for_alignment('va')
 
 def test_clean_text(state):
    es = Elasticsearch(['54.203.12.145:9200', '54.203.12.145:9200'], timeout=300)

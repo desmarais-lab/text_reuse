@@ -4,11 +4,19 @@
 
 from elasticsearch import Elasticsearch
 from pprint import pprint
+import sys
 
 
-es = Elasticsearch('http://elasticsearch.dssg.io:9200/', timeout=1000)
-pprint(es.cluster.health())
-print(es.ping())
+es = Elasticsearch('http://elasticsearch.dssg.io:9200/', timeout=10, 
+                    retry_on_timeout=True, max_retries=100)
+try:
+    pprint(es.cluster.health())
+    print(es.ping())
+except:
+    print("exception occurred")
+
+
+sys.exit()
 
 doc = es.get_source(index="state_bills", id='ky_2013RS_HB262', doc_type="_all")
 pprint(doc.keys())

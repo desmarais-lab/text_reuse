@@ -66,10 +66,10 @@ Reviewer #2: The paper proposes a modified measurement tool to study similaritie
 
 I do not consider myself a methodologist as such; therefore I will comment from the point of view as a possible user of such a method in other substantive areas. Does the paper do enough scholarly contribution to the discipline to be accepted to the premier journal in political science?
 
-[
-
 Even though an informed reader familiar with the text analytics will be able to follow the analyses presented, since the submission is t AJPS as opposed to Pol Analysis, I think the authors need to revise it to a considerable degree so that a general political science practitioner interested in applying such methods in his or research will be able to follow. At the very least, the authors need to address and revise frequent methods-related jargon, e.g., "boiler plate removal" encountered in text. I am not sure an average reader of AJPS is familiar with it. I was also surprised that the authors omit several important references to applied text analytics in political science, such as those of Laver, Benoit, Garry 2003, Slapin and Proksch; Lowe; Grimmer, etc (I am not one of these authors and am not related to them, only think it is important to relate to the growing literature on political text so that this paper does not look like a niche paper but as a part of a growing
 research program instead).
+
+[Addressed] I added a couple of string cites to emphasize the broader connections and contributions we offer---both to the text as data methods literature and to any substantive applied work that involves analysis of text corpora.
 
 After reading the paper my overall impression is that it will be very suitable for a special volume on political text, or perhaps for a more specialized journal such as State Politics & Policy Quarterly. As it stands, I think it requires very considerable revisions to be considered for publication in AJPS.
 

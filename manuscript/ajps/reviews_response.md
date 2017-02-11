@@ -62,7 +62,11 @@ I don’t think we should follow this advice. The point of a validation study is
 
 Reviewer #2: The paper proposes a modified measurement tool to study similarities between legislative texts in the US politics field (state legislatures), based on text-sequencing algorithms. The authors conduct several validity tests to confirm that ideologically similar bill sponsors reveal a high degree of text reuse, that bills that cover similar policies also reveal text reuse, and that text reuse correlate with the diffusion networks. I think that by and large, an informed reader is able to follow the explanation of the method, the structure is clear - it is a good paper overall.
 
+[Addressed] Thanks!
+
 I do not consider myself a methodologist as such; therefore I will comment from the point of view as a possible user of such a method in other substantive areas. Does the paper do enough scholarly contribution to the discipline to be accepted to the premier journal in political science?
+
+[
 
 Even though an informed reader familiar with the text analytics will be able to follow the analyses presented, since the submission is t AJPS as opposed to Pol Analysis, I think the authors need to revise it to a considerable degree so that a general political science practitioner interested in applying such methods in his or research will be able to follow. At the very least, the authors need to address and revise frequent methods-related jargon, e.g., "boiler plate removal" encountered in text. I am not sure an average reader of AJPS is familiar with it. I was also surprised that the authors omit several important references to applied text analytics in political science, such as those of Laver, Benoit, Garry 2003, Slapin and Proksch; Lowe; Grimmer, etc (I am not one of these authors and am not related to them, only think it is important to relate to the growing literature on political text so that this paper does not look like a niche paper but as a part of a growing
 research program instead).
@@ -116,9 +120,15 @@ Fourth, I'd like a clearer justification for the choice of the NCSL classificati
 Finally, some smaller notes:
 - The discussion of SWAlign is generally good, but the description of the dynamic implementation is somewhat tough to follow.
 
+[Addressed] I revised this to clarify.
+
 - In Figure 1, placing the optimal alignment alongside the table is confusing, and suggests that the terms match the axes in the figure.
 
+[FRIDO] Would you circle or bold the terms in each axis that get included in the alignment, rather than writing them to the right?
+
 - Scores inside cells in Figure 1 do not appear to match the parameter values and scores given in text.
+
+[FRIDO] Would you double check this?
 
 
 

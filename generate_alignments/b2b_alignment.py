@@ -92,21 +92,10 @@ class NoTextError(Exception):
 class NoBillError(Exception):
     pass
 
-if __name__ == "__main__":
 
-    # =========================================================================
-    # Config
-    # =========================================================================
-    BILL_ID = sys.argv[1]
-    
-    N_RIGHT_BILLS = int(sys.argv[2])
-    MATCH_SCORE = int(sys.argv[3])
-    MISMATCH_SCORE = int(sys.argv[4])
-    GAP_SCORE = int(sys.argv[5])
-    OUTPUT_DIR = sys.argv[6]
-    ES_IP = sys.argv[7]
-    # =========================================================================
-    
+def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH, MISMATCH, GAP, OUTPUT_DIR,
+                        ES_IP)
+
     alignments = []
     status = "successfull"
     start_time = time()
@@ -115,7 +104,7 @@ if __name__ == "__main__":
 
     try:
         # Establish elastic search connection
-        es = ES(ES_IP, timeout=1000)
+        es = ES(ES_IP, timeout=10)
 
         if not es.ping():
             raise NoConnectionError()
@@ -189,3 +178,20 @@ if __name__ == "__main__":
         write_outputs(alignments, BILL_ID, status, elapsed_time, n_right_bills,
                       n_success, OUTPUT_DIR)
 
+if __name__ == "__main__":
+
+    # =========================================================================
+    # Config
+    # =========================================================================
+    BILL_ID = sys.argv[1]
+    
+    N_RIGHT_BILLS = int(sys.argv[2])
+    MATCH_SCORE = int(sys.argv[3])
+    MISMATCH_SCORE = int(sys.argv[4])
+    GAP_SCORE = int(sys.argv[5])
+    OUTPUT_DIR = sys.argv[6]
+    ES_IP = sys.argv[7]
+    # =========================================================================
+    
+    get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH, MISMATCH, GAP, OUTPUT_DIR, 
+                        ES_IP)

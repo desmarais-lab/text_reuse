@@ -137,7 +137,7 @@ class PBSQueue(object):
                         raise
                     c -= 1
                     # Wait before re-trying
-                    time.sleep(60)
+                    time.sleep(10)
                     pass
 
             self.bill_queue.pop(0)
@@ -247,7 +247,9 @@ class PBSQueue(object):
                         outfile.write(line)
                 os.remove(f)
 
-
+def timestamp():
+    ts = time.time()
+    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 if __name__ == "__main__":
     
@@ -255,11 +257,11 @@ if __name__ == "__main__":
     # Config
     # =====================================================================
     USER_ID = 'fjl128'
-    NUM_JOBS = 80
+    NUM_JOBS = 90
     BILL_IDS = 'bill_ids.txt'
     ALLOCATION = 'bbd5087-himem_collab'
 
-    N_RIGHT_BILLS = 2
+    N_RIGHT_BILLS = 500
     MATCH_SCORE = 3
     MISMATCH_SCORE = -2
     GAP_SCORE = -3
@@ -278,11 +280,10 @@ if __name__ == "__main__":
     processed_bills = set()
 
     if os.path.exists(BILL_STATUS_FILE):
-        with open(BILL_STATUS_FILE, 'r') as csvfile:
+        with open(BILL_STATUS_FILE, 'r', encoding='utf-8') as csvfile:
              reader = csv.reader(csvfile, delimiter=',', quotechar='"')
              for row in reader:
                  processed_bills.update([row[0]])
-
     temp = io.open(BILL_IDS).readlines()
     all_bills = [e.strip('\n') for e in temp]
     bill_list = [e for e in all_bills if e not in processed_bills]
@@ -298,7 +299,7 @@ if __name__ == "__main__":
                      bill_list=bill_list, 
                      job_template=template, 
                      job_dir=job_dir, 
-                     sleep_time=2, 
+                     sleep_time=10, 
                      allocation=ALLOCATION,
                      n_right_bills=N_RIGHT_BILLS,
                      match=MATCH_SCORE,
@@ -314,34 +315,30 @@ if __name__ == "__main__":
     try:
         while True:
             queue.update()
-            ts = time.time()
-            st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             
             if len(queue.bill_queue) == 0:
                 print("Finished")
                 break
 
             if queue.running_jobs >= queue.num_jobs:
-                print("[{}]: {} jobs running. No new jobs.".format(st, queue.running_jobs))
-                time.sleep(2)
+                print("[{}]: {} jobs running. No new jobs.".format(timestamp(), queue.running_jobs))
             else:
                 n_submitted = queue.submit_jobs()
-            print("[{}]: {} jobs running. Submitted {} jobs".format(st, queue.running_jobs,
-                                                                    n_submitted))
-            time.sleep(5)
+                print("[{}]: {} jobs running. Submitted {} jobs".format(timestamp(), queue.running_jobs,
+                                                                        n_submitted))
+            time.sleep(2)
             queue.clear_job_dir()
 
     except KeyboardInterrupt:
-        print("[{}]: Terminating...".format(st))
+        print("[{}]: Terminating...".format(timestamp()))
         raise
     finally:        
-        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        print("[{}]: Cleaning up...".format(st))
+        print("[{}]: Cleaning up...".format(timestamp()))
  
         queue.update()
         # Wait until all jobs are terminated, then collect results
         while queue.running_jobs > 0:
-            print("[{}]: There are still jobs running. Waiting...".format(st))
+            print("[{}]: There are still jobs running. Waiting...".format(timestamp()))
             time.sleep(10)
             queue.update()
 

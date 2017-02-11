@@ -69,7 +69,8 @@ def write_outputs(alignments, bill_id, status, time, n_bills, n_success,
     status_file = os.path.join(output_dir, 'bill_status/', 
                                bill_id + '_status.csv')
 
-    with open(alignment_file, 'w') as af, open(status_file, 'w') as sf:
+    with open(alignment_file, 'w', encoding='utf-8') as af,\
+            open(status_file, 'w', encoding='utf-8') as sf:
 
         swriter = csv.writer(sf, delimiter=',', quotechar='"', 
                              quoting=csv.QUOTE_MINIMAL)
@@ -115,7 +116,7 @@ if __name__ == "__main__":
 
     try:
         # Establish elastic search connection
-        es = ES(ES_IP, timeout=1000)
+        es = ES(ES_IP, timeout=10, retry_on_timeout=True, max_retries=100)
 
         if not es.ping():
             raise NoConnectionError()
@@ -125,8 +126,7 @@ if __name__ == "__main__":
                                   doc_type="_all")
 
         if query_doc is None:
-            raise NoBillError()
-
+            raise NoBillError() 
 
         # Get most similar right bills
         if query_doc["bill_document_last"] is not None:
@@ -177,12 +177,8 @@ if __name__ == "__main__":
     except NoBillError:
         status = "no_bill"
 
-    except KeyboardInterrupt as e:
-        raise e
-
     except:
         status = "other_error"
-        raise
 
     finally:
         elapsed_time = time() - start_time 

@@ -73,7 +73,11 @@ research program instead).
 
 After reading the paper my overall impression is that it will be very suitable for a special volume on political text, or perhaps for a more specialized journal such as State Politics & Policy Quarterly. As it stands, I think it requires very considerable revisions to be considered for publication in AJPS.
 
+[Addressed] OK
+
 The authors do not introduce any new data - they rely on the existing dataset. They do not offer a new theory that explains the logic behind the re-use of legislative bills, whether based on interest groups literature or the diffusion literature, for example. As such, it is a measurement paper. The SW text re-use algorithm has been previously employed in Political Science in Wilkerson et al (2015), as the authors themselves acknowledge. The authors here re-use the same algorithm, with slight modifications to improve it.  On p. 11 they underline that "In our analyses we use a slightly modified version of the local alignment algorithm, in which the first gap in a series of multiple gaps receives a higher penalty then the following ones (Wilkerson et al., 2015, use the same modification)." "The idea behind this modification is that someone who changes text in a bill might insert several words into an existing piece of text."
+
+[Addressed] I updated the conclusion to note that the all-bill-pairs database is a novel contribution, and that we will distribute it with the supplemental materials for this article.
 
 Following the estimations of text re-use, the authors report three validation exercises to demonstrate that the texts that they find to be similar based on their analyses are in fact (expected to be) similar, based on other analyses, such as from the ideological distances of bill sponsors. The validation exercises do not bring any additional knowledge since it is expected that ideologically similar bill sponsors will reveal a high degree of text reuse, that bills that cover similar policies will reveal text reuse also. Even though such external validation is important, it does not tell me however, as a possible user of such method, as to the value of the method in my own applied work.
 

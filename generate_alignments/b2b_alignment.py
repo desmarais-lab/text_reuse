@@ -1,19 +1,19 @@
 from elasticsearch import Elasticsearch as ES
 from text_cleaning import clean_document
 from pprint import pprint
-from time import time
+from time import time, sleep
 from urllib3.exceptions import NewConnectionError
 from socket import gaierror
 from local_aligner import align, TimeOutError
 import sys
 import csv
 import os
+import numpy as np
 
 
 def similar_doc_query(es_connection, text, state_id, num_results):
     """
-     Query db for similar documents within documents of not the same
-     state
+     Query db for similar documents within documents of not the same state
     """
     
     # Elastic search query:
@@ -94,9 +94,10 @@ class NoBillError(Exception):
     pass
 
 
-def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH, MISMATCH, GAP, OUTPUT_DIR,
-                        ES_IP)
-
+def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH_SCORE, MISMATCH_SCORE, 
+                        GAP_SCORE, OUTPUT_DIR, ES_IP):
+    
+    sleep(np.random.exponential(1))
     alignments = []
     status = "successfull"
     start_time = time()
@@ -105,7 +106,7 @@ def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH, MISMATCH, GAP, OUTPUT_DIR
 
     try:
         # Establish elastic search connection
-        es = ES(ES_IP, timeout=10, retry_on_timeout=True, max_retries=100)
+        es = ES(ES_IP, timeout=30, retry_on_timeout=True, max_retries=10)
 
         if not es.ping():
             raise NoConnectionError()
@@ -173,6 +174,8 @@ def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH, MISMATCH, GAP, OUTPUT_DIR
         elapsed_time = time() - start_time 
         write_outputs(alignments, BILL_ID, status, elapsed_time, n_right_bills,
                       n_success, OUTPUT_DIR)
+
+    return status
 
 if __name__ == "__main__":
 

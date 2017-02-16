@@ -73,20 +73,28 @@ research program instead).
 
 After reading the paper my overall impression is that it will be very suitable for a special volume on political text, or perhaps for a more specialized journal such as State Politics & Policy Quarterly. As it stands, I think it requires very considerable revisions to be considered for publication in AJPS.
 
+[Addressed] OK
+
 The authors do not introduce any new data - they rely on the existing dataset. They do not offer a new theory that explains the logic behind the re-use of legislative bills, whether based on interest groups literature or the diffusion literature, for example. As such, it is a measurement paper. The SW text re-use algorithm has been previously employed in Political Science in Wilkerson et al (2015), as the authors themselves acknowledge. The authors here re-use the same algorithm, with slight modifications to improve it.  On p. 11 they underline that "In our analyses we use a slightly modified version of the local alignment algorithm, in which the first gap in a series of multiple gaps receives a higher penalty then the following ones (Wilkerson et al., 2015, use the same modification)." "The idea behind this modification is that someone who changes text in a bill might insert several words into an existing piece of text."
+
+[Addressed] I updated the conclusion to note that the all-bill-pairs database is a novel contribution, and that we will distribute it with the supplemental materials for this article.
 
 Following the estimations of text re-use, the authors report three validation exercises to demonstrate that the texts that they find to be similar based on their analyses are in fact (expected to be) similar, based on other analyses, such as from the ideological distances of bill sponsors. The validation exercises do not bring any additional knowledge since it is expected that ideologically similar bill sponsors will reveal a high degree of text reuse, that bills that cover similar policies will reveal text reuse also. Even though such external validation is important, it does not tell me however, as a possible user of such method, as to the value of the method in my own applied work.
 
+[Addressed] I added a note explaining that passing these validation exercises assures that researchers can use our measure to study policy similarity.
+
 In my humble opinion, the authors can follow two possible avenues. First, if they frame it as mainly a methods paper as they do now, they need to demonstrate the usage of their methods in at least two empirical applications at the back of the paper --- not external validity tests but applications, preferably in different fields and using different text corpora, e.g., one in US politics and another in IR or in European politics. For example, they could take an existing study of policy-making in the US and reveal how their method can be employed by other scholars working in the same area; they can also take the data from the UK parliament or EU parliament and equally apply the text reuse method, to a different corpus however. As it stands, the authors only suggest that the method could be useful, but they do not demonstrate the applications.
+
+[Addressed] Not going in this direction. This is odd. It seems like the reviewer wants us to write a transfer paper about the SW algorithm. 
 
 The second possibility of course is to reframe the paper altogether by explaining a substantive puzzle in US politics field, using the method to address that puzzle. On p. 26 they suggest several possible applications. The validation analyses can be trimmed or placed into the supplementary materials. Because this paper only improves on the method that is already introduced to the literature, I think the authors could make it into a much more "substantive" piece that still relies on the same method but also explains factors behind the likelihood of text re-use in state legislatures, again possibly utilizing several avenues suggested on p. 26. For example, the paper by Wilkerson et al. 2015 --- that introduced the method to political science --- has a substantive focus on how policy ideas relate to the legislative history of various pieces of legislation, with several examples and illustrations. This paper could be revised along similar lines, with a substantive focus. But I
 think the first possibility --- 2 empirical applications to demonstrate the applicability - would require less effort and fewer revisions.
 
-
+[Addressed] There are lots of measurement papers in the literature that do not involve a full substantive application. I find it peculiar that this reviewer makes such close reference to Wilkerson et al. We could probably call the sponsor ideology analysis a novel substantive application, as I am not aware of past work that studies whether ideologically similar legislators sponsor bills with similar content. Its not a surprising result, but I haven't seen it in the Congress literature. Let's see how it goes at PSJ with the current framing.
 
 Reviewer #1: As I read it, this manuscript makes three primary contributions. First, the manuscript provides a conceptualization of "policy similarity," and argues that text re-use is related to that conceptual viewpoint. Second, the manuscript provides a description of Smith-Waterman Algorithm (SWAlign), and offers advice and variants on the basic algorithm for potential users. Third, the manuscript provides a series of ground-truth validity tests of the procedure.
 
-[Adressed] Just overview
+[Addressed] Just overview
 
 Overall, this article makes a noteworthy contribution to the text-as-data literature. Text re-use analyses are becoming increasingly popular throughout political science, and this article advances the state of the literature on these methods. I have some concerns regarding the framing of the article as well as some more specific methodological critiques, but overall I think this is a worthwhile article.
 

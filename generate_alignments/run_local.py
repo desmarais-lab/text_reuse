@@ -64,9 +64,11 @@ if __name__ == "__main__":
     processed_bills = set()
     if os.path.exists(BILL_STATUS_FILE):
         with open(BILL_STATUS_FILE, 'r', encoding='utf-8') as csvfile:
-             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-             for row in reader:
-                 processed_bills.update([row[0]])
+            reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+            for row in reader:
+                if row[1] == "successful":
+                    processed_bills.update([row[0]])
+
     temp = open(BILL_IDS).readlines()
     all_bills = [e.strip('\n') for e in temp]
     bill_list = [e for e in all_bills if e not in processed_bills]

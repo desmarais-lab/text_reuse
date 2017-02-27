@@ -25,9 +25,9 @@ def similar_doc_query(es_connection, text, state_id, num_results):
                         "more_like_this": {
                             "fields": ["bill_document_last.shingles"],
                             "like_text": text,
-                            "max_query_terms": 25,
-                            "min_term_freq": 1,
-                            "min_doc_freq": 2,
+                            "max_query_terms": 15,
+                            "min_term_freq": 3,
+                            "min_doc_freq": 5,
                             "minimum_should_match": 1
                         }
                     },
@@ -44,9 +44,11 @@ def similar_doc_query(es_connection, text, state_id, num_results):
     }
 
     results = es_connection.search(index="state_bills", body=query,
-                                   #fields=["state", "bill_document_last"], 
+                                   filter_path=['hits.hits._id', 
+                                                'hits.hits.state',
+                                                'hits.hits.bill_document_last',
+                                                'hits.hits.bill_document_first'],
                                    size=num_results)
-     
 
     max_score = results['hits']['max_score']
     results = results['hits']['hits']
@@ -106,14 +108,14 @@ def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH_SCORE, MISMATCH_SCORE,
 
     try:
         # Establish elastic search connection
-        es = ES(ES_IP, timeout=30, retry_on_timeout=True, max_retries=10)
+        es = ES(ES_IP, timeout=5, retry_on_timeout=True, max_retries=10)
 
         if not es.ping():
-            raise NoConnectionError()
+            raise NoConnectionError() from None
 
         # Get text of the left bill
         query_doc = es.get_source(index="state_bills", id=BILL_ID, 
-                                  doc_type="_all")
+                               doc_type="_all")
 
         if query_doc is None:
             raise NoBillError() 
@@ -130,6 +132,10 @@ def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH_SCORE, MISMATCH_SCORE,
         res, max_score = similar_doc_query(es_connection=es, text=query_text, 
                                            state_id=BILL_ID[:2], 
                                            num_results=N_RIGHT_BILLS)
+        
+        
+        print('Success in {}'.format(time() - start_time))
+        return None
 
         n_right_bills = len(res)
                 
@@ -185,9 +191,9 @@ if __name__ == "__main__":
     BILL_ID = sys.argv[1]
     
     N_RIGHT_BILLS = int(sys.argv[2])
-    MATCH_SCORE = int(sys.argv[3])
-    MISMATCH_SCORE = int(sys.argv[4])
-    GAP_SCORE = int(sys.argv[5])
+    MATCH = int(sys.argv[3])
+    MISMATCH = int(sys.argv[4])
+    GAP = int(sys.argv[5])
     OUTPUT_DIR = sys.argv[6]
     ES_IP = sys.argv[7]
     # =========================================================================

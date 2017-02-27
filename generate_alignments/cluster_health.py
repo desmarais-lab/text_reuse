@@ -4,12 +4,12 @@ import sys
 import numpy as np
 
 
-es = Elasticsearch('http://localhost:9200/', timeout=3, 
+es = Elasticsearch('http://172.27.125.139:9200/', timeout=3, 
                     retry_on_timeout=True, max_retries=1)
 
-pprint(es.cluster.health())
-print(es.ping())
-
+doc = es.get_source(index="state_bills", id='tx_84_SB135', doc_type="_all")
+print(doc.keys())
+sys.exit()
 
 with open('bill_ids.txt') as infile:
     ids = [x.strip('\n') for x in infile]
@@ -31,6 +31,8 @@ with open('bill_ids.txt') as infile:
 
 
 doc = es.get_source(index="state_bills", id="ky_2013RS_HB262", doc_type="_all")
+print(doc.keys())
+sys.exit()
 
 query = {
     "query": {

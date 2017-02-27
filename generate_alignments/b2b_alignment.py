@@ -25,9 +25,9 @@ def similar_doc_query(es_connection, text, state_id, num_results):
                         "more_like_this": {
                             "fields": ["bill_document_last.shingles"],
                             "like_text": text,
-                            "max_query_terms": 15,
-                            "min_term_freq": 3,
-                            "min_doc_freq": 5,
+                            "max_query_terms": 25,
+                            "min_term_freq": 1,
+                            "min_doc_freq": 2,
                             "minimum_should_match": 1
                         }
                     },
@@ -44,10 +44,6 @@ def similar_doc_query(es_connection, text, state_id, num_results):
     }
 
     results = es_connection.search(index="state_bills", body=query,
-                                   filter_path=['hits.hits._id', 
-                                                'hits.hits.state',
-                                                'hits.hits.bill_document_last',
-                                                'hits.hits.bill_document_first'],
                                    size=num_results)
 
     max_score = results['hits']['max_score']
@@ -108,7 +104,7 @@ def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH_SCORE, MISMATCH_SCORE,
 
     try:
         # Establish elastic search connection
-        es = ES(ES_IP, timeout=5, retry_on_timeout=True, max_retries=10)
+        es = ES(ES_IP, timeout=100, retry_on_timeout=False)
 
         if not es.ping():
             raise NoConnectionError() from None
@@ -133,10 +129,6 @@ def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH_SCORE, MISMATCH_SCORE,
                                            state_id=BILL_ID[:2], 
                                            num_results=N_RIGHT_BILLS)
         
-        
-        print('Success in {}'.format(time() - start_time))
-        return None
-
         n_right_bills = len(res)
                 
         # Align them

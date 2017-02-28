@@ -7,8 +7,8 @@ import numpy as np
 es = Elasticsearch('http://172.27.125.139:9200/', timeout=3, 
                     retry_on_timeout=True, max_retries=1)
 
-doc = es.get_source(index="state_bills", id='tx_84_SB135', doc_type="_all")
-print(doc.keys())
+doc = es.get_source(index="state_bills", id='mn_2015-2016_SF1458', doc_type="_all")
+print(len(doc['bill_document_last']))
 sys.exit()
 
 with open('bill_ids.txt') as infile:

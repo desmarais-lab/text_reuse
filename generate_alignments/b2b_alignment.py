@@ -9,7 +9,18 @@ import sys
 import csv
 import os
 import numpy as np
+import timeout_decorator
 
+def get_bill_document(doc):
+    last = doc.get("bill_document_last", None)
+    first = doc.get("bill_document_first", None)
+
+    if last is not None:
+        return last
+    elif first is not None:
+        return first
+    else:
+        return None
 
 def similar_doc_query(es_connection, text, state_id, num_results):
     """
@@ -59,8 +70,8 @@ def similar_doc_query(es_connection, text, state_id, num_results):
 
     return result_docs, max_score
 
-def write_outputs(alignments, bill_id, status, time, n_bills, n_success, 
-                  output_dir):
+def write_outputs(alignments, bill_id, status, time, n_bills, 
+                  output_dir, query_time, bill_length):
     
     alignment_file = os.path.join(output_dir, 'alignments/', 
                                   bill_id + '_alignments.csv')
@@ -72,7 +83,8 @@ def write_outputs(alignments, bill_id, status, time, n_bills, n_success,
 
         swriter = csv.writer(sf, delimiter=',', quotechar='"', 
                              quoting=csv.QUOTE_MINIMAL)
-        swriter.writerow([bill_id, status, round(time, 4), n_bills, n_success])
+        swriter.writerow([bill_id, status, round(time, 4), n_bills,
+                          query_time, bill_length])
         
         if len(alignments) > 0:
             awriter = csv.writer(af, delimiter=',', quotechar='"', 
@@ -91,89 +103,79 @@ class NoTextError(Exception):
 class NoBillError(Exception):
     pass
 
+class TooLongError(Exception):
+    pass
 
+
+@timeout_decorator.timeout(3600, timeout_exception=TimeOutError)
 def get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH_SCORE, MISMATCH_SCORE, 
                         GAP_SCORE, OUTPUT_DIR, ES_IP):
     
-    sleep(np.random.exponential(1))
-    alignments = []
-    status = "successfull"
-    start_time = time()
-    n_right_bills = None
-    n_success = 0
+    global alignments
+    global bill_length
+    global n_right_bills
+    global query_time
 
-    try:
-        # Establish elastic search connection
-        es = ES(ES_IP, timeout=100, retry_on_timeout=False)
+    # Establish elastic search connection
+    es = ES(ES_IP, timeout=60, retry_on_timeout=True, max_retries=15)
 
-        if not es.ping():
-            raise NoConnectionError() from None
+    if not es.ping():
+        raise NoConnectionError() from None
 
-        # Get text of the left bill
-        query_doc = es.get_source(index="state_bills", id=BILL_ID, 
-                               doc_type="_all")
+    # Get text of the left bill
+    query_doc = es.get_source(index="state_bills", id=BILL_ID, 
+                           doc_type="_all")
 
-        if query_doc is None:
-            raise NoBillError() 
+    if query_doc is None:
+        raise NoBillError() 
 
-        # Get most similar right bills
-        if query_doc["bill_document_last"] is not None:
-            query_text = query_doc["bill_document_last"]
-        elif query_doc["bill_document_first"] is not None:
-            query_text = query_doc["bill_document_first"]
-        else:
-            raise NoTextError()
 
-        query_text = clean_document(query_text, state_id=BILL_ID[:2])
-        res, max_score = similar_doc_query(es_connection=es, text=query_text, 
-                                           state_id=BILL_ID[:2], 
-                                           num_results=N_RIGHT_BILLS)
+    # Get most similar right bills
+    query_text = get_bill_document(query_doc)
+    if query_text is None:
+        raise NoTextError()
+
+    bill_length = len(query_text)
+    if bill_length > 300000:
+        raise TooLongError()
+
+    query_text = clean_document(query_text, state_id=BILL_ID[:2])
+    query_start = time()
+    res, max_score = similar_doc_query(es_connection=es, text=query_text, 
+                                       state_id=BILL_ID[:2], 
+                                       num_results=N_RIGHT_BILLS)
+    query_time = round(time() - query_start, 4)
+    
+    n_right_bills = len(res)
+            
+    # Align them
+    for right_bill in res:
         
-        n_right_bills = len(res)
-                
-        # Align them
-        for right_bill in res:
+        bd = get_bill_document(right_bill)
+        right_text = clean_document(bd,
+                                    state_id=right_bill["state"])
+        if len(right_text) > 300000:
+            continue
 
-            right_text = clean_document(right_bill["bill_document_last"],
-                                        state_id=right_bill["state"])
-            s = time()
-            try:
-                alignment = align(left=query_text, right=right_text, 
-                                  match=MATCH_SCORE, gap=GAP_SCORE,
-                                  mismatch=MISMATCH_SCORE)
-            except TimeOutError:
-                alignment = [None, None, None] 
-            at = time() - s
+        s = time()
+        try:
+            alignment = align(left=query_text, right=right_text, 
+                              match=MATCH_SCORE, gap=GAP_SCORE,
+                              mismatch=MISMATCH_SCORE)
+        except TimeOutError:
+            alignment = [None, None, None] 
+        at = time() - s
 
-            alignment.insert(0, right_bill["id"])
-            alignment.insert(0, BILL_ID)
-            alignment.extend([round(right_bill["score"], 4), 
-                              round(max_score, 4), round(at, 4)])
+        alignment.insert(0, right_bill["id"])
+        alignment.insert(0, BILL_ID)
+        alignment.extend([round(right_bill["score"], 4), 
+                          round(max_score, 4), round(at, 4)])
 
-            alignments.append(alignment)
-            n_success += 1
+        alignments.append(alignment)
 
-        print("Sucessfully terminated")
+    print("Sucessfully terminated")
 
-    # Handle exceptions
-    except NoConnectionError:
-        status = "connection_error"
-
-    except NoTextError:
-        status = "no_text"
-
-    except NoBillError:
-        status = "no_bill"
-
-    except:
-        status = "other_error"
-
-    finally:
-        elapsed_time = time() - start_time 
-        write_outputs(alignments, BILL_ID, status, elapsed_time, n_right_bills,
-                      n_success, OUTPUT_DIR)
-
-    return status
+    return alignments, n_right_bills, query_time, bill_length
 
 if __name__ == "__main__":
 
@@ -189,6 +191,47 @@ if __name__ == "__main__":
     OUTPUT_DIR = sys.argv[6]
     ES_IP = sys.argv[7]
     # =========================================================================
+
+    status = "successfull"
+    start_time = time()
+    n_right_bills = None
+    query_time = None
+    bill_length = None
+    alignments = []
     
-    get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH, MISMATCH, GAP, OUTPUT_DIR, 
-                        ES_IP)
+   
+    try:
+        get_bill_alignments(BILL_ID, N_RIGHT_BILLS, MATCH, MISMATCH, GAP, 
+                            OUTPUT_DIR, ES_IP)
+
+    # Handle exceptions
+    except NoConnectionError:
+        status = "connection_error"
+        raise
+
+    except NoTextError:
+        status = "no_text"
+        raise
+
+    except NoBillError:
+        status = "no_bill"
+        raise
+    
+    except TimeOutError:
+        status = "bill_timeout"
+        raise
+
+    except TooLongError:
+        status = "skipped_for_length"
+        raise
+
+    except:
+        status = "other_error"
+        raise
+
+    finally:
+        elapsed_time = time() - start_time 
+        write_outputs(alignments, BILL_ID, status, elapsed_time, n_right_bills,
+                      OUTPUT_DIR, query_time, bill_length)
+
+

@@ -7,5 +7,5 @@
 #PBS -e pbs_output/
 
 cd /storage/home/fjl128/scratch/text_reuse/aligner_output
-python b2b_alignment.py "{bill_id}" "{n_right_bills}" "{match}" "{mismatch}" "{gap}" "{output_dir}" "{es_ip}"
+python /storage/home/fjl128/text_reuse/generate_alignments/b2b_alignment.py "{bill_id}" "{n_right_bills}" "{match}" "{mismatch}" "{gap}" "{output_dir}" "{es_ip}"
 

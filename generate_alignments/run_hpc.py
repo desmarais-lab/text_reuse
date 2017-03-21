@@ -10,8 +10,7 @@ import glob
 import time
 import argparse
 import datetime
-import sys
-import shutil
+import sys import shutil
 import csv
 
 
@@ -223,12 +222,9 @@ if __name__ == "__main__":
     # Config
     # =====================================================================
     USER_ID = 'fjl128'
-    #NUM_JOBS = 90
-    NUM_JOBS = 100
-    #BILL_IDS = 'bill_ids.txt'
-    BILL_IDS = 'bill_ids_open_batch.txt'
-    #ALLOCATION = 'bbd5087-himem_collab'
-    ALLOCATION = 'open'
+    NUM_JOBS = 90
+    BILL_IDS = '../data/bill_ids.txt'
+    ALLOCATION = 'bbd5087-himem_collab'
 
     N_RIGHT_BILLS = 500
     MATCH_SCORE = 3

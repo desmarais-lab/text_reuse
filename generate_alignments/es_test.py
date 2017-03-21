@@ -4,7 +4,7 @@ import sys
 import numpy as np
 
 
-es = Elasticsearch('http://localhost:9200/', timeout=3, 
+es = Elasticsearch('http://172.27.125.139:9200/', timeout=10, 
                     retry_on_timeout=True, max_retries=1)
 
 doc = es.get_source(index="state_bills", id='az_49th-3rd-special_SB1010', doc_type="_all")

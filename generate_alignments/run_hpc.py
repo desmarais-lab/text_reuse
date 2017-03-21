@@ -213,40 +213,6 @@ class PBSQueue(object):
         for f in jobfiles:
             os.remove(f)
     
-    def collect_results(self):
-
-        # If master files don't exist, create them
-        if not os.path.exists(self.alignment_master_file):
-            with open(self.alignment_master_file, 'w') as outfile:
-                header = ('left_id,right_id,score,left_alignment_text,right_ali'
-                          'gnment_text,lucene_score,max_lucene_score,compute_ti'
-                           'me\n')
-                outfile.write(header)
-
-        if not os.path.exists(self.bill_status_file):
-            with open(self.bill_status_file, 'w') as outfile:
-                outfile.write('bill_id,status,time,n_bills,n_successfull\n')
-
-        # Bill status
-        status_dir = os.path.join(self.output_dir, "bill_status")
-        with open(self.bill_status_file, 'a+') as outfile:
-            for file in os.listdir(status_dir):
-                f = os.path.join(status_dir, file)
-                with open(f, 'r') as infile:
-                    line = infile.read()
-                    outfile.write(line)
-                os.remove(f)
-
-        # Alignments
-        alignment_dir = os.path.join(self.output_dir, "alignments")
-        with open(self.alignment_master_file, 'a+') as outfile:
-            for file in os.listdir(alignment_dir):
-                f = os.path.join(alignment_dir, file)
-                with open(f, 'r') as infile:
-                    for line in infile:
-                        outfile.write(line)
-                os.remove(f)
-
 def timestamp():
     ts = time.time()
     return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
@@ -257,18 +223,21 @@ if __name__ == "__main__":
     # Config
     # =====================================================================
     USER_ID = 'fjl128'
-    NUM_JOBS = 90
-    BILL_IDS = 'bill_ids.txt'
-    ALLOCATION = 'bbd5087-himem_collab'
+    #NUM_JOBS = 90
+    NUM_JOBS = 100
+    #BILL_IDS = 'bill_ids.txt'
+    BILL_IDS = 'bill_ids_open_batch.txt'
+    #ALLOCATION = 'bbd5087-himem_collab'
+    ALLOCATION = 'open'
 
     N_RIGHT_BILLS = 500
     MATCH_SCORE = 3
     MISMATCH_SCORE = -2
     GAP_SCORE = -3
-    OUTPUT_DIR = '/storage/group/bbd5087_collab/text_reuse/data/aligner_output/'
+    OUTPUT_DIR = '/storage/home/fjl128/scratch/text_reuse/aligner_output'
     BILL_STATUS_FILE = os.path.join(OUTPUT_DIR, 'bill_status.csv')
     ALIGNMENT_MASTER_FILE = os.path.join(OUTPUT_DIR, 'alignments.csv')
-    ES_IP = "http://elasticsearch.dssg.io:9200/"
+    ES_IP = "http://172.27.125.139:9200/"
     # =====================================================================
 
     ## Temp job file directory
@@ -299,7 +268,7 @@ if __name__ == "__main__":
                      bill_list=bill_list, 
                      job_template=template, 
                      job_dir=job_dir, 
-                     sleep_time=10, 
+                     sleep_time=1, 
                      allocation=ALLOCATION,
                      n_right_bills=N_RIGHT_BILLS,
                      match=MATCH_SCORE,
@@ -312,34 +281,21 @@ if __name__ == "__main__":
                      )
 
     # Main loop
-    try:
-        while True:
-            queue.update()
-            
-            if len(queue.bill_queue) == 0:
-                print("Finished")
-                break
-
-            if queue.running_jobs >= queue.num_jobs:
-                print("[{}]: {} jobs running. No new jobs.".format(timestamp(), queue.running_jobs))
-            else:
-                n_submitted = queue.submit_jobs()
-                print("[{}]: {} jobs running. Submitted {} jobs".format(timestamp(), queue.running_jobs,
-                                                                        n_submitted))
-            time.sleep(2)
-            queue.clear_job_dir()
-
-    except KeyboardInterrupt:
-        print("[{}]: Terminating...".format(timestamp()))
-        raise
-    finally:        
-        print("[{}]: Cleaning up...".format(timestamp()))
- 
+    while True:
         queue.update()
-        # Wait until all jobs are terminated, then collect results
-        while queue.running_jobs > 0:
-            print("[{}]: There are still jobs running. Waiting...".format(timestamp()))
-            time.sleep(10)
-            queue.update()
+        
+        if len(queue.bill_queue) == 0:
+            print("Finished")
+            break
 
-        queue.collect_results()
+        if queue.running_jobs >= queue.num_jobs:
+            print("[{}]: {} jobs running. No new jobs.".format(timestamp(), 
+                                                               queue.running_jobs))
+        else:
+            n_submitted = queue.submit_jobs()
+            print("[{}]: {} jobs running. Submitted {} jobs".format(timestamp(), 
+                                                                    queue.running_jobs,
+                                                                    n_submitted))
+        time.sleep(1)
+        queue.clear_job_dir()
+

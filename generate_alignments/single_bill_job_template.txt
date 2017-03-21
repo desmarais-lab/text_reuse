@@ -1,12 +1,11 @@
 #PBS -l nodes=1:ppn=1
-#PBS -l walltime=10:00:00
-#PBS -l pmem=10gb
+#PBS -l walltime=3:00:00
+#PBS -l pmem=3gb
 #PBS -A {allocation}
 #PBS -j oe
 #PBS -o pbs_output/
 #PBS -e pbs_output/
 
-cd $PBS_O_WORKDIR
-dig +short myip.opendns.com @resolver1.opendns.com
+cd /storage/home/fjl128/scratch/text_reuse/aligner_output
 python b2b_alignment.py "{bill_id}" "{n_right_bills}" "{match}" "{mismatch}" "{gap}" "{output_dir}" "{es_ip}"
 

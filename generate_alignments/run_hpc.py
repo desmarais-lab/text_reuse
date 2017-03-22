@@ -223,10 +223,10 @@ if __name__ == "__main__":
     # Config
     # =====================================================================
     USER_ID = 'fjl128'
-    #NUM_JOBS = 90
-    NUM_JOBS = 100
-    #BILL_IDS = 'bill_ids.txt'
-    BILL_IDS = 'bill_ids_open_batch.txt'
+    NUM_JOBS = 50
+    #NUM_JOBS = 80
+    BILL_IDS = 'all_bill_ids.txt'
+    #BILL_IDS = 'bill_ids_open_batch.txt'
     #ALLOCATION = 'bbd5087-himem_collab'
     ALLOCATION = 'open'
 
@@ -234,14 +234,14 @@ if __name__ == "__main__":
     MATCH_SCORE = 3
     MISMATCH_SCORE = -2
     GAP_SCORE = -3
-    OUTPUT_DIR = '/storage/home/fjl128/scratch/text_reuse/aligner_output'
+    OUTPUT_DIR = '/storage/home/fjl128/scratch/text_reuse/aligner_output/'
     BILL_STATUS_FILE = os.path.join(OUTPUT_DIR, 'bill_status.csv')
     ALIGNMENT_MASTER_FILE = os.path.join(OUTPUT_DIR, 'alignments.csv')
     ES_IP = "http://172.27.125.139:9200/"
     # =====================================================================
 
     ## Temp job file directory
-    job_dir = 'pbs_scripts_' + ALLOCATION
+    job_dir = os.path.join(OUTPUT_DIR, 'pbs_scripts_' + ALLOCATION)
 
     ## List of bills to be processed (bill ids - ids in progress file)
     
@@ -251,7 +251,7 @@ if __name__ == "__main__":
     if os.path.exists(BILL_STATUS_FILE):
         with open(BILL_STATUS_FILE, 'r', encoding='utf-8') as csvfile:
              reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-             for row in reader:
+             for i,row in enumerate(reader):
                  processed_bills.update([row[0]])
     temp = io.open(BILL_IDS).readlines()
     all_bills = [e.strip('\n') for e in temp]
@@ -268,7 +268,7 @@ if __name__ == "__main__":
                      bill_list=bill_list, 
                      job_template=template, 
                      job_dir=job_dir, 
-                     sleep_time=1, 
+                     sleep_time=0.1, 
                      allocation=ALLOCATION,
                      n_right_bills=N_RIGHT_BILLS,
                      match=MATCH_SCORE,

@@ -12,6 +12,7 @@ import scipy.sparse as sps
 from time import time
 from gensim import corpora, matutils
 from sklearn.metrics.pairwise import cosine_similarity
+from multiprocessing import Manager, Pool
 
 # Generate the reweigted scores
 
@@ -73,13 +74,25 @@ def calc_similarities(text, comparison, dictionary, stemmer):
 
     return score
 
+
+def process_alignment(row):
+    matched_text = matches_only(row[3], row[4])
+    similarity_score = calc_similarities(matched_text, sample_tdm, 
+                                         dictionary, stemmer)
+    if row[2] == '':
+        adjusted_score = ''
+    else:
+        adjusted_score = float(row[2]) * (1 - similarity_score)
+    out_row = row[:3] + row[5:7] + [adjusted_score]
+    return out_row
+    
+            
 if __name__ == "__main__":
 
 
     # Config
-    DATA_DIR = '/storage/home/fjl128/scratch/text_reuse/data/aligner_output/'
+    DATA_DIR = '../data/aligner_output/'
     ALIGNMENT_OUTPUT = os.path.join(DATA_DIR, 'alignments.csv')
-    
     SCORES = os.path.join(DATA_DIR, 'alignments_notext.csv')
 
     n = 1000 # size of comparison samples
@@ -151,28 +164,20 @@ if __name__ == "__main__":
         
         # Calculate the weights and write them to the scorefile
         logging.info('Calculating weights...')
+
         ## Write header for scorefile
         infile.seek(0)
         header = next(reader)
         score_header = header[:3] + header[5:7] + ['adjusted_alignment_score']
         score_writer.writerow(score_header)
         
-        start = time()
-        for i,row in enumerate(reader):
+        #manager = Manager()
+        #shared_list = manager.list()
 
-            matched_text = matches_only(row[3], row[4])
-            similarity_score = calc_similarities(matched_text, sample_tdm, 
-                                                 dictionary, stemmer)
-            if row[2] == '':
-                adjusted_score = ''
-            else:
-                adjusted_score = float(row[2]) * (1 - similarity_score)
-            
-            out_row = row[:3] + row[5:7] + [adjusted_score]
-
-            if i % 10**6 == 0:
-                t = time() - start
-                start = time()
-                perc = round((i / m) * 100, 2)
-                logging.info(f'{perc} percent done. This batch (10^6) took {t}')
-                
+        pool = Pool(processes=12)
+        results = pool.imap(process_alignment, reader, chunksize=10000)
+        pool.close()
+        
+        # Write all rows to file
+        for row in results:
+            score_writer.writerow(row)

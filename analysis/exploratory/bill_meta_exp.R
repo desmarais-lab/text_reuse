@@ -41,7 +41,7 @@ ggplot(state_desc, aes(x=year_introduced, y=state)) +
     ylab("State") + xlab("Year") + 
     guides(size=guide_legend(title="Count")) +
     plot_theme
-ggsave('../../manuscript/figures/year_count_by_state.png', width = p_width,
+ggsave('../../paper/figures/year_count_by_state.png', width = p_width,
        height = 0.7*p_width)
 
 ## Amount of text by state

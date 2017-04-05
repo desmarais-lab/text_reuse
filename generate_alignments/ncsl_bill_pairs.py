@@ -1,77 +1,59 @@
-#!/opt/anaconda/bin/python 
-from __future__ import unicode_literals
-import sys 
-sys.path.append('../policy_diffusion/lid/')
-from lid import LID
-from text_alignment import AffineLocalAligner,LocalAligner
-from utils.text_cleaning import clean_document 
-import database
-import json
-import base64
-import codecs
-import re
-import logging
+import sys
+import csv
 import os
-import traceback
-import sys
-from utils.general_utils import deadline,TimedOutExc
-from database import ElasticConnection
-import time
-import io
 import itertools
-from pprint import pprint
-import numpy as np
-import sys
 import multiprocessing
-from functools import partial
 
-# TODO: dedicated I/O process for result output. There have been some conflicts
-# (very few though)
+import numpy as np
 
-def align_pair(c, split):
+from elasticsearch import Elasticsearch as ES
+from text_cleaning import clean_document
+from local_aligner import align, TimeOutError
+from b2b_alignment import get_bill_document
+
+
+def align_pair(pair):
     '''
-    c: tuple, (left_bill, right_bill)
-    split: bool, should bills be split in sections
+    pair: tuple, (left_bill, right_bill)
     '''
-    s = time.time()
-    alignments = lidy.align_bill_pair(right_doc_id=c[0], 
-                                      left_doc_id=c[1],
-                                      split_sections=split)
-    out = {'left_bill': c[0], 
-           'right_bill': c[1], 
-           'alignments':alignments}
+    # Get bill text
+    left_source = es.get_source(index="state_bills", id=pair[0], 
+                                doc_type="_all") 
+    right_source = es.get_source(index="state_bills", id=pair[1], 
+                                 doc_type="_all")
+
+    left_doc = get_bill_document(left_source)
+    right_doc = get_bill_document(right_source)
     
-    #with io.open(outfile_name, 'a', encoding='utf-8') as outfile:
-    #    outfile.write(unicode(json.dumps(out)) + '\n')
-    print(time.time() - s) 
+    if (left_doc is None or right_doc is None or
+        len(left_doc) > 3e5 or len(right_doc) > 3e5):
+        return None
+    
+    left_doc = clean_document(left_doc, state_id=left_source["state"])
+    right_doc = clean_document(right_doc, state_id=right_source["state"])
+        
+    try:
+        alignment = align(left_doc, right_doc, 3, -3, -2)
+    except TimeOutError:
+        alignment = [None] * 3
 
-    return out
+    alignment.insert(0, pair[1])
+    alignment.insert(0, pair[0])
+
+    return alignment
 
 
 if __name__ == '__main__':
 
-    # Parameters
-
-    # Number of processes
-    n_proc = 40
+    # Config
+    N_PROC = 10
+    OUTF = '../data/aligner_output/ncsl_alignments.csv'
      
-    OUTF = '../data/alignments_new/ncsl_pair_alignments_nosplit.json'
-    #OUTF = 'ncsl_pair_alignments.json'
-
-    ## Should bills be split in sections before alignment
-    SPLIT=False
-     
-    # Initialize aligner
-    aligner = AffineLocalAligner(match_score=4, mismatch_score=-1, gap_start=-3, 
-                                 gap_extend = -1.5)
-
-    # Initialize LID
-    ES_IP = "54.244.236.175"
-    lidy = LID(query_results_limit=1000, elastic_host=ES_IP, 
-               lucene_score_threshold=0, aligner=aligner)
+    # DB connection
+    es = ES("localhost:9200", timeout=60, retry_on_timeout=True, max_retries=15)
 
     # Load list of bills
-    with io.open('../data/ncsl/matched_ncsl_bill_ids.txt') as infile:
+    with open('../data/ncsl/matched_ncsl_bill_ids.txt') as infile:
         bill_ids = [s.strip('\n') for s in infile.readlines()]
 
     # Get all combinations
@@ -79,12 +61,16 @@ if __name__ == '__main__':
     
     combos = [x for x in c]
 
-    part_align_pair = partial(align_pair, split=SPLIT)
-
-    pool = multiprocessing.Pool(processes=n_proc) 
-    results = pool.map_async(part_align_pair, combos).get(9999999)
+    pool = multiprocessing.Pool(processes=N_PROC) 
+    results = pool.map(align_pair, combos)
     
     # Write output
-    with io.open(OUTF, 'w', encoding='utf-8') as outfile:
+    with open(OUTF, 'w', encoding='utf-8') as outfile:
+        writer = csv.writer(outfile, delimiter=',', quotechar='"', 
+                            quoting=csv.QUOTE_MINIMAL)
+        header = ['left_id', 'right_id', 'score', 'left_alignment_text',
+                  'right_alignment_text']
+        writer.writerow(header)
+
         for r in results:
-            outfile.write(unicode(json.dumps(r)) + '\n')
+            writer.writerow(r)

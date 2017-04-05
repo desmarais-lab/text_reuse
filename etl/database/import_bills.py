@@ -18,7 +18,7 @@ if __name__ == "__main__":
     HOST = 'localhost'
     PORT = 9200
     INDEX_NAME = 'state_bills'
-    DATA_FILE = '../../data/raw_data/extracted_bills_with_sponsers.json' 
+    DATA_FILE = '../../data/initial_data/extracted_bills_with_sponsers.json' 
     MAPPING_FILE = "../../etl/database/state_bill_mapping.json"
     IDX_SET_FILE = "../../etl/database/state_bill_index.json"
     #==========================================================================

@@ -12,7 +12,7 @@ import scipy.sparse as sps
 from time import time
 from gensim import corpora, matutils
 from sklearn.metrics.pairwise import cosine_similarity
-from multiprocessing import Manager, Pool
+from multiprocessing import Pool
 
 # Generate the reweigted scores
 
@@ -76,7 +76,14 @@ def calc_similarities(text, comparison, dictionary, stemmer):
 
 
 def process_alignment(row):
-    matched_text = matches_only(row[3], row[4])
+
+    # Check if this pair has been processed already
+    
+    try:
+        matched_text = matches_only(row[3], row[4])
+    except IndexError:
+        return [None] * 6 
+
     similarity_score = calc_similarities(matched_text, sample_tdm, 
                                          dictionary, stemmer)
     if row[2] == '':
@@ -170,11 +177,8 @@ if __name__ == "__main__":
         header = next(reader)
         score_header = header[:3] + header[5:7] + ['adjusted_alignment_score']
         score_writer.writerow(score_header)
-        
-        #manager = Manager()
-        #shared_list = manager.list()
-
-        pool = Pool(processes=12)
+            
+        pool = Pool(processes=20)
         results = pool.imap(process_alignment, reader, chunksize=10000)
         pool.close()
         

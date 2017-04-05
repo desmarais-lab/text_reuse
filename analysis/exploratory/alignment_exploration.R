@@ -22,6 +22,7 @@ fast_read <- function(filename) {
 # Bill to bill alignment scores
 alignments <- tbl_df(fast_read('../../data/aligner_output/alignments_notext.csv')) %>%
     filter(!is.na(score)) %>%
+    filter(score > 0) %>%
     mutate(relative_lucene_score = lucene_score / max_lucene_score)
 
 cat("========================================================================\n")

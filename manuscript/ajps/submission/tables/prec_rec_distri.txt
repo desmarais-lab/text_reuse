@@ -1,3 +1,0 @@
-Frequency of scores higher than 5:  0.01072041 
-Frequency of scores higher than 7:  0.006947437 
-Proportion in same table:  0.08201902 

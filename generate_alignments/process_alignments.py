@@ -77,8 +77,6 @@ def calc_similarities(text, comparison, dictionary, stemmer):
 
 def process_alignment(row):
 
-    # Check if this pair has been processed already
-    
     try:
         matched_text = matches_only(row[3], row[4])
     except IndexError:
@@ -100,6 +98,7 @@ if __name__ == "__main__":
     # Config
     DATA_DIR = '../data/aligner_output/'
     ALIGNMENT_OUTPUT = os.path.join(DATA_DIR, 'alignments.csv')
+    #ALIGNMENT_OUTPUT = os.path.join(DATA_DIR, 'test.csv')
     SCORES = os.path.join(DATA_DIR, 'alignments_notext.csv')
 
     n = 1000 # size of comparison samples

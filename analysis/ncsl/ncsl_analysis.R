@@ -5,6 +5,117 @@ library(ROCR)
 library(pROC)
 library(doParallel)
 
+
+# Load the ncsl alignment raw data
+ncsl_raw <- tbl_df(read.csv('../../data/aligner_output/ncsl_alignments_notext.csv'))
+
+
+retx <- function(x, i) x[i] 
+ncsl_raw <- tbl_df(read.csv('../data/alignments_new/ncsl_adjusted_nosplit.csv',
+                            stringsAsFactors = FALSE, header = TRUE))%>%
+    mutate(score = alignment_score)
+ncsl_raw$alignment_score <- NULL
+
+
+ncsl_alignments <- group_by(ncsl_raw, left_doc_id, right_doc_id) %>%
+    summarize(score = sum(score), count = n()) %>%
+    mutate(left_state = sapply(strsplit(left_doc_id, "_"), retx, 1),
+           right_state = sapply(strsplit(right_doc_id, "_"), retx, 1)) %>%
+    filter(left_state != right_state) %>%
+    select(-left_state, -right_state)
+
+# Load the ncsl table dataset
+ncsl_bills <- tbl_df(read.csv('../data/ncsl/ncsl_data_from_sample_matched.csv',
+                              stringsAsFactors = FALSE, header = TRUE)) %>% 
+    filter(!is.na(matched_from_db))
+
+# Write out all the ids we could match to database for pairwise alignment computation
+sink('../data/ncsl/matched_ncsl_bill_ids.txt')
+for(id_ in ncsl_bills$matched_from_db){
+    cat(paste0(id_, '\n'))
+}
+
+sink()
+
+# Summary table of tables (for poster)
+#group_by(ncsl_bills, topic) %>% summarize(count = n())
+
+# Data Frame of all pairs we have table information of (with the matched db ids)
+bill_pairs <- tbl_df(as.data.frame(t(combn(ncsl_bills$matched_from_db, 2))))
+colnames(bill_pairs) <- c("left_doc_id", "right_doc_id") 
+# Also use the reversed combinations
+reverse <- data.frame("left_doc_id" = bill_pairs$right_doc_id,
+                      "right_doc_id" = bill_pairs$left_doc_id)
+bill_pairs <- tbl_df(rbind(bill_pairs, reverse))
+
+# Get 'same-table-indicator'
+## Join with topic tables
+temp <- mutate(ncsl_bills, left_doc_id = matched_from_db, left_table = topic) %>%
+    select(left_doc_id, left_table)
+df <- left_join(bill_pairs, temp, by = "left_doc_id")
+temp <- mutate(ncsl_bills, right_doc_id = matched_from_db, right_table = topic) %>%
+    select(right_doc_id, right_table)
+df <- left_join(df, temp, by = "right_doc_id") %>% 
+    mutate(same_table = ifelse(left_table == right_table, 1, 0))
+
+## Join
+bill_pairs <- left_join(df, ncsl_alignments, 
+                        by = c("left_doc_id", "right_doc_id"))
+# Sanity check: match with alignmetns from general alignment algo
+#bill_pairs <- left_join(df, alignments, 
+#                        by = c("left_doc_id", "right_doc_id"))
+
+df <- filter(bill_pairs, !is.na(score)) %>%
+    select(-left_table, -right_table)
+
+## Join with the cosine similarity scores
+ncsl_cosine <- tbl_df(read.csv('../data/ncsl/cosine_similarities.csv', 
+                               stringsAsFactors = FALSE, header = TRUE))
+df <- left_join(df, ncsl_cosine, by = c("left_doc_id", "right_doc_id"))
+rm(bill_pairs)
+
+p <- ggplot(df, aes(x = cosine_similarity, y = score)) + 
+    stat_binhex(bins = 30) +
+    scale_y_log10() +
+    xlab("Cosine Similarity") + 
+    ylab("Alignment Score") + 
+    scale_fill_gradient(low = cbPalette[1], high = cbPalette[2],
+                        labels = function (x) round(x, 0)) +
+    guides(fill=guide_legend(title="Count")) +
+    plot_theme
+ggsave(plot = p, '../manuscript/figures/ncsl_alignment_cosine.png', 
+       width = p_width, height = 0.65 * p_width)
+
+# Write out the list of ncsl bill ids (lid format)
+#out_ids <- unique(df$left_doc_id)
+#writeLines(out_ids, con = '../data/ncsl_analysis/ncsl_analysis.')
+
+# Remove 0 scores
+df <- filter(df, score != 0)
+
+cat("Store the data\n")
+save(x = df, file = '../data/ncsl_analysis/ncsl_analysis_nosplit.RData')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Load the data (data preprocessing in `/etl/make_analysis_datasets.R`)
 load('../../data/ncsl_analysis/ncsl_analysis_nosplit.RData')
 df_nosplit <- df

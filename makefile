@@ -15,7 +15,7 @@ cd $ROOT_DIR
 
 # Set up the database
 
-## Import bills
+## Import bill
 _ : $DTA_DIR/initial_data/extracted_bills_with_sponsers.json
 	python import_bills.py
 
@@ -43,6 +43,7 @@ $ALIGN_DTA/alignments.csv: $DTA_DIR/bill_ids.txt
 $ALIGN_DTA/alignments_notext.csv: $ALIGN_DTA/alignments.csv
 	python process_alignments.py
 
+
 ## Generate the ncsl alignments (full similarity matrix for all matched bills)
 
 ### TODO: fill in steps to generate the ncsl dataset
@@ -55,11 +56,9 @@ $NCSL_DTA/matched_ncsl_bill_ids.txt: $NCSL_DTA/ncsl_data_from_sample.csv $DTA_DI
 $ALIGN_DTA/ncsl_alignments: $NCSL_DTA/matched_ncsl_bill_ids.txt
 	python generate_alignments/ncsl_bill_pairs.py
 
-
 ### Postprocess (boilerplate weighting)
 $ALIGN_DTA/ncls_alignments_notext.csv: $ALIGN_DTA/ncls_alignments.csv
 	python generate_alignments/process_ncls_alignments.py
-
 
 
 
@@ -76,3 +75,6 @@ $FIGURES/alignment_score_distribution.png $TABLES/alignments_descriptives.yml: \
 
 
 # Analysis
+
+## NCSL
+

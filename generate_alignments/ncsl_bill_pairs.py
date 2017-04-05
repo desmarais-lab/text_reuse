@@ -27,7 +27,7 @@ def align_pair(pair):
     
     if (left_doc is None or right_doc is None or
         len(left_doc) > 3e5 or len(right_doc) > 3e5):
-        return None
+        return [None] * 3
     
     left_doc = clean_document(left_doc, state_id=left_source["state"])
     right_doc = clean_document(right_doc, state_id=right_source["state"])
@@ -61,11 +61,13 @@ if __name__ == '__main__':
     
     combos = [x for x in c]
 
-    pool = multiprocessing.Pool(processes=N_PROC) 
-    results = pool.map(align_pair, combos)
-    
-    # Write output
     with open(OUTF, 'w', encoding='utf-8') as outfile:
+
+        pool = multiprocessing.Pool(processes=N_PROC) 
+        results = pool.imap(align_pair, combos, chunksize=1000)
+        pool.close()
+        
+        # Write output
         writer = csv.writer(outfile, delimiter=',', quotechar='"', 
                             quoting=csv.QUOTE_MINIMAL)
         header = ['left_id', 'right_id', 'score', 'left_alignment_text',

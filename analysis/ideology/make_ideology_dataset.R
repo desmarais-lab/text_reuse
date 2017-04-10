@@ -66,6 +66,6 @@ sink()
 
 # Save ideology data
 fname <- "../../data/ideology_analysis_input.RData"
-
+df <- select(df, adjusted_alignment_score, ideology_dist, left_id)
 cat(paste0("Saving to ", fname, "\n"))
 save(df, file = fname)

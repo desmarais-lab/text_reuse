@@ -26,7 +26,7 @@ with open('bs_reg_temp.txt', 'r') as infile:
 if not BASE:
     print("Generating bootstrap jobs...")
     N_PROC = 40 # number of processes to start
-    N_BS = 65 # number of bootstrap iterations
+    N_BS = 100 # number of bootstrap iterations
 
     n_per_job = int(math.ceil(N_BS / N_PROC)) # number of iterations per job
     print('{} iterations per job'.format(n_per_job))

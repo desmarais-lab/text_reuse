@@ -1,15 +1,6 @@
 # Regression on series of quantiles of the alignment score conditional on
 # ideological distance of the bills
 
-list.of.packages <- c("dplyr", "quantreg")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) {
-    print(new.packages)
-    print(R.version())
-    print(.libPaths())
-}
-
-
 library(dplyr)
 library(quantreg)
 library(ggplot2)
@@ -22,23 +13,18 @@ quantiles <- c(seq(0.5, 0.9, by = 0.1), seq(0.91, 0.99, by = 0.01),
                seq(0.991, 0.995, by =0.001))
 
 if(length(args) > 0) {
-
-
     
     # Generate bootstrap data 
     # Load the data (see ideology_preprocess.R)
     cat("Loading data...\n")
-    load(paste0(data_dir, 'ideology_analysis_input.RData'))
-    
-   
-    #bak <- df
-    #df <- bak[c(1:10000), ]
+    load('../../data/ideology_analysis/ideology_analysis_input.RData')
     
     # Regression with clustered bootstrap
     
     # Fit primary regression model for all quantiles
     quant_reg <- function(q, dat) {
-        mod <- rq(alignment_score ~ ideology_dist, data = dat, tau = q, method = "pfn")
+        mod <- rq(adjusted_alignment_score ~ ideology_dist, data = dat, tau = q,
+                  method = "pfn")
         cat(paste0("Done with ", q, "\n"))
         return(mod)
     }
@@ -54,7 +40,7 @@ if(length(args) > 0) {
         no <- as.integer(args[2])
         B <- as.integer(args[3])
         
-        clusters <- unique(df$left_doc_id)
+        clusters <- unique(df$left_id)
         nc <- length(clusters)
         out <- vector(mode = "list", length = B)
         
@@ -62,7 +48,7 @@ if(length(args) > 0) {
             
             # Sample clusters and build iteration-dataset
             sc <- sample(clusters, nc, replace = TRUE)
-            dat <- filter(df, is.element(left_doc_id, sc))
+            dat <- filter(df, is.element(left_id, sc))
             
             # fit models 
             mods <- lapply(quantiles, quant_reg, dat = dat)

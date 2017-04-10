@@ -50,7 +50,6 @@ df <- left_join(df, temp, by = "right_id")
 df <- mutate(df, ideology_dist = (left_ideology - right_ideology)^2)
 
 cat("Descriptives for ideology data\n")
-cat("***********************************************************************\n")
 
 # Stats for text
 sink('data_desc_stats.txt')
@@ -58,7 +57,7 @@ n <- nrow(df)
 cat(paste0("Preprocessed data from ", n, " bill dyads.\n"))
 df <- filter(df, !is.na(ideology_dist))
 m <- nrow(df)
-cat(paste0((1 - m / n), "% of dyads missing ideological distance.\n"))
+cat(paste0((1 - m / n) * 100, "% of dyads missing ideological distance.\n"))
 cat(paste0((n - m), " bills don't have ideological distance \n"))
 cat(paste0(m, " valid dyads from ", length(unique(df$left_id)), 
            " left bills and ", length(unique(df$right_id)), 

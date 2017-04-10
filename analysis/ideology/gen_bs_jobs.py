@@ -8,7 +8,7 @@ import sys
 if sys.argv[1] == "all":
     specific_job = None
     BASE = False
-elif sys.arrv[1] == "base":
+elif sys.argv[1] == "base":
     specific_job = None
     BASE = True
 else:
@@ -40,7 +40,7 @@ if not BASE:
                               job_number = n,
                               n_iter = n_per_job)
         job_file = "bs_job_{}.pbs".format(n)
-        with io.open(job_file, 'w') as outfile:
+        with open(job_file, 'w') as outfile:
             outfile.write(job)
         print("Submitted {}".format(n))
         x = subprocess.check_output(['qsub', job_file]) 
@@ -54,7 +54,7 @@ else:
                           job_number = 0,
                           n_iter = 0)
 
-    with io.open('base_job.pbs', 'w') as outfile:
+    with open('base_job.pbs', 'w') as outfile:
         outfile.write(job)
 
     x = subprocess.check_output(['qsub', 'base_job.pbs'])

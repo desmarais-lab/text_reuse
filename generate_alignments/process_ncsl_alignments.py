@@ -1,8 +1,7 @@
 import Stemmer
 import os 
 import csv
-import logging
-import pickle
+import logging 
 import sys
 
 import numpy as np
@@ -11,8 +10,24 @@ import scipy.sparse as sps
 from gensim import corpora, matutils
 from sklearn.metrics.pairwise import cosine_similarity
 from multiprocessing import Pool
-from generate_alignments import matches_only, proc_text, calc_similarities
+from process_alignments import matches_only, proc_text, calc_similarities
 
+def process_alignment(row):
+
+    try:
+        matched_text = matches_only(row[3], row[1])
+    except IndexError:
+        return [None] * 6
+
+    similarity_score = calc_similarities(matched_text, sample_tdm, 
+                                         dictionary, stemmer)
+
+    if row[2] == '':
+        adjusted_score = ''
+    else:
+        adjusted_score = float(row[2]) * (1 - similarity_score)
+    out_row = row[:3] + row[5:7] + [adjusted_score]
+    return out_row
 
 
 
@@ -50,11 +65,18 @@ if __name__ == "__main__":
         logging.info(('Making sample matrix and dictionary'))
         sample_bow = []
         dictionary = corpora.Dictionary()
+        header = next(reader)
         for i,row in enumerate(reader):
+            
+            if i % 10**4 == 0:
+                print(i)
 
             # If selected for sample, process and append to sample corpus
             if i in sample:
-                matched_text = matches_only(row[3], row[4])
+                try:
+                    matched_text = matches_only(row[3], row[4])
+                except IndexError:
+                    print(row)
                 tokens = proc_text(matched_text, stemmer)
                 sample_bow.append(dictionary.doc2bow(tokens, 
                                                      allow_update=True))
@@ -76,8 +98,8 @@ if __name__ == "__main__":
         header = next(reader)
         score_header = header[:3] + ['adjusted_alignment_score']
         score_writer.writerow(score_header)
-            
-        pool = Pool(processes=10)
+
+        pool = Pool(processes=11)
         results = pool.imap(process_alignment, reader, chunksize=10000)
         pool.close()
         

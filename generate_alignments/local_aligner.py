@@ -31,7 +31,7 @@ def _transform_text(a, b):
 
     return a_ints, b_ints, word_map
 
-@timeout_decorator.timeout(5, timeout_exception=TimeOutError)
+@timeout_decorator.timeout(1000000, timeout_exception=TimeOutError)
 def align(left, right, match, mismatch, gap):
     '''
     description:

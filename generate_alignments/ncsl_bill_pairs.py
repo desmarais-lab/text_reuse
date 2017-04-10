@@ -7,8 +7,8 @@ import multiprocessing
 import numpy as np
 
 from elasticsearch import Elasticsearch as ES
-from text_cleaning import clean_document
-from local_aligner import align, TimeOutError
+from text_cleaning import clean_document 
+from local_aligner import align, TimeOutError 
 from b2b_alignment import get_bill_document
 
 
@@ -25,9 +25,9 @@ def align_pair(pair):
     left_doc = get_bill_document(left_source)
     right_doc = get_bill_document(right_source)
     
-    if (left_doc is None or right_doc is None or
-        len(left_doc) > 3e5 or len(right_doc) > 3e5):
-        return [None] * 3
+    if (left_doc is None or right_doc is None
+        or (len(left_doc) + len(right_doc)) > 5e5):
+        return None
     
     left_doc = clean_document(left_doc, state_id=left_source["state"])
     right_doc = clean_document(right_doc, state_id=right_source["state"])
@@ -60,11 +60,13 @@ if __name__ == '__main__':
     c = itertools.combinations(bill_ids, 2)
     
     combos = [x for x in c]
+    #print(len(combos))
+    #combos = combos[:1000]
 
     with open(OUTF, 'w', encoding='utf-8') as outfile:
 
         pool = multiprocessing.Pool(processes=N_PROC) 
-        results = pool.imap(align_pair, combos, chunksize=1000)
+        results = pool.map(align_pair, combos)
         pool.close()
         
         # Write output
@@ -75,4 +77,6 @@ if __name__ == '__main__':
         writer.writerow(header)
 
         for r in results:
+            if r is None:
+                continue
             writer.writerow(r)

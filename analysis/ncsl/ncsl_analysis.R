@@ -7,17 +7,10 @@ library(doParallel)
 
 
 # Load the ncsl alignment raw data
-ncsl_raw <- tbl_df(read.csv('../../data/aligner_output/ncsl_alignments_notext.csv'))
-
-
-retx <- function(x, i) x[i] 
-ncsl_raw <- tbl_df(read.csv('../data/alignments_new/ncsl_adjusted_nosplit.csv',
-                            stringsAsFactors = FALSE, header = TRUE))%>%
-    mutate(score = alignment_score)
-ncsl_raw$alignment_score <- NULL
-
-
-ncsl_alignments <- group_by(ncsl_raw, left_doc_id, right_doc_id) %>%
+indat <- '../../data/aligner_output/ncsl_alignments_notext.csv'
+ncsl_alignments <- tbl_df(read.csv(indat, stringsAsFactors = FALSE)) %>%
+    mutate(score = alignment_score, alignment_score = NULL) %>%
+    group_by(left_doc_id, right_doc_id) %>%
     summarize(score = sum(score), count = n()) %>%
     mutate(left_state = sapply(strsplit(left_doc_id, "_"), retx, 1),
            right_state = sapply(strsplit(right_doc_id, "_"), retx, 1)) %>%
@@ -25,7 +18,7 @@ ncsl_alignments <- group_by(ncsl_raw, left_doc_id, right_doc_id) %>%
     select(-left_state, -right_state)
 
 # Load the ncsl table dataset
-ncsl_bills <- tbl_df(read.csv('../data/ncsl/ncsl_data_from_sample_matched.csv',
+ncsl_bills <- tbl_df(read.csv('../../data/ncsl/ncsl_data_from_sample.csv',
                               stringsAsFactors = FALSE, header = TRUE)) %>% 
     filter(!is.na(matched_from_db))
 

@@ -27,7 +27,7 @@ $DTA_DIR/bill_metadata.csv $DTA_DIR/bill_ids.txt: $DTA_DIR/initial_data/extracte
 
 ## Generate the main alignment dataset
 
-### Get the alignments (this takes about 3 weeks on 120 cores)
+### Get the alignments (this takes about 3 weeks on 120 cores (requries HPC with pbs job scheduler)
 $ALIGN_DTA/alignments.csv: $DTA_DIR/bill_ids.txt
 	# All these three can be run in parallel:
 	# Generates the actual alignments
@@ -92,4 +92,11 @@ $FIGURES/ncsl_pr_cosm.png $FIGURES/ncsl_pr_nosplit.png \
 	Rscript analysis/ncsl_analysis.R
 
 ## Ideology
+
+### Prep dataset
+$DTA_DIR/ideology_analysis_input.RData: $ALIGN_DTA/alignments_notext.csv \
+    $DTA_DIR/bill_metadata.csv
+	Rscript analysis/ideology/make_ideology_dataset.R
+
+### Run the script (requries HPC with pbs job scheduler)
 

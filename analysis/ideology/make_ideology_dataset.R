@@ -1,6 +1,5 @@
 library(dplyr)
 library(ggplot2)
-library(stargazer)
 
 # Load Alignments
 cat("Loading alignment data...\n")
@@ -10,9 +9,8 @@ fast_read <- function(filename) {
     classes <- sapply(samp, class)
     return(read.table(filename, header = TRUE, colClasses = classes,
                       stringsAsFactors = FALSE, sep = ',', 
-                      comment.char = "", nrows = 1000))
+                      comment.char = ""))
 }
-
 
 alignments <- tbl_df(fast_read('../../data/aligner_output/alignments_notext.csv'))
 
@@ -22,41 +20,30 @@ alignments <- filter(alignments, adjusted_alignment_score > 0)
 
 # Load metadata
 cat("Loading and cleaning metadata...\n")
-meta <- read.csv('../../data/bill_metadata.csv', stringsAsFactors = FALSE,
-                 header = TRUE, quote = '"')
+meta <- tbl_df(read.csv('../../data/bill_metadata.csv', 
+                        stringsAsFactors = FALSE, header = TRUE, 
+                        quote = '"')) %>%
+    select(-session) %>%
+    mutate(sponsor_ideology = as.numeric(sponsor_idology),
+           num_sponsors = as.integer(num_sponsors),
+           bill_length = as.integer(bill_length))
 
-## Clean it up
-meta$session <- NULL
 ### Make 'None' NA
 meta[meta == 'None'] <- NA
-### Fix column classes
-for(i in grep("date_", names(meta))){
-    var <- sapply(as.character(meta[, i]), substr, 1, 10)
-    meta[, i] <- as.Date(x = var)
-}
-for(col in c("state", "chamber", "bill_type")){
-    meta[, col] <- as.factor(meta[, col])
-}
-meta$sponsor_idology <- as.numeric(meta$sponsor_idology)
-meta$num_sponsors <- as.integer(meta$num_sponsors)
-meta$bill_length <- as.integer(meta$bill_length)
-
-## Make dplyr object
-meta <- tbl_df(meta)
-
+meta[meta == ''] <- NA
 
 ## Match alignments with ideology scores
 ### Join info on left bill
 cat("Joining datasets...\n")
 temp <- mutate(meta, left_id = unique_id, left_ideology = sponsor_idology,
                left_length = bill_length) %>%
-    dplyr::select(left_doc_id, left_ideology, left_length)
-df <- left_join(alignments, temp, by = "left_id")
+    dplyr::select(left_id, left_ideology, left_length)
+df <- left_join(alignments, temp, by = c("left_id"))
 
 ### Join info on right bill
 temp <- mutate(meta, right_id = unique_id, right_ideology = sponsor_idology,
                right_length = bill_length) %>%
-    dplyr::select(right_doc_id, right_ideology, right_length)
+    dplyr::select(right_id, right_ideology, right_length)
 df <- left_join(df, temp, by = "right_id")
 
 # Calculate ideological distance
@@ -73,8 +60,8 @@ df <- filter(df, !is.na(ideology_dist))
 m <- nrow(df)
 cat(paste0((1 - m / n), "% of dyads missing ideological distance.\n"))
 cat(paste0((n - m), " bills don't have ideological distance \n"))
-cat(paste0(m, " valid dyads from ", length(unique(df$left_doc_id)), 
-           " left bills and ", length(unique(df$right_doc_id)), 
+cat(paste0(m, " valid dyads from ", length(unique(df$left_id)), 
+           " left bills and ", length(unique(df$right_id)), 
            " right bills remaining.\n"))
 sink()
 

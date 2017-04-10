@@ -1,22 +1,9 @@
-# Request 1 processors on 1 node
 #PBS -l nodes=1:ppn=1
-
-# Request walltime (how long will your program run?)
-#PBS -l walltime=96:00:00
-
-# Request 1 gigabyte of memory per process
-#PBS -l pmem=50gb
-
-# send an email if the job aborts (a) and when it ends (e) 
-#PBS -mae
-
-#PBS -A bbd5087-himem_collab
-
-# Request that regular output and terminal output go to the same file
+#PBS -l walltime=24:00:00
+#PBS -l pmem=20gb
 #PBS -j oe
 
-# Run your program
-# don't forget to load the software modules you are using if necessary
+
 cd $PBS_O_WORKDIR
 module load R/3.2.0
 Rscript ideology_regression.R {mode} {job_number} {n_iter}

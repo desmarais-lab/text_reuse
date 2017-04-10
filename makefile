@@ -9,13 +9,11 @@ cd $ROOT_DIR
 
 # data files: TODO: exact sources where available
 # - extracted_bills_with_sponsors.json from DSSG / sunlight foundation
-# - malp_individual.tab (from the malp authors' website)
-# - legislators.csv (legislators and ids from sunlight foundation matched with 
-#   malp ids (I can't find the original legislator data from sunlight anymore)
+# - malp_individual.tab (from the malp authors' website) # - legislators.csv (legislators and ids from sunlight foundation matched with #   malp ids (I can't find the original legislator data from sunlight anymore)
 
 # Set up the database
 
-## Import bill
+## Import bill data
 _ : $DTA_DIR/initial_data/extracted_bills_with_sponsers.json
 	python import_bills.py
 
@@ -23,7 +21,9 @@ _ : $DTA_DIR/initial_data/extracted_bills_with_sponsers.json
 $DTA_DIR/bill_metadata.csv $DTA_DIR/bill_ids.txt: $DTA_DIR/initial_data/extracted_bills_with_sponsers.json
 	python extract_bill_metadata.py
 
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Generate the alignments
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ## Generate the main alignment dataset
 
@@ -60,9 +60,9 @@ $ALIGN_DTA/ncsl_alignments: $NCSL_DTA/matched_ncsl_bill_ids.txt
 $ALIGN_DTA/ncls_alignments_notext.csv: $ALIGN_DTA/ncls_alignments.csv
 	python generate_alignments/process_ncls_alignments.py
 
-
-
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Descriptives
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ## Bill database overview (how many bills per state)
 $FIGURES/year_count_by_state.png: data/bill_ids.txt data/bill_metadata.csv
@@ -73,8 +73,23 @@ $FIGURES/alignment_score_distribution.png $TABLES/alignments_descriptives.yml: \
     $ALIGN_DTA/alignments_notext.csv
 	analysis/exploratory/alignment_exploration.R
 
-
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Analysis
-
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## NCSL
+
+### Generate the cosine similarity scores
+### Requires elastic search connection
+$NCSL_DTA/cosine_similarities.csv: $NCSL_DTA/matched_ncsl_bill_ids.txt
+	python etl/ncsl_cosim/ncsl_cosim.py
+
+### Figures and tables
+$FIGURES/ncsl_pr_cosm.png $FIGURES/ncsl_pr_nosplit.png \
+    $TABLES/ncsl_auc.tex $TABLES/ncsl_bs_reg.tex $TABLES/prec_rec_distri.txt: \
+    $ALIGN_DTA/ncsl_alignments_notext.csv \
+    $NCSL_DTA/ncsl_data_from_sample_matched.csv \
+    $NCSL_DTA/cosine_similarities.csv
+	Rscript analysis/ncsl_analysis.R
+
+## Ideology
 

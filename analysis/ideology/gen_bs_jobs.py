@@ -1,6 +1,3 @@
-from __future__ import unicode_literals, division
-
-import io
 import subprocess
 import math
 import os
@@ -22,20 +19,20 @@ else:
     BASE = False
 
 # Load template file
-with io.open('bs_reg_temp.txt', 'r') as infile:
+with open('bs_reg_temp.txt', 'r') as infile:
         template = infile.read()
 
 
 if not BASE:
     print("Generating bootstrap jobs...")
-    N_PROC = 80 # number of processes to start
+    N_PROC = 40 # number of processes to start
     N_BS = 65 # number of bootstrap iterations
 
     n_per_job = int(math.ceil(N_BS / N_PROC)) # number of iterations per job
     print('{} iterations per job'.format(n_per_job))
 
     # Bootstrap jobs
-    for n in range(80, 80 + N_PROC):
+    for n in range(0, N_PROC):
         if specific_job is not None:
             if n != specific_job:
                 continue

@@ -183,19 +183,19 @@ colnames(auc_tab) <- c("AUC", "P(X<Random)", "P(X<Cosine)")
 
 ## Random classifier
 score <- runif(nrow(df_nosplit))
-p <- prediction(score, dat$same_table)
+p <- prediction(score, df_nosplit$same_table)
 auc_tab[1, 1] <- performance(p, measure = 'auc')@y.values[[1]]
 
 ## Cosine similarity
 out_cosim <- prc_auc(df_cosim, cosim=TRUE)
 auc_tab[2, 1] <- out_cosim$auc
-ggsave(filename = '../../manuscript/figures/ncsl_pr_cosm.png', 
+ggsave(filename = '../../paper/figures/ncsl_pr_cosm.png', 
        plot = out_cosim$prp, width = p_width, height = 0.65 * p_width)
 
 ## Alignment Score
 out_nosplit <- prc_auc(df_nosplit)
 auc_tab[3, 1] <- out_nosplit$auc
-ggsave(filename = '../../manuscript/figures/ncsl_pr_nosplit.png', 
+ggsave(filename = '../../paper/figures/ncsl_pr_nosplit.png', 
        plot = out_nosplit$prp, width = p_width, height = 0.65 * p_width)
 
 ## Bootstrap AUC differences
@@ -238,7 +238,7 @@ auc_tab[3, 2] <- sum(roc_res$Random > roc_res$Alignment) / B
 auc_tab[3, 3] <- sum(roc_res$Cosine > roc_res$Alignment) / B
 
 # Make the results table
-sink('../../manuscript/tables/ncsl_auc.tex')
+sink('../../paper/tables/ncsl_auc.tex')
 xtable(auc_tab, digits = 2, caption = paste("Area under the curve for classifier based
        on thresholding alignment scores (Alignment), classifier based on 
        thresholding cosine similarity score (Cosine) and random 
@@ -250,7 +250,7 @@ sink()
 # Distribution stats
 
 # Frequency of scores higher 50 / 100
-sink('../../manuscript/tables/prec_rec_distri.txt')
+sink('../../paper/tables/prec_rec_distri.txt')
 cat(paste0('Frequency of scores higher than 5: '), 
     sum(df_nosplit$score > 50) / nrow(df_nosplit),
     '\n')
@@ -300,6 +300,6 @@ colnames(reg_tab) <- c("Coefficient", "Std. Error", "95\\% CI")
 rownames(reg_tab) <- c("Same Table")
 reg_tab[1, ] <- c(round(b, 3), round(sd(out[, 2]), 3), paste(round(ci[1], 3), round(ci[2], 3)))
 
-sink('../../manuscript/tables/ncsl_bs_reg.tex')
+sink('../../paper/tables/ncsl_bs_reg.tex')
 xtable(reg_tab, digits = 3)
 sink()

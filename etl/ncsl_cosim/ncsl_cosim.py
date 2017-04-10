@@ -1,19 +1,19 @@
-from __future__ import unicode_literals, print_function, division
 import sys
-sys.path.append('../policy_diffusion/lid')
-from lid import LID
-from utils.text_cleaning import clean_document
-from database import ElasticConnection
 import json
-import io
-from gensim import corpora, matutils
 import Stemmer
 import scipy.sparse as sps
-from sklearn.metrics.pairwise import cosine_similarity
 import re
 import logging
-import cPickle as pickle
+import pickle
 import os
+
+from sklearn.metrics.pairwise import cosine_similarity
+from gensim import corpora, matutils
+from elasticsearch import Elasticsearch as ES
+
+sys.path.append('../../generate_alignments/')
+from text_cleaning import clean_document
+
 
 class TextCleaner(object):
 
@@ -49,18 +49,19 @@ if __name__ == "__main__":
     BILL_CACHE = 'bills.p'
     
     # Load bill list
-    with io.open('../../data/ncsl/matched_ncsl_bill_ids.txt') as infile:
+    with open('../../data/ncsl/matched_ncsl_bill_ids.txt') as infile:
         ids = [s.strip('\n') for s in infile.readlines()]
 
     if not os.path.isfile(BILL_CACHE):
         # Initialize database for bill retrieval
-        ES_IP = "54.244.236.175"
-        elastic_connection = ElasticConnection(host=ES_IP, port=9200)
+        es = ES("localhost:9200", timeout=60)
         # Retrieve bills
-        bills = [elastic_connection.get_bill_by_id(id) for id in ids]
-        pickle.dump(bills, io.open(BILL_CACHE, 'wb'))
+        bills = [es.get_source(index="state_bills", id=id_, doc_type="_all") 
+                 for id_ in ids]
+        print("Retrieved {} bills".format(len(bills)))
+        pickle.dump(bills, open(BILL_CACHE, 'wb'))
     else:
-        bills = pickle.load(io.open(BILL_CACHE, 'rb'))
+        bills = pickle.load(open(BILL_CACHE, 'rb'))
 
 
     # Initialize text cleaner
@@ -70,8 +71,8 @@ if __name__ == "__main__":
     dictionary = corpora.Dictionary()
 
     # Set up logging for gensim
-    #logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-    #                    level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+                        level=logging.INFO)
     ids_with_text = []
     
     print('First pass to build the dictionary...')
@@ -113,7 +114,7 @@ if __name__ == "__main__":
     # Store output (store the complete matrix w/o diagonal, in case 
     # left and right bill is different in the other datasets
     outline = '{},{},{}\n'
-    with io.open('../data/ncsl/cosine_similarities.csv', 'w') as outfile:
+    with open('../../data/ncsl/cosine_similarities.csv', 'w') as outfile:
         outfile.write(outline.format('left_doc_id',
                                      'right_doc_id',
                                      'cosine_similarity'))

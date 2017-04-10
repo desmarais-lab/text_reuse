@@ -65,7 +65,7 @@ cat(paste0(m, " valid dyads from ", length(unique(df$left_id)),
 sink()
 
 # Save ideology data
-fname <- "../../data/ideology_analysis_input.RData"
 df <- select(df, adjusted_alignment_score, ideology_dist, left_id)
+fname <- "../../data/ideology_analysis/ideology_analysis_input.RData"
 cat(paste0("Saving to ", fname, "\n"))
 save(df, file = fname)

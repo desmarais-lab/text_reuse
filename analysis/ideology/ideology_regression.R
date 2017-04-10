@@ -14,8 +14,6 @@ quantiles <- c(seq(0.5, 0.9, by = 0.1), seq(0.91, 0.99, by = 0.01),
 cat("Loading data...\n")
 load('../../data/ideology_analysis/ideology_analysis_input.RData')
 
-df <- df[1:10000, ]
-
 # Regression with clustered bootstrap
 cat("Fit primary regression model for all quantiles...\n")
 quant_reg <- function(q, dat) {

@@ -32,7 +32,7 @@ cat("========================================================================\n"
 r <- range(alignments$score)
 
 # Descriptive stats for alignment dataset
-sink('../../manuscript/tables/alignments_descriptives.yml')
+sink('../../paper/tables/alignments_descriptives.yml')
 cat(paste0("n_bill_dyads: ", nrow(alignments), '\n'))
 cat(paste0("mean_score: ", mean(alignments$score), '\n'))
 cat(paste0("median_score: ", median(alignments$score), '\n'))
@@ -58,7 +58,7 @@ p <- ggplot(pdat) +
     xlab("X") +
     ylab("P(Score < X)") +
     plot_theme
-ggsave('../manuscript/figures/alignment_score_distribution.png', width = p_width, 
+ggsave('../../paper/figures/alignment_score_distribution.png', width = p_width, 
        height = 0.65 * p_width)
 
 # Relationship of alignment and lucene score
@@ -72,7 +72,7 @@ p <- ggplot(alignments, aes(x = relative_lucene_score, y = score)) +
     guides(fill=guide_legend(title="Count")) +
     plot_theme
 cat('Saving plot...\n')
-ggsave(plot = p, '../manuscript/figures/alignment_lucene.png', 
+ggsave(plot = p, '../../paper/figures/alignment_lucene.png', 
        width = p_width, height = 0.65 * p_width)
 
 ## Bill metadata

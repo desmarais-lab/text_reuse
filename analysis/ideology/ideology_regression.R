@@ -28,7 +28,7 @@ if(length(args) > 0) {
     # Generate bootstrap data 
     # Load the data (see ideology_preprocess.R)
     cat("Loading data...\n")
-    load(paste0(data_dir, 'ideology.RData'))
+    load(paste0(data_dir, 'ideology_analysis_input.RData'))
     
    
     #bak <- df

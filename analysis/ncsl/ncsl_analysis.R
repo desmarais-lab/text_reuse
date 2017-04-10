@@ -6,29 +6,22 @@ library(pROC)
 library(doParallel)
 
 
-# Load the ncsl alignment raw data
+#_ Load the ncsl alignment raw data
+retx <- function(x, i) x[i] 
 indat <- '../../data/aligner_output/ncsl_alignments_notext.csv'
 ncsl_alignments <- tbl_df(read.csv(indat, stringsAsFactors = FALSE)) %>%
-    mutate(score = alignment_score, alignment_score = NULL) %>%
-    group_by(left_doc_id, right_doc_id) %>%
+    mutate(score = adjusted_alignment_score, adjusted_alignment_score = NULL) %>%
+    group_by(left_id, right_id) %>%
     summarize(score = sum(score), count = n()) %>%
-    mutate(left_state = sapply(strsplit(left_doc_id, "_"), retx, 1),
-           right_state = sapply(strsplit(right_doc_id, "_"), retx, 1)) %>%
+    mutate(left_state = sapply(strsplit(left_id, "_"), retx, 1),
+           right_state = sapply(strsplit(right_id, "_"), retx, 1)) %>%
     filter(left_state != right_state) %>%
     select(-left_state, -right_state)
 
 # Load the ncsl table dataset
-ncsl_bills <- tbl_df(read.csv('../../data/ncsl/ncsl_data_from_sample.csv',
-                              stringsAsFactors = FALSE, header = TRUE)) %>% 
+ncsl_bills <- tbl_df(read.csv('../../data/ncsl/ncsl_data_from_sample_matched.csv',
+                              stringsAsFactors = FALSE, header = TRUE)) %>%
     filter(!is.na(matched_from_db))
-
-# Write out all the ids we could match to database for pairwise alignment computation
-sink('../data/ncsl/matched_ncsl_bill_ids.txt')
-for(id_ in ncsl_bills$matched_from_db){
-    cat(paste0(id_, '\n'))
-}
-
-sink()
 
 # Summary table of tables (for poster)
 #group_by(ncsl_bills, topic) %>% summarize(count = n())
@@ -53,7 +46,8 @@ df <- left_join(df, temp, by = "right_doc_id") %>%
 
 ## Join
 bill_pairs <- left_join(df, ncsl_alignments, 
-                        by = c("left_doc_id", "right_doc_id"))
+                        by = c("left_doc_id" = "left_id", 
+                               "right_doc_id" = "right_id"))
 # Sanity check: match with alignmetns from general alignment algo
 #bill_pairs <- left_join(df, alignments, 
 #                        by = c("left_doc_id", "right_doc_id"))
@@ -62,10 +56,12 @@ df <- filter(bill_pairs, !is.na(score)) %>%
     select(-left_table, -right_table)
 
 ## Join with the cosine similarity scores
-ncsl_cosine <- tbl_df(read.csv('../data/ncsl/cosine_similarities.csv', 
+ncsl_cosine <- tbl_df(read.csv('../../data/ncsl/cosine_similarities.csv', 
                                stringsAsFactors = FALSE, header = TRUE))
 df <- left_join(df, ncsl_cosine, by = c("left_doc_id", "right_doc_id"))
 rm(bill_pairs)
+
+source('../plot_theme.R')
 
 p <- ggplot(df, aes(x = cosine_similarity, y = score)) + 
     stat_binhex(bins = 30) +
@@ -76,7 +72,7 @@ p <- ggplot(df, aes(x = cosine_similarity, y = score)) +
                         labels = function (x) round(x, 0)) +
     guides(fill=guide_legend(title="Count")) +
     plot_theme
-ggsave(plot = p, '../manuscript/figures/ncsl_alignment_cosine.png', 
+ggsave(plot = p, '../../paper//figures/ncsl_alignment_cosine.png', 
        width = p_width, height = 0.65 * p_width)
 
 # Write out the list of ncsl bill ids (lid format)
@@ -86,53 +82,26 @@ ggsave(plot = p, '../manuscript/figures/ncsl_alignment_cosine.png',
 # Remove 0 scores
 df <- filter(df, score != 0)
 
-cat("Store the data\n")
-save(x = df, file = '../data/ncsl_analysis/ncsl_analysis_nosplit.RData')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Load the data (data preprocessing in `/etl/make_analysis_datasets.R`)
-load('../../data/ncsl_analysis/ncsl_analysis_nosplit.RData')
 df_nosplit <- df
-load('../../data/ncsl_analysis/ncsl_analysis.RData')
 df_cosim <- select(df, -count, -score) %>%
     mutate(score = cosine_similarity, cosine_similarity = NULL)
-source('../plot_theme.R')
 
 # Descriptives
 # ==============================================================================
 
 # Alignment examples
 # TODO: regenerate for new alignments
-align_text <- tbl_df(read.table('../../data/ncsl/ncsl_unique_align.csv',
-                                sep = ',', stringsAsFactors = FALSE,
-                                header = TRUE)) %>%
-    arrange(desc(count))
-# 4 most commont
-fmc <- head(align_text, 5)
-
-# Make table:
-sink('../../manuscript/tables/align_exmpls.tex')
-xtable(fmc)
-sink()
+#align_text <- tbl_df(read.table('../../data/ncsl/ncsl_unique_align.csv',
+#                                sep = ',', stringsAsFactors = FALSE,
+#                                header = TRUE)) %>%
+#    arrange(desc(count))
+## 4 most commont
+#fmc <- head(align_text, 5)
+#
+## Make table:
+#sink('../../manuscript/tables/align_exmpls.tex')
+#xtable(fmc)
+#sink()
 
 # Precision recall plots and area under the curve
 # ==============================================================================

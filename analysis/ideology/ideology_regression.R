@@ -44,7 +44,7 @@ bs_iter <- function(i) {
     return(lapply(mods, coef))
 }
 
-cl <- makeCluster(11)
+cl <- makeCluster(10)
 registerDoParallel(cl)
 
 out <- foreach(i=1:B, .packages = c("dplyr", "quantreg")) %dopar% bs_iter(i)

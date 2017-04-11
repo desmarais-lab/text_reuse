@@ -95,15 +95,11 @@ $FIGURES/ncsl_pr_cosm.png $FIGURES/ncsl_pr_nosplit.png \
 ## Ideology
 
 ### Prep dataset
-$DTA_DIR/ideology_analysis_input.RData: $ALIGN_DTA/alignments_notext.csv \
+$DTA_DIR/ideology_analysis/ideology_analysis_input.RData: $ALIGN_DTA/alignments_notext.csv \
     $DTA_DIR/bill_metadata.csv
 	Rscript analysis/ideology/make_ideology_dataset.R
 
 ### Run the bootstrapped regressions (requries HPC with pbs job scheduler)
 $IDEO_DIR/regression_results.RData: $IDEO_DIR/ideology_analysis_input.RData
-	python gen_bs_jobs.py base
-	python gen_bs_jobs.py all
-	# Doesn't run, wait till all jobs are done. This combines results to one
-	# file
-	python gen_bs_jobs.py	
+	Rscript analysis/ideology/ideology_regression.R	
 

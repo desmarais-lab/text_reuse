@@ -1,12 +1,43 @@
+library(dplyr)
+
+# Read in the alignment data and aggregate to state dyad level
+fast_read <- function(filename) {
+    samp <- read.table(filename, header = TRUE, nrows = 2, 
+                       stringsAsFactors = FALSE, sep = ',')
+    classes <- sapply(samp, class)
+    return(read.table(filename, header = TRUE, colClasses = classes,
+                      stringsAsFactors = FALSE, sep = ',', 
+                      comment.char = ""))
+}
+
+ifile <- '../../data/aligner_output/alignments_notext.csv'
+alignments <- tbl_df(fast_read(ifile)) %>%
+    mutate(left_state = sapply(strsplit(left_id, "_"), function(x) x[1]),
+           right_state = sapply(strsplit(right_id, "_"), function(x) x[1])) %>%
+    select(-left_id, -right_id, -lucene_score, -max_lucene_score) %>%
+    group_by(left_state, right_state) %>%
+    summarize(sum_score = sum(adjusted_alignment_score),
+              mean_score = mean(adjusted_alignment_score),
+              median_score = median(adjusted_alignment_score))
+write.csv('../../data/state_dyad_alignments.csv', row.names = FALSE)
+alignments <- read.csv('../../data/state_dyad_alignments.csv', 
+                       stringsAsFactors = FALSE)
+
 # Read in complete dyadic dataset from APSR 
-state_diffusion_edges <- read.csv("../../data/diffusion/dhb2015apsr-networks.csv",stringsAsFactors=F)
+state_diffusion_edges <- read.csv("../../data/diffusion/dhb2015apsr-networks.csv", 
+                                  stringsAsFactors=F)
 
 # subset to 2008 edges
 state_diffusion_edges2008 <- subset(state_diffusion_edges,year==2008)
 
-alignments <- read.csv("../../data/alignments_new/state2state_scores.csv",stringsAsFactors=F)
-
-state_coverage <- read.csv("../../data/lid/nbills_by_state.csv",stringsAsFactors=F)
+# Get coverage by state
+state_coverage <- tbl_df(read.csv('../../data/bill_metadata.csv',
+                                  stringsAsFactors = FALSE)) %>%
+    select(unique_id, state) %>%
+    group_by(state) %>%
+    summarize()
+    
+state_coverage <- read.csv("../../data/nbills_by_state.csv",stringsAsFactors=F)
 
 ustates <- sort(unique(c(alignments$left_state,alignments$right_state)))
 ustates <- ustates[which(!is.element(ustates,c("pr","dc")))]

@@ -113,7 +113,7 @@ if(INTERACTIVE) {
     
     
     source('../plot_theme.R')
-    ggplot(pdat) +
+    ggplot(filter(pdat, quantile < 0.98)) +
         geom_point(aes(x = quantile_fctr, y = coefs, color = significant)) +
         geom_segment(aes(x = quantile_fctr, xend = quantile_fctr, y = lower, 
                          yend = upper, color = significant)) +
@@ -122,7 +122,7 @@ if(INTERACTIVE) {
         geom_hline(aes(yintercept = 0), linetype = 2, color = "grey") + 
         coord_flip() + ylab("Quantile Regression Coefficient") +
         xlab("Quantile") + plot_theme
-    ggsave('../../manuscript/figures/quantile_regression.png', width = p_width,
+    ggsave('../../paper/figures/quantile_regression.png', width = p_width,
            height = 0.8 * p_width)
 }
 

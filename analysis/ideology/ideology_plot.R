@@ -11,7 +11,7 @@ source('../plot_theme.R')
 
 # Load the data (see `ideology_preprocessing.R` for details)
 cat('Loading data...\n')
-load("../../data/ideology_analysis/ideology.RData")
+load('../../data/ideology_analysis/ideology_analysis_input.RData')
 
 #bak <- df
 #df <- bak[sample(c(1:nrow(bak)), 1e6), ]
@@ -20,7 +20,7 @@ load("../../data/ideology_analysis/ideology.RData")
 # Descriptive scatterplot on sample of points
 
 ## ALignments on natural scale
-p <- ggplot(df, aes(x = ideology_dist, y = alignment_score)) + 
+p <- ggplot(df, aes(x = ideology_dist, y = adjusted_alignment_score)) + 
     stat_binhex(bins = 80) + 
     xlab("Ideological Distance") + 
     ylab("Alignment Score") + 
@@ -29,11 +29,11 @@ p <- ggplot(df, aes(x = ideology_dist, y = alignment_score)) +
     guides(fill=guide_legend(title="Count")) +
     plot_theme
 cat('Saving plot...\n')
-ggsave(plot = p, '../../manuscript/figures/ideology_plot.png', 
+ggsave(plot = p, '../../paper/figures/ideology_plot.png', 
        width = p_width, height = 0.65 * p_width)
 
 ## Alignments on log scale
 p <- p + scale_y_log10() + ylab("Log Alignment Score")
 cat('Saving plot...\n')
-ggsave(plot = p, '../../manuscript/figures/ideology_plot_log.png', 
+ggsave(plot = p, '../../paper/figures/ideology_plot_log.png', 
        width = p_width, height = 0.65 * p_width)

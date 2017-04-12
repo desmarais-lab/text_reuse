@@ -92,6 +92,7 @@ $FIGURES/ncsl_pr_cosm.png $FIGURES/ncsl_pr_nosplit.png \
     $NCSL_DTA/cosine_similarities.csv
 	Rscript analysis/ncsl_analysis.R
 
+
 ## Ideology
 
 ### Prep dataset
@@ -101,5 +102,14 @@ $DTA_DIR/ideology_analysis/ideology_analysis_input.RData: $ALIGN_DTA/alignments_
 
 ### Run the bootstrapped regressions (requries HPC with pbs job scheduler)
 $IDEO_DIR/regression_results.RData: $IDEO_DIR/ideology_analysis_input.RData
-	Rscript analysis/ideology/ideology_regression.R	
+	python analysis/ideology/gen_bs_jobs.py base # Submits base model job
+	python analysis/ideology/gen_bs_jobs.py all # Submits bootstrap jobs
+	Rscript analysis/ideology/ideology_regression.R	 # Collects outputs
+
+
+## Diffusion analysis	
+
+$TABLES/diffusion_regression_results.tex: $ALIGN_DTA/alignments_notext.csv \
+    $DTA_DIR/bill_metadata.csv $DTA_DIR/dhb2015apsr-networks.csv
+	Rscript analysis/diffusion/diffusion_analysis.R
 

@@ -34,3 +34,4 @@ alignments_descriptives.txt
 *.pyc
 *.p
 ajps_submission
+*.RData

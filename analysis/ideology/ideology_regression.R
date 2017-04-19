@@ -114,9 +114,9 @@ if(INTERACTIVE) {
     
     source('../plot_theme.R')
     ggplot(filter(pdat, quantile < 0.98)) +
-        geom_point(aes(x = quantile_fctr, y = coefs, color = significant)) +
         geom_segment(aes(x = quantile_fctr, xend = quantile_fctr, y = lower, 
-                         yend = upper, color = significant)) +
+                         yend = upper), size = 1) +
+        geom_point(aes(x = quantile_fctr, y = coefs), size = 3) +
         scale_color_manual(values = c(cbPalette[1], "black")) +
         guides(color = FALSE) +
         geom_hline(aes(yintercept = 0), linetype = 2, color = "grey") + 

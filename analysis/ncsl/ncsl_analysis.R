@@ -4,7 +4,7 @@ library(xtable)
 library(ROCR)
 library(pROC)
 library(doParallel)
-
+library(pracma)
 
 #_ Load the ncsl alignment raw data
 retx <- function(x, i) x[i] 
@@ -117,6 +117,16 @@ pr <- function(threshold, score, true) {
     return(c(precision, recall))
 }
 
+# Area under precision recall curve
+auprc <- function(score, true) {
+    p <- prediction(score, true)
+    prec_rec <- performance(p, measure = 'rec', x.measure = 'prec')
+    precision <- prec_rec@x.values[[1]][-1]
+    recall <- prec_rec@y.values[[1]][-1]
+    area <-  trapz(recall, precision)
+    return(area)
+}
+
 # Precision recall curve and AUC function
 prc_auc <- function(dat, cosim=FALSE) {
     
@@ -168,11 +178,11 @@ prc_auc <- function(dat, cosim=FALSE) {
     }
        
     # Area under the curve 
-    p <- prediction(dat$score, dat$same_table)
-    auc <- performance(p, measure = 'auc')
+    auc <- auprc(dat$score, dat$same_table)
     
-    return(list("prp" = plt, "auc" = auc@y.values[[1]]))
+    return(list("prp" = plt, "auc" = auc))
 }
+
 
 # Make plots and get measures for all three scores
 auc_tab <- as.data.frame(matrix(NA, nc = 1, nr = 3))
@@ -183,8 +193,8 @@ colnames(auc_tab) <- c("AUC", "P(X<Random)", "P(X<Cosine)")
 
 ## Random classifier
 score <- runif(nrow(df_nosplit))
-p <- prediction(score, df_nosplit$same_table)
-auc_tab[1, 1] <- performance(p, measure = 'auc')@y.values[[1]]
+true <- df_nosplit$same_table
+auc_tab[1, 1] <- auprc(score, true)
 
 ## Cosine similarity
 out_cosim <- prc_auc(df_cosim, cosim=TRUE)
@@ -212,12 +222,10 @@ roc_bs <- function(){
     da <- df[sample(c(1:nrow(df)), nrow(df), replace = TRUE), ]
     
     # Area under the curve for each measure
-    ra <- performance(prediction(dr$score, dr$same_table), 
-                        measure = 'auc')@y.values[[1]]
-    al <- performance(prediction(da$score, da$same_table), 
-                        measure = 'auc')@y.values[[1]]
-    co <- performance(prediction(dc$score, dc$same_table), 
-                        measure = 'auc')@y.values[[1]]
+    ra <- auprc(dr$score, dr$same_table) 
+    al <- auprc(da$score, da$same_table) 
+    co <- auprc(dc$score, dc$same_table) 
+    
     return(list(al, co, ra))  
 }
 
@@ -225,7 +233,7 @@ roc_bs <- function(){
 cl <- makeCluster(12)
 registerDoParallel(cl)
 B <- 2000
-roc_res <- foreach(i=1:B, .packages = "ROCR") %dopar% roc_bs() 
+roc_res <- foreach(i=1:B, .packages = c("ROCR", "pracma")) %dopar% roc_bs() 
 
 ## Process parallel output
 b <- roc_res
@@ -239,7 +247,7 @@ auc_tab[3, 3] <- sum(roc_res$Cosine > roc_res$Alignment) / B
 
 # Make the results table
 sink('../../paper/tables/ncsl_auc.tex')
-xtable(auc_tab, digits = 2, caption = paste("Area under the curve for classifier based
+xtable(auc_tab, digits = 2, caption = paste("Area under the precision-recall curve for classifier based
        on thresholding alignment scores (Alignment), classifier based on 
        thresholding cosine similarity score (Cosine) and random 
        classifier (Random). The last three columns report one-tailed p-values for 

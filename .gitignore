@@ -1,5 +1,4 @@
 data/
-literature/
 .DS_Store
 *.csv
 *.rdata
@@ -12,7 +11,6 @@ literature/
 *.ipynb_checkpoints/
 *.fls
 bing_key.txt
-bak
 logs/
 id_batches/
 pbs_scripts*/
@@ -21,17 +19,14 @@ pbs_scripts*/
 processed_bills.txt
 mj_queue_prog.txt
 bill_ids*
-poster/
 *.sh.o*
 *.sh.e*
 *.pbs.o*
 *.synctex.gz
-TODO.md
 data_desc_stats.txt
 ncsl_data_descriptives.txt
 alignments_descriptives.txt
 *.tsv
 *.pyc
 *.p
-ajps_submission
 *.RData

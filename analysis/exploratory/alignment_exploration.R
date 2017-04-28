@@ -9,7 +9,8 @@ library(dtplyr)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # Bill to bill alignment scores
-alignments <- fread('../../data/aligner_output/alignments_notext.csv') %>%
+alignments <- fread('../../data/aligner_output/alignments_notext.csv', 
+                    verbose = TRUE) %>%
     filter(!is.na(score)) %>%
     filter(score > 0)
     #mutate(relative_lucene_score = lucene_score / max_lucene_score)
@@ -21,6 +22,7 @@ cat("========================================================================\n"
 r <- range(alignments$score)
 
 # Descriptive stats for alignment dataset
+print('Stats...')
 sink('../../paper/tables/alignments_descriptives.yml')
 cat(paste0("n_bill_dyads: ", nrow(alignments), '\n'))
 cat(paste0("mean_score: ", mean(alignments$score), '\n'))
@@ -32,22 +34,43 @@ cat(paste("n_alignments_gt_1000:", sum(alignments$score > 1000), '\n'))
 sink()
 
 ## Distribution of alignment scores
+print('Distribution plot...')
 thresholds <- exp(seq(log(r[1]), log(r[2]), length.out = 100))
 
-hm <- function(threshold) sum(alignments$score < threshold) / nrow(alignments)
-cumdist <- sapply(thresholds, hm)
-pdat <- tbl_df(data.frame("Proportion" = cumdist, "Score" = thresholds))
+hm <- function(threshold) {
+    freq <- sum(alignments$score > threshold) 
+    prop <- sum(alignments$score < threshold) / nrow(alignments)
+    return(c(freq, prop))
+}
+cumdist <- do.call(rbind, lapply(thresholds, hm))
+
+pdat <- tbl_df(data.frame("proportion_lt" = cumdist[, 2], "score" = thresholds,
+                          "frequency_gt" = cumdist[, 1]))
 
 # Load commont theme elements for plots
 source('../plot_theme.R')
-
-p <- ggplot(pdat) + 
-    geom_line(aes(x = Score, y = Proportion), size = 1.2) + 
+p <- ggplot(pdat, aes(x = score, y = proportion_lt)) + 
     scale_x_log10(breaks=c(1, 10, 100, 1000, 10000)) + 
-    xlab("X") +
-    ylab("P(Score < X)") +
+    geom_area(data = filter(pdat, score >= score[14] & score <= score[40]), 
+              aes(x = score, y = proportion_lt),
+              fill = cbPalette[1], alpha = 0.5) +
+    geom_area(data = filter(pdat, score >= score[40] & score <= score[66]), 
+              aes(x = score, y = proportion_lt),
+              fill = cbPalette[2], alpha = 0.5) +   
+    geom_area(data = filter(pdat, score >= score[66]), 
+              aes(x = score, y = proportion_lt),
+              fill = cbPalette[3], alpha = 0.5) +
+    geom_label(aes(x = score[30], y = 0.5), label = "217m", 
+               color = cbPalette[1], size = 10) +
+    geom_label(aes(x = score[52], y = 0.5), label = "1.4m", 
+               color = cbPalette[2], size = 10) +
+    geom_label(aes(x = score[83], y = 0.5), label = "43,000", 
+               color = cbPalette[3], size = 10) +
+    geom_line(size = 1.2) + 
+    xlab("Alignment Score") +
+    ylab("Proportion < Score") +
     plot_theme
-ggsave('../../paper/figures/alignment_score_distribution.png', width = p_width, 
+ggsave(plot = p, '../../paper/figures/alignment_score_distribution.png', width = p_width, 
        height = 0.65 * p_width)
 
 # Relationship of alignment and lucene score
@@ -64,6 +87,21 @@ ggsave('../../paper/figures/alignment_score_distribution.png', width = p_width,
 #ggsave(plot = p, '../../paper/figures/alignment_lucene.png', 
 #       width = p_width, height = 0.65 * p_width)
 
+# Plot the scores by bill
+p <- ggplot(arrange(alignments, desc(adjusted_alignment_score))) + 
+    geom_point(aes(x=factor(left_id, levels = unique(left_id)), 
+                            y = adjusted_alignment_score), alpha = 0.1, 
+               size = 0.01) +
+    scale_y_log10() + 
+    theme_bw() +
+    theme(axis.text.x=element_blank(),
+          axis.ticks.x=element_blank(),
+          axis.title=element_text(size=22),
+          axis.text.y=element_text(size=16)) +
+    ylab("Alignment Score") + xlab("Bill")
+ggsave(plot = p, '../../paper/figures/scores_by_bill.png', width = p_width, 
+       height = 0.65 * p_width)
+  
 ## Bill metadata
 #ret_last <- function(x) return(x[length(x)])
 #ret_first <- function(x) return(x[1])

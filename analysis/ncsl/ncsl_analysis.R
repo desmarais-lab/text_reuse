@@ -147,7 +147,7 @@ prc_auc <- function(dat, cosim=FALSE) {
         geom_density(aes(x = score, y = ..scaled..), data = dat, fill = "black",
                      alpha = 0.05, color = "white", adjust = 4) +
         geom_line(aes(y = value, x = threshold, color = type, linetype = type),
-                  size = 1.2) + 
+                  size = 2) + 
         scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1, 1.25)) +
         geom_hline(aes(yintercept = 1), linetype = 2, alpha = 0.2) +
         scale_color_manual(values = cbPalette, 
@@ -163,7 +163,7 @@ prc_auc <- function(dat, cosim=FALSE) {
         geom_density(aes(x = score, y = ..scaled..), data = dat, fill = "black",
                      alpha = 0.05, color = "white", adjust = 4) +
         geom_line(aes(y = value, x = threshold, color = type, linetype = type),
-                  size = 1.2) + 
+                  size = 2) + 
         scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1, 1.25)) +
         scale_x_log10(breaks = c(1, 10, 100, 1000, 10000)) +
         geom_hline(aes(yintercept = 1), linetype = 2, alpha = 0.2) +

@@ -24,8 +24,8 @@ p <- ggplot(df, aes(x = ideology_dist, y = adjusted_alignment_score)) +
     stat_binhex(bins = 80) + 
     xlab("Ideological Distance") + 
     ylab("Alignment Score") + 
-    scale_fill_gradient(low = "grey60", high = "grey1", trans = "log",
-                        labels = function (x) round(x, 0)) +
+    scale_fill_gradient(low = cbPalette[1], high = cbPalette[2], trans = "log",
+                       labels = c("1", "60", "3,000", "160,000", "9,000,000")) +
     guides(fill=guide_legend(title="Count")) +
     plot_theme
 cat('Saving plot...\n')

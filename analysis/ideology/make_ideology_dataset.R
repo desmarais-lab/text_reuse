@@ -1,18 +1,13 @@
 library(dplyr)
 library(ggplot2)
+library(dtplyr)
+library(data.table)
 
 # Load Alignments
 cat("Loading alignment data...\n")
-fast_read <- function(filename) {
-    samp <- read.table(filename, header = TRUE, nrows = 2, 
-                       stringsAsFactors = FALSE, sep = ',')
-    classes <- sapply(samp, class)
-    return(read.table(filename, header = TRUE, colClasses = classes,
-                      stringsAsFactors = FALSE, sep = ',', 
-                      comment.char = ""))
-}
 
-alignments <- tbl_df(fast_read('../../data/aligner_output/alignments_notext.csv'))
+alignments <- fread('../../data/aligner_output/alignments_notext.csv', 
+                    verbose = TRUE)
 
 # Remove 0 alignments
 # Choose weighted score as alignmetn score (weighted score from sample 1)

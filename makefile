@@ -40,8 +40,9 @@ $ALIGN_DTA/alignments.csv: $DTA_DIR/bill_ids.txt
 	python generate_alignments/process_results.py $ALIGN_DTA/bill_status \
 	    $ALIGN_DTA/bill_status.csv
 
-## Postprocess it (boilerplate weighting)
-$ALIGN_DTA/alignments_notext.csv: $ALIGN_DTA/alignments.csv
+## Postprocess it (boilerplate weighting) and duplicate removal (yes that's a hack)
+$ALIGN_DTA/alignments_notext.csv $ALIGN_DTA/alignments.csv: \
+    $ALIGN_DTA/alignments_with_dups.csv
 	python process_alignments.py
 
 
@@ -50,7 +51,8 @@ $ALIGN_DTA/alignments_notext.csv: $ALIGN_DTA/alignments.csv
 ### TODO: fill in steps to generate the ncsl dataset
 
 ### Get the bills in the ncsl tables that are also in our database
-$NCSL_DTA/matched_ncsl_bill_ids.txt: $NCSL_DTA/ncsl_data_from_sample.csv $DTA_DIR/bill_metadata.csv 
+$NCSL_DTA/matched_ncsl_bill_ids.txt: $NCSL_DTA/ncsl_data_from_sample.csv \
+    $DTA_DIR/bill_metadata.csv 
 	Rscript etl/ncsl_tables/match_bills.R
 
 ### Generate the alignments
@@ -72,7 +74,7 @@ $FIGURES/year_count_by_state.png: data/bill_ids.txt data/bill_metadata.csv
 ## Exploration of alignment data
 $FIGURES/alignment_score_distribution.png $TABLES/alignments_descriptives.yml: \
     $ALIGN_DTA/alignments_notext.csv
-	analysis/exploratory/alignment_exploration.R
+	Rscript analysis/exploratory/alignment_exploration.R
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Analysis
@@ -106,10 +108,23 @@ $IDEO_DIR/regression_results.RData: $IDEO_DIR/ideology_analysis_input.RData
 	python analysis/ideology/gen_bs_jobs.py all # Submits bootstrap jobs
 	Rscript analysis/ideology/ideology_regression.R	 # Collects outputs
 
-
 ## Diffusion analysis	
 
 $TABLES/diffusion_regression_results.tex: $ALIGN_DTA/alignments_notext.csv \
     $DTA_DIR/bill_metadata.csv $DTA_DIR/dhb2015apsr-networks.csv
 	Rscript analysis/diffusion/diffusion_analysis.R
+
+
+## Additional stuff for new faces presentation
+
+## Most common alignments
+all_alignments.p: $ALIGN_DTA/alignments.csv
+	python analysis/exploratory/common_alignments.py
+
+## Proportion aligned distribution
+## in alignment_exploration.R 
+
+## import alignments to sql database
+_ : $ALIGN_DTA/alignments_notext.csv $ALIGN_DTA/alignments.csv:
+	psql -U flinder -d text_reuse -f etl/sql/import_alignments.sql
 

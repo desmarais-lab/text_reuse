@@ -1,29 +1,18 @@
 library(dplyr)
 library(xtable)
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Function definitions
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-fast_read <- function(filename) {
-    samp <- read.table(filename, header = TRUE, nrows = 2, stringsAsFactors = FALSE,
-                       sep = ',')
-    classes <- sapply(samp, class)
-    return(read.table(filename, header = TRUE, colClasses = classes,
-                      stringsAsFactors = FALSE, sep = ',', comment.char = "",
-                      fileEncoding = 'utf-8'))
-}
-
+library(ggplot2)
+library(data.table)
+library(dtplyr)
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Main program
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # Bill to bill alignment scores
-alignments <- tbl_df(fast_read('../../data/aligner_output/alignments_notext.csv')) %>%
+alignments <- fread('../../data/aligner_output/alignments_notext.csv') %>%
     filter(!is.na(score)) %>%
-    filter(score > 0) %>%
-    mutate(relative_lucene_score = lucene_score / max_lucene_score)
+    filter(score > 0)
+    #mutate(relative_lucene_score = lucene_score / max_lucene_score)
 
 cat("========================================================================\n")
 cat("Descriptive statistics for alignments\n")
@@ -62,18 +51,18 @@ ggsave('../../paper/figures/alignment_score_distribution.png', width = p_width,
        height = 0.65 * p_width)
 
 # Relationship of alignment and lucene score
-p <- ggplot(alignments, aes(x = relative_lucene_score, y = score)) + 
-    stat_binhex(bins = 150) +
-    scale_y_log10() +
-    xlab("Lucene Score") + 
-    ylab("Alignment Score") + 
-    scale_fill_gradient(low = cbPalette[1], high = cbPalette[2], trans = "log",
-                        labels = function (x) round(x, 0)) +
-    guides(fill=guide_legend(title="Count")) +
-    plot_theme
-cat('Saving plot...\n')
-ggsave(plot = p, '../../paper/figures/alignment_lucene.png', 
-       width = p_width, height = 0.65 * p_width)
+#p <- ggplot(alignments, aes(x = relative_lucene_score, y = score)) + 
+#    stat_binhex(bins = 150) +
+#    scale_y_log10() +
+#    xlab("Lucene Score") + 
+#    ylab("Alignment Score") + 
+#    scale_fill_gradient(low = cbPalette[1], high = cbPalette[2], trans = "log",
+#                        labels = function (x) round(x, 0)) +
+#    guides(fill=guide_legend(title="Count")) +
+#    plot_theme
+#cat('Saving plot...\n')
+#ggsave(plot = p, '../../paper/figures/alignment_lucene.png', 
+#       width = p_width, height = 0.65 * p_width)
 
 ## Bill metadata
 #ret_last <- function(x) return(x[length(x)])
@@ -125,3 +114,117 @@ ggsave(plot = p, '../../paper/figures/alignment_lucene.png',
 #
 ## Get the actual alignments 
 #alignments <- s]
+stop()
+count_words <- function(x) as.numeric(length(unlist(strsplit(x, ' '))))
+db_connection = src_postgres('text_reuse')
+alignments = tbl(db_connection, "alignments") %>%
+    filter(!is.na(adjusted_alignment_score)) %>%
+    head(5e6) %>%
+    left_join(tbl(db_connection, "bill_metadata"), 
+              by = c("left_id" = "unique_id")) %>%
+    left_join(tbl(db_connection, "bill_metadata"), 
+              by = c("right_id" = "unique_id"), suffix = c(".left", ".right")) %>%
+    filter(!is.na(sponsor_ideology.right), !is.na(sponsor_ideology.left)) %>%
+    tbl_df()
+
+alignments <- mutate(alignments, 
+                     left_aligned = sapply(left_alignment_text, count_words) /
+                         bill_length.left,
+                     right_aligned = sapply(left_alignment_text, count_words) /
+                         bill_length.right) %>%
+    select(right_aligned, left_aligned, sponsor_ideology.right, 
+           sponsor_ideology.left, left_id, right_id)
+
+df = data_frame(prop_aligned = c(alignments$right_aligned, 
+                                 alignments$left_aligned),
+                ideology = c(alignments$sponsor_ideology.right,
+                             alignments$sponsor_ideology.left),
+                bill_id = c(alignments$right_id, alignments$left_id)) %>%
+    group_by(bill_id) %>%
+    summarize(prop_aligned = max(prop_aligned), 
+              ideology = ideology[1])
+
+# Proportion aligned by ideology
+source('../plot_theme.R')
+ggplot(df, aes(x = ideology, y = prop_aligned)) +
+    stat_binhex(bins = 50) +
+    scale_y_log10() + 
+    plot_theme
+
+ggplot(df, aes(x = ideology, y = prop_aligned)) +
+    geom_point(alpha = 0.1, size = 0.5) +
+    scale_y_log10() + 
+    plot_theme
+   
+
+states = group_by(largest_alignments, state.left, state.right) %>%
+    summarize(count = n(), mean = mean(adjusted_alignment_score), 
+              sum = sum(adjusted_alignment_score)) %>%
+    arrange(desc(count), desc(mean), desc(sum))
+
+# Adjusted vs unweighted score distribution
+scores = tbl(db_connection, "alignments") %>%
+    select(score, adjusted_alignment_score) %>%
+    filter(score != 0, !is.na(adjusted_alignment_score)) %>%
+    mutate(difference_absolute = score - adjusted_alignment_score,
+           perc_difference = ((score - adjusted_alignment_score) / score) * 100) %>%
+    tbl_df()
+
+
+## Distribution of alignment scores
+r <- range(scores$score)
+thresholds <- exp(seq(log(r[1]), log(r[2]), length.out = 100))
+
+hm <- function(threshold) c(sum(scores$score < threshold) / nrow(scores),
+                            sum(scores$adjusted_alignment_score < threshold) / nrow(scores))
+cumdist <- do.call(rbind, lapply(thresholds, hm))
+
+pdat <- tbl_df(data.frame("proportion_score" = cumdist[, 1], 
+                          "proportion_adjusted_score" = cumdist[, 2],
+                          "score" = thresholds))
+
+p <- ggplot(pdat) + 
+    geom_line(aes(x = score, y = proportion_score), size = 1.2) + 
+    geom_line(aes(x = score, y = proportion_adjusted_score), size = 1.2) + 
+    scale_x_log10(breaks=c(1, 10, 100, 1000, 10000)) + 
+    xlab("X") +
+    ylab("P(Score < X)") +
+    plot_theme
+
+## distribution of differnces
+ggplot(scores) +
+    geom_density(aes(x = perc_difference))
+
+## Relationship of 
+scores$sample = sample(1:nrow(scores), nrow(scores), replace = FALSE)
+scores_sample = filter(scores, sample < 100000) %>%
+    select(-sample)
+
+ggplot(scores_sample, aes(x = perc_difference, y = score)) +
+    geom_point(alpha = 0.3, size = 0.5) +
+    geom_smooth() +
+    scale_y_log10() +
+    plot_theme
+
+## distribution of proportions aligned
+r <- range(df$prop_aligned)
+thresholds <- exp(seq(log(r[1]), log(r[2]), length.out = 100))
+
+hm <- function(threshold) sum(df$prop_aligned < threshold) / nrow(df)
+cumdist <- sapply(thresholds, hm)
+
+pdat <- tbl_df(data.frame("proportion" = cumdist, 
+                          "score" = thresholds))
+
+p <- ggplot(pdat) + 
+    geom_line(aes(x = score, y = proportion), size = 1.2) + 
+    scale_x_log10(breaks = c(0, 0.001, 0.01, 0.1, 1)) + 
+    xlab("X") +
+    ylab("P(Ratio < X)") +
+    plot_theme
+ggsave(p, filename = '../../conference_materials/presentation/5994341jpqjcz/images/prop_aligned_distri.png',
+       width = p_width, height = 0.7*p_width)
+
+ggplot(df) + 
+    geom_density(aes(x = prop_aligned)) +
+    scale_x_log10()

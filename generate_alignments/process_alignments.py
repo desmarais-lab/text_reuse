@@ -97,24 +97,45 @@ if __name__ == "__main__":
 
     # Config
     DATA_DIR = '../data/aligner_output/'
-    ALIGNMENT_OUTPUT = os.path.join(DATA_DIR, 'alignments.csv')
+    ALIGNMENT_OUTPUT = os.path.join(DATA_DIR, 'alignments_with_dups.csv')
     #ALIGNMENT_OUTPUT = os.path.join(DATA_DIR, 'test.csv')
     SCORES = os.path.join(DATA_DIR, 'alignments_notext.csv')
+    DEDUPED = os.path.join(DATA_DIR, 'alignments.csv')
 
     n = 1000 # size of comparison samples
     stemmer = Stemmer.Stemmer('english').stemWord 
     
     logging.basicConfig(level=logging.INFO)
+    
+#    logging.info("Deduplicating alignments...")
+#    with open(ALIGNMENT_OUTPUT, 'r', encoding='utf-8') as infile,\
+#         open(DEDUPED, 'w') as dedupedfile:
+#
+#        reader = csv.reader(infile, delimiter=',', quotechar='"')
+#        deduped_writer = csv.writer(dedupedfile, delimiter=',', quotechar='"',
+#                                    quoting=csv.QUOTE_MINIMAL)
+#
+#        header = next(reader)
+#        deduped_writer.writerow(header)
+#        all_pairs = set()
+#        for i,row in enumerate(reader):
+#            ids = '_'.join(sorted([row[0], row[1]]))
+#            if ids not in all_pairs:
+#                deduped_writer.writerow(row)
+#                all_pairs.update([ids])
 
-    with open(ALIGNMENT_OUTPUT, 'r', encoding='utf-8') as infile,\
+#    del all_pairs
+
+    with open(DEDUPED, 'r', encoding='utf-8') as infile,\
          open(SCORES, 'w') as scorefile:
         
         reader = csv.reader(infile, delimiter=',', quotechar='"')
         score_writer = csv.writer(scorefile, delimiter=',', quotechar='"',
                                   quoting=csv.QUOTE_MINIMAL)
-
+ 
         # Count total number of rows in data
         if not os.path.exists('n_alignments.p'):
+            header = next(reader)
             logging.info('Counting alignments...')
             m = sum([1 for row in reader])
             pickle.dump(m, open('n_alignments.p', 'wb'))
@@ -177,7 +198,7 @@ if __name__ == "__main__":
         score_header = header[:3] + header[5:7] + ['adjusted_alignment_score']
         score_writer.writerow(score_header)
             
-        pool = Pool(processes=20)
+        pool = Pool(processes=10)
         results = pool.imap(process_alignment, reader, chunksize=10000)
         pool.close()
         

@@ -32,7 +32,8 @@ if not BASE:
     print('{} iterations per job'.format(n_per_job))
 
     # Bootstrap jobs
-    for n in range(0, N_PROC):
+    #for n in range(0, N_PROC):
+    for n in [27]:
         if specific_job is not None:
             if n != specific_job:
                 continue

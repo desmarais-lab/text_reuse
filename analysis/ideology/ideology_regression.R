@@ -9,8 +9,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 data_dir <- '../../data/ideology_analysis/'
 res_dir <- paste0(data_dir, 'bootstrap_results/')
-quantiles <- c(seq(0.5, 0.9, by = 0.1), seq(0.91, 0.99, by = 0.01), 
-               seq(0.991, 0.995, by =0.001))
+quantiles <- c(seq(0.5, 0.9, by = 0.1), seq(0.91, 0.97, by = 0.01))
 
 if(length(args) > 0) {
     

@@ -49,20 +49,27 @@ pdat <- tbl_df(data.frame("proportion_lt" = cumdist[, 2], "score" = thresholds,
 
 # Load commont theme elements for plots
 source('../plot_theme.R')
+d0_100 <- filter(pdat, score <= score[40])
+d100_1000 <- filter(pdat, score >= score[40] & score <= score[66])
+d1000 <- filter(pdat, score >= score[66])
+n <- nrow(alignments)
+n0_100 <- n * pdat$proportion_lt[40]
+n100_1000 <- n * pdat$proportion_lt[66] - n0_100
+n1000 <- n - n0_100 - n100_1000
 p <- ggplot(pdat, aes(x = score, y = proportion_lt)) + 
     scale_x_log10(breaks=c(1, 10, 100, 1000, 10000)) + 
-    geom_area(data = filter(pdat, score >= score[14] & score <= score[40]), 
+    geom_area(data = d0_100, 
               aes(x = score, y = proportion_lt),
               fill = cbPalette[1], alpha = 0.5) +
-    geom_area(data = filter(pdat, score >= score[40] & score <= score[66]), 
+    geom_area(data = d100_1000, 
               aes(x = score, y = proportion_lt),
               fill = cbPalette[2], alpha = 0.5) +   
-    geom_area(data = filter(pdat, score >= score[66]), 
+    geom_area(data = d1000, 
               aes(x = score, y = proportion_lt),
               fill = cbPalette[3], alpha = 0.5) +
-    geom_label(aes(x = score[30], y = 0.5), label = "217m", 
+    geom_label(aes(x = score[30], y = 0.5), label = "224m", 
                color = cbPalette[1], size = 10) +
-    geom_label(aes(x = score[52], y = 0.5), label = "1.4m", 
+    geom_label(aes(x = score[52], y = 0.5), label = "1.3m", 
                color = cbPalette[2], size = 10) +
     geom_label(aes(x = score[83], y = 0.5), label = "43,000", 
                color = cbPalette[3], size = 10) +
@@ -90,14 +97,16 @@ ggsave(plot = p, '../../paper/figures/alignment_score_distribution.png', width =
 # Plot the scores by bill
 p <- ggplot(arrange(alignments, desc(adjusted_alignment_score))) + 
     geom_point(aes(x=factor(left_id, levels = unique(left_id)), 
-                            y = adjusted_alignment_score), alpha = 0.1, 
-               size = 0.01) +
-    scale_y_log10() + 
+                            y = adjusted_alignment_score), alpha = 0.005, 
+               size = 0.001) +
+    scale_y_log10(breaks = c(3, 10, 100, 1000, 10000)) + 
     theme_bw() +
     theme(axis.text.x=element_blank(),
           axis.ticks.x=element_blank(),
           axis.title=element_text(size=22),
-          axis.text.y=element_text(size=16)) +
+          axis.text.y=element_text(size=16),
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank()) +
     ylab("Alignment Score") + xlab("Bill")
 ggsave(plot = p, '../../paper/figures/scores_by_bill.png', width = p_width, 
        height = 0.65 * p_width)

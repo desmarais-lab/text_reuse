@@ -17,7 +17,8 @@ urls <- urls[grepl('legislation.aspx', urls$url), ]
 n <- 50 # no of bills to sample
 set.seed(82096)
 sampled_urls <- urls[sample(c(1:nrow(urls)), n), ]
-write.csv(sampled_urls, '../../data/ncsl/sampled_urls.csv', row.names = FALSE)
+
+#write.csv(sampled_urls, '../../data/ncsl/sampled_urls.csv', row.names = FALSE)
 
 # Coding of the sampled urls was done in a table editor
 

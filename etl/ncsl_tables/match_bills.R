@@ -1,7 +1,15 @@
 library(dplyr)
+library(tidyverse)
 
-ncsl_bills <- tbl_df(read.csv('../../data/ncsl/ncsl_data_from_sample.csv', 
-                       header = TRUE, stringsAsFactors = FALSE))
+ncsl_bills <- read_csv('../../data/ncsl/ncsl_data_from_sample.csv')
+abbreviations <- read_csv('../../data/ncsl/states.csv')
+
+# Abbreviate state names
+for(i in 1:nrow(abbreviations)) {
+    name <- tolower(abbreviations$State[i])
+    ncsl_bills$state[tolower(ncsl_bills$state) == name] <- abbreviations$Abbreviation[i]
+}
+
 # Check for duplicates
 ncsl_bills <- mutate(ncsl_bills, unique_id = paste0(id, '_', state, '_', year)) %>%
     select(-table, -description)

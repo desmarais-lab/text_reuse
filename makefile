@@ -48,11 +48,21 @@ $ALIGN_DTA/alignments_notext.csv $ALIGN_DTA/alignments.csv: \
 
 ## Generate the ncsl alignments (full similarity matrix for all matched bills)
 
-### TODO: fill in steps to generate the ncsl dataset
+### Steps to generate the ncsl dataset
+$NCSL_DTA/checked_urls.csv:
+	python etl/ncsl_tables/get_table_urls.py
+
+### Sample from them
+$NCSL_DTA/sampled_urls.csv: $NCSL_DTA/checked_urls.csv
+	Rscript etl/ncsl_tables/sample_tables.R
+
+### Sampled tables are then processed by hand and stored in 
+# $NCSL_DTA/ncsl_data_from_sample.csv
 
 ### Get the bills in the ncsl tables that are also in our database
-$NCSL_DTA/matched_ncsl_bill_ids.txt: $NCSL_DTA/ncsl_data_from_sample.csv \
-    $DTA_DIR/bill_metadata.csv 
+$$NCSL_DTA/ncsl_data_from_sample_matched.csv NCSL_DTA/matched_ncsl_bill_ids.txt: \
+    $NCSL_DTA/ncsl_data_from_sample.csv $DTA_DIR/bill_metadata.csv \
+    $NCSL_DTA/states.csv
 	Rscript etl/ncsl_tables/match_bills.R
 
 ### Generate the alignments

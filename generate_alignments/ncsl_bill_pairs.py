@@ -3,8 +3,10 @@ import csv
 import os
 import itertools
 import multiprocessing
+import time
 
 import numpy as np
+import pandas as pd
 
 from elasticsearch import Elasticsearch as ES
 from text_cleaning import clean_document 
@@ -53,21 +55,22 @@ if __name__ == '__main__':
     es = ES("localhost:9200", timeout=60, retry_on_timeout=True, max_retries=15)
 
     # Load list of bills
-    with open('../data/ncsl/matched_ncsl_bill_ids.txt') as infile:
-        bill_ids = [s.strip('\n') for s in infile.readlines()]
+    bill_ids = pd.read_csv('../data/ncsl/ncsl_data_from_sample_matched.csv')
 
-    # Get all combinations
-    c = itertools.combinations(bill_ids, 2)
-    
-    combos = [x for x in c]
-    #print(len(combos))
-    #combos = combos[:1000]
+    # Get all combinations within parent topics
+    combos = []
+    grouped = bill_ids.groupby('parent_topic')
+    for name, data in grouped:
+        c = itertools.combinations(data['matched_from_db'], 2)
+        combos.extend(list(c))
 
     with open(OUTF, 'w', encoding='utf-8') as outfile:
-
+        
+        start = time.time()
         pool = multiprocessing.Pool(processes=N_PROC) 
         results = pool.map(align_pair, combos)
         pool.close()
+        print(time.time() - start)
         
         # Write output
         writer = csv.writer(outfile, delimiter=',', quotechar='"', 

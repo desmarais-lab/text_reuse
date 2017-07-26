@@ -46,7 +46,8 @@ $ALIGN_DTA/alignments_notext.csv $ALIGN_DTA/alignments.csv: \
 	python process_alignments.py
 
 
-## Generate the ncsl alignments (full similarity matrix for all matched bills)
+## Generate the ncsl alignments (full similarity matrix within parent topics
+## for all matched bills)
 
 ### Steps to generate the ncsl dataset
 $NCSL_DTA/checked_urls.csv:

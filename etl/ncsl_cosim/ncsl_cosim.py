@@ -53,8 +53,6 @@ if __name__ == "__main__":
     
     # Load bill list
     ids = pd.read_csv('../../data/ncsl/ncsl_data_from_sample_matched.csv')
-    ids = ids[ids['matched_from_db'] != 'mo_2012_HB1315']
-    ids = ids.reindex()
 
     if not os.path.isfile(BILL_CACHE):
         # Initialize database for bill retrieval
@@ -125,12 +123,12 @@ if __name__ == "__main__":
 
    
         out = []
-        for dtm_group, id_group in zip(grouped_dtm, grouped_bill_ids):
+        for dtm_group, id_group in zip(grouped_dtm, grouped_ids):
             sim_mat = cosine_similarity(dtm_group[1])
-            this_ids = id_group[1]
+            this_ids = id_group[1]['matched_from_db']
             for i in range(len(this_ids)):
                 for j in range(len(this_ids)):
                     if i == j:
                         continue
-                outfile.write(outline.format(this_ids.iloc[i], this_ids.iloc[j], 
-                                             sim_mat[i][j]))
+                    outfile.write(outline.format(this_ids.iloc[i], this_ids.iloc[j], 
+                                                 sim_mat[i][j]))

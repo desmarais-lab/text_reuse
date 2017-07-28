@@ -103,7 +103,7 @@ $FIGURES/ncsl_pr_cosm.png $FIGURES/ncsl_pr_nosplit.png \
     $ALIGN_DTA/ncsl_alignments_notext.csv \
     $NCSL_DTA/ncsl_data_from_sample_matched.csv \
     $NCSL_DTA/cosine_similarities.csv
-	Rscript analysis/ncsl_analysis.R
+	Rscript analysis/ncsl/ncsl_analysis.R
 
 
 ## Ideology

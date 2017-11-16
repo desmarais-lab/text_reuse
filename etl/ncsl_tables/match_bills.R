@@ -1,9 +1,13 @@
-library(dplyr)
+library(tidyverse)
+library(urltools)
 
-ncsl_bills <- tbl_df(read.csv('../../data/ncsl/ncsl_data_from_sample.csv', 
-                       header = TRUE, stringsAsFactors = FALSE))
-# Check for duplicates
-ncsl_bills <- mutate(ncsl_bills, unique_id = paste0(id, '_', state, '_', year)) %>%
+ncsl_bills <- read_csv('../../data/ncsl/ncsl_data_from_sample.csv') %>%
+    mutate(unique_id = paste0(id, '_', state, '_', year),
+           parent_topic = as.character(sapply(table, function(x) {
+               path = unlist(strsplit(url_parse(x)$path, '/'))
+               l = length(path)
+               return(path[l-1])
+           }))) %>%
     select(-table, -description)
 ncsl_bills <- ncsl_bills[!duplicated(ncsl_bills$unique_id),]
 

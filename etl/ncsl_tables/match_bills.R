@@ -1,14 +1,28 @@
+# !diagnostics off
+library(dplyr)
 library(tidyverse)
-library(urltools)
 
-ncsl_bills <- read_csv('../../data/ncsl/ncsl_data_from_sample.csv') %>%
-    mutate(unique_id = paste0(id, '_', state, '_', year),
-           parent_topic = as.character(sapply(table, function(x) {
-               path = unlist(strsplit(url_parse(x)$path, '/'))
-               l = length(path)
-               return(path[l-1])
-           }))) %>%
-    select(-table, -description)
+ncsl_bills <- read_csv('../../data/ncsl/ncsl_data_from_sample.csv')
+abbreviations <- read_csv('../../data/ncsl/states.csv')
+
+# Abbreviate state names
+for(i in 1:nrow(abbreviations)) {
+    name <- tolower(abbreviations$State[i])
+    ncsl_bills$state[tolower(ncsl_bills$state) == name] <- abbreviations$Abbreviation[i]
+}
+
+# Get the parent topic
+
+# Check for duplicates
+ncsl_bills <- mutate(ncsl_bills, unique_id = paste0(id, '_', state, '_', year),
+                     parent_topic = sapply(ncsl_bills$table, 
+                                           function(x) unlist(strsplit(x, '/'))[5])) %>%
+    select(-table, -description) %>%
+    filter()
+
+# Remove duplicates
+ncsl_bills <- filter(ncsl_bills, !duplicated(unique_id))
+
 ncsl_bills <- ncsl_bills[!duplicated(ncsl_bills$unique_id),]
 
 db_bills <- tbl_df(read.csv('../../data/bill_metadata.csv', header = TRUE,
@@ -106,6 +120,22 @@ for(i in 1:nrow(ncsl_bills)) {
 print(paste('Found', one_match, 'matches'))
 print(paste(no_match, 'not matched'))
 print(paste(multi_match, 'multiple matches'))
+
+# Remove parent topics that have only one table
+ncsl_bills <- filter(ncsl_bills, !is.na(matched_from_db), matched_from_db != "mo_2012_HB1315")
+
+topic_overview <- group_by(ncsl_bills, parent_topic, topic) %>% 
+    summarize(count = n())
+rm_parent_topics <- unique(topic_overview$parent_topic)[table(topic_overview$parent_topic) == 1]
+# Remove tables that have only one bill
+rm_topics <- filter(topic_overview, count == 1) %>% 
+    group_by() %>%
+    select(topic)
+
+ncsl_bills <- filter(ncsl_bills, !is.element(parent_topic, rm_parent_topics),
+                     !is.element(topic, rm_topics$topic)) %>%
+    select(id, state, topic, parent_topic, year, unique_id, num_id, 
+           let_id, matched_from_db)
 
 out <- select(ncsl_bills, matched_from_db) %>%
     filter(!is.na(matched_from_db))

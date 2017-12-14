@@ -1,6 +1,5 @@
-library(dplyr)
-library(ggplot2)
-library(dtplyr)
+library(tidyverse)
+#library(dtplyr)
 library(data.table)
 
 # Load Alignments
@@ -15,30 +14,29 @@ alignments <- filter(alignments, adjusted_alignment_score > 0)
 
 # Load metadata
 cat("Loading and cleaning metadata...\n")
-meta <- tbl_df(read.csv('../../data/bill_metadata.csv', 
-                        stringsAsFactors = FALSE, header = TRUE, 
-                        quote = '"')) %>%
+meta <- read_csv('../../data/bill_metadata.csv', quote = '"') %>%
     select(-session) %>%
     mutate(sponsor_ideology = as.numeric(sponsor_idology),
            num_sponsors = as.integer(num_sponsors),
            bill_length = as.integer(bill_length))
 
-### Make 'None' NA
-meta[meta == 'None'] <- NA
-meta[meta == ''] <- NA
+meta$primary_sponsor_party[meta$primary_sponsor_party == 'nan'] = NA
+meta$variance_sponsors_party[meta$variance_sponsors_party == 'nan'] = NA
 
 ## Match alignments with ideology scores
 ### Join info on left bill
 cat("Joining datasets...\n")
 temp <- mutate(meta, left_id = unique_id, left_ideology = sponsor_idology,
-               left_length = bill_length) %>%
-    dplyr::select(left_id, left_ideology, left_length)
+               left_length = bill_length, left_party = primary_sponsor_party,
+               left_party_var = variance_sponsors_party) %>%
+    select(left_id, left_ideology, left_length, left_party, left_party_var)
 df <- left_join(alignments, temp, by = c("left_id"))
 
 ### Join info on right bill
 temp <- mutate(meta, right_id = unique_id, right_ideology = sponsor_idology,
-               right_length = bill_length) %>%
-    dplyr::select(right_id, right_ideology, right_length)
+               right_length = bill_length, right_party = primary_sponsor_party,
+               right_party_var = variance_sponsors_party) %>%
+    select(right_id, right_ideology, right_length, right_party, right_party_var)
 df <- left_join(df, temp, by = "right_id")
 
 # Calculate ideological distance
@@ -60,7 +58,8 @@ cat(paste0(m, " valid dyads from ", length(unique(df$left_id)),
 sink()
 
 # Save ideology data
-df <- select(df, adjusted_alignment_score, ideology_dist, left_id)
+df <- select(df, adjusted_alignment_score, ideology_dist, left_id, left_party,
+             right_party, left_party_var, right_party_var)
 fname <- "../../data/ideology_analysis/ideology_analysis_input.RData"
 cat(paste0("Saving to ", fname, "\n"))
 save(df, file = fname)

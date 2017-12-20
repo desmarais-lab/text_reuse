@@ -26,6 +26,14 @@ def get_bill_document(doc):
     else:
         return None
 
+def party_to_int(party_str):
+    if party_str == 'R':
+        return 1
+    elif party_str == 'D':
+        return 0
+    else:
+        return np.nan
+
 
 if __name__ == "__main__":
     
@@ -43,7 +51,8 @@ if __name__ == "__main__":
     header = ['unique_id', 'date_introduced', 'date_signed', 'date_last_action', 
               'date_passed_upper', 'date_passed_lower', 'state', 'chamber', 
               'bill_type', 'short_title', 'session', 'bill_title', 'bill_length',
-              'sponsor_idology', 'num_sponsors']
+              'sponsor_idology', 'num_sponsors', 'primary_sponsor_party', 
+              'variance_sponsors_party']
 
     # Get a set of all legislators that we have ideology for
     known_legis = set(legislators['id'])
@@ -88,21 +97,32 @@ if __name__ == "__main__":
                         in doc['sponsers'] if d['type'] == 'primary']
             l = len(sponsors)
             scores = []
+            parties = []
             for sponsor in sponsors:
                 if sponsor not in known_legis:
                     continue
                 else:
-                    score = legislators.ideology[legislators['id'] == sponsor].tolist()
+                    score = (legislators.ideology[legislators['id'] == sponsor]
+                                        .tolist())
+                    party = (legislators.party[legislators['id'] == sponsor]
+                                        .tolist())
                 scores.extend(score)
+                parties.extend(party)
             
             if len(scores) > 0:
                 score = np.mean(scores)
-                #first_score = scores[0]
             else:
-                score = None
-                first_score = None
+                score = np.nan
+            if len(parties) > 0:
+                primary_party = parties[0]
+                party_variance = np.nanvar([party_to_int(x) for x in parties])
+            else:
+                primary_party = np.nan
+                party_variance = np.nan
 
             # Append average score and number of sponsors to df-row
             row.append(score)
             row.append(l)
+            row.append(primary_party)
+            row.append(party_variance)
             writer.writerow(row)

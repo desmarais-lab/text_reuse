@@ -120,11 +120,13 @@ $IDEO_DIR/regression_results.RData: $IDEO_DIR/ideology_analysis_input.RData
 	Rscript analysis/ideology/ideology_regression.R	 # Collects outputs
 
 ## Diffusion analysis	
-
 $TABLES/diffusion_regression_results.tex: $ALIGN_DTA/alignments_notext.csv \
     $DTA_DIR/bill_metadata.csv $DTA_DIR/dhb2015apsr-networks.csv
 	Rscript analysis/diffusion/diffusion_analysis.R
 
+## Parisanship application
+$TABLES/partisanship_dyad_distribution.tex $FIGURES/partisanship_score_distribution.png: $DTA_DIR/ideology_analysis/ideology_analysis_input.RData
+	Rscript analysis/partisanship/partisanship.R
 
 ## Additional stuff for new faces presentation
 

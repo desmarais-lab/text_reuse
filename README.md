@@ -8,4 +8,4 @@ The identification of substantively similar policy proposals in both proposed an
 ### Replication
 
 See the `makefile` for concrete replication steps. The original data is
-currently not publicly available. 
+available here: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi%3A10.7910%2FDVN%2FCZ25GF

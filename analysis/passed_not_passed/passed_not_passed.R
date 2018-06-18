@@ -26,6 +26,8 @@ df <- group_by(alignments, left_id) %>%
               ) %>% 
     # merge with the bill metadata
     left_join(metadata, by = c("left_id" = "unique_id"))
+write_csv(df, '../../data/aligner_output/bill_summaries.csv')
+read_csv('../../data/aligner_output/bill_summaries.csv')
     
 pdat <- df %>%
     gather(measure, score, -left_id, -passed) 

@@ -13,7 +13,7 @@ cd $ROOT_DIR
 # - malp_individual.tab (from the malp authors' website) # - legislators.csv (legislators and ids from sunlight foundation matched with #   malp ids (I can't find the original legislator data from sunlight anymore)
 
 # Set up the database
-
+cd etl/database
 ## Import bill data
 _ : $DTA_DIR/initial_data/extracted_bills_with_sponsers.json
 	python import_bills.py

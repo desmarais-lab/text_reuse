@@ -1,6 +1,6 @@
 ## Measuring Policy Similarity through Bill Text Reuse
 
-Publication: Linder F., Desmarais B., Burgess M., Giraudy E. (2018): Text as Policy: Measuring Policy Similarity Through Bill Text Reuse. *Policy Studies Journal*. Lind: [](https://onlinelibrary.wiley.com/doi/abs/10.1111/psj.12257)
+Publication: Linder F., Desmarais B., Burgess M., Giraudy E. (2018): Text as Policy: Measuring Policy Similarity Through Bill Text Reuse. *Policy Studies Journal*. [https://onlinelibrary.wiley.com/doi/abs/10.1111/psj.12257](https://onlinelibrary.wiley.com/doi/abs/10.1111/psj.12257)
 
 
 ### Abstract
